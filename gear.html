@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>齒輪轉速教學</title>
+    <title>二年級|一起來跳舞|齒輪轉速</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
@@ -17,18 +17,18 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden; /* Prevent scrolling */
-            padding: 20px;
+            padding: 10px;
         }
         .container {
             background-color: #ffffff;
             border-radius: 20px;
-            padding: 2rem;
+            padding: 1rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             max-width: 900px;
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 1rem;
         }
         .canvas-container {
             position: relative;
@@ -54,32 +54,32 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 p-8">
+<body class="bg-gray-100 p-4">
 
     <div class="container">
-        <h1 class="text-3xl font-bold text-center mb-4">齒輪轉速教學</h1>
-        <p class="text-center text-gray-600 mb-6">請將左邊的齒輪拖曳到灰色區域，然後點擊「啟動」來觀察轉速。</p>
+        <h1 class="text-2xl font-bold text-center mb-2">齒輪轉速教學</h1>
+        <p class="text-center text-gray-600 text-sm mb-4">請將左邊的齒輪拖曳到灰色區域，然後點擊「啟動」來觀察轉速。</p>
 
         <!-- Gear selection and canvas -->
-        <div class="flex flex-col lg:flex-row gap-6">
+        <div class="flex flex-col lg:flex-row gap-4">
             <!-- Gear selection panel -->
-            <div class="bg-gray-50 rounded-lg p-6 flex flex-col items-center gap-4 border border-gray-200 lg:w-1/4">
-                <h2 class="text-xl font-bold mb-2">齒輪庫</h2>
-                <div id="gear-palette" class="flex flex-col gap-4">
+            <div class="bg-gray-50 rounded-lg p-4 flex flex-col items-center gap-2 border border-gray-200 lg:w-1/4">
+                <h2 class="text-lg font-bold">齒輪庫</h2>
+                <div id="gear-palette" class="flex flex-row justify-center lg:flex-col gap-2">
                     <!-- Small gear -->
-                    <div id="small-gear" class="gear-option cursor-grab relative w-16 h-16 rounded-full bg-purple-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="small">
-                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">小</span>
+                    <div id="small-gear" class="gear-option cursor-grab relative w-12 h-12 rounded-full bg-purple-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="small">
+                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-xs pointer-events-none">小</span>
                     </div>
                     <!-- Medium gear -->
-                    <div id="medium-gear" class="gear-option cursor-grab relative w-20 h-20 rounded-full bg-blue-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="medium">
+                    <div id="medium-gear" class="gear-option cursor-grab relative w-16 h-16 rounded-full bg-blue-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="medium">
                         <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">中</span>
                     </div>
                     <!-- Large gear -->
-                    <div id="large-gear" class="gear-option cursor-grab relative w-24 h-24 rounded-full bg-green-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="large">
+                    <div id="large-gear" class="gear-option cursor-grab relative w-20 h-20 rounded-full bg-green-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="large">
                         <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">大</span>
                     </div>
                 </div>
-                <button id="reset-button" class="mt-4 px-6 py-2 bg-red-500 text-white font-bold rounded-full shadow-md hover:bg-red-600 transition-colors">重新開始</button>
+                <button id="reset-button" class="mt-2 px-4 py-1 text-sm bg-red-500 text-white font-bold rounded-full shadow-md hover:bg-red-600 transition-colors">重新開始</button>
             </div>
 
             <!-- Canvas area -->
@@ -87,28 +87,28 @@
                 <div class="canvas-container">
                     <canvas id="gear-canvas" class="rounded-lg shadow-inner" ondrop="drop(event)" ondragover="allowDrop(event)"></canvas>
                 </div>
-                <div class="flex flex-col items-center mt-6">
-                    <div class="flex justify-center items-center mb-4">
-                        <button id="start-button" class="px-8 py-3 bg-blue-500 text-white text-lg font-bold rounded-full shadow-lg hover:bg-blue-600 transition-colors">
+                <div class="flex flex-col items-center mt-4">
+                    <div class="flex justify-center items-center mb-2">
+                        <button id="start-button" class="px-6 py-2 bg-blue-500 text-white text-md font-bold rounded-full shadow-lg hover:bg-blue-600 transition-colors">
                             啟動
                         </button>
                     </div>
 
                     <!-- Manual/Auto Mode Toggle -->
-                    <div class="flex items-center gap-4 mb-4">
-                        <span class="font-bold text-sm">手動模式</span>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-bold text-xs">手動模式</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" value="" id="mode-toggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
 
-                    <div id="auto-mode-controls" class="w-full max-w-sm flex items-center gap-4">
-                        <span class="font-bold text-sm">轉速調整 (RPM)</span>
+                    <div id="auto-mode-controls" class="w-full max-w-sm flex items-center gap-2">
+                        <span class="font-bold text-xs">轉速調整 (RPM)</span>
                         <input type="range" id="speed-slider" min="1" max="100" value="50" class="w-full accent-blue-500 cursor-pointer">
                     </div>
 
-                    <div id="gear-speeds" class="mt-4 text-center"></div>
+                    <div id="gear-speeds" class="mt-2 text-center text-sm"></div>
                 </div>
             </div>
         </div>
@@ -286,10 +286,10 @@
                 const gear1 = gearsOnCanvas[0];
                 const gear2 = gearsOnCanvas[1];
                 gearSpeedsDisplay.innerHTML = `
-                    <p class="text-lg font-medium text-gray-800">
+                    <p class="text-md font-medium text-gray-800">
                         第一個齒輪轉速: <span class="text-blue-600 font-bold">${gear1.speedRPM.toFixed(2)} RPM</span>
                     </p>
-                    <p class="text-lg font-medium text-gray-800">
+                    <p class="text-md font-medium text-gray-800">
                         第二個齒輪轉速: <span class="text-blue-600 font-bold">${gear2.speedRPM.toFixed(2)} RPM</span>
                     </p>
                 `;
