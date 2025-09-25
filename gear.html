@@ -36,7 +36,9 @@
             border-radius: 15px;
             overflow: hidden;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 75%; /* 4:3 Aspect Ratio */
         }
         canvas {
             position: absolute;
@@ -61,7 +63,7 @@
         <p class="text-center text-gray-600 text-sm mb-4">請將左邊的齒輪拖曳到灰色區域，然後點擊「啟動」來觀察轉速。</p>
 
         <!-- Gear selection and canvas -->
-        <div class="flex flex-col lg:flex-row gap-4">
+        <div class="flex flex-col lg:flex-row gap-4 items-center">
             <!-- Gear selection panel -->
             <div class="bg-gray-50 rounded-lg p-4 flex flex-col items-center gap-2 border border-gray-200 lg:w-1/4">
                 <h2 class="text-lg font-bold">齒輪庫</h2>
@@ -263,10 +265,12 @@
             if (checkIntersection(gear1, gear2)) {
                 // Adjust position for perfect meshing
                 const angle = Math.atan2(gear2.y - gear1.y, gear2.x - gear1.x);
-                const combinedRadius = (gear1.properties.size * 1.1) + (gear2.properties.size * 1.1);
+                const pitchRadius1 = gear1.properties.size * 1.05;
+                const pitchRadius2 = gear2.properties.size * 1.05;
+                const combinedPitchRadius = pitchRadius1 + pitchRadius2;
                 
-                gear2.x = gear1.x + Math.cos(angle) * combinedRadius;
-                gear2.y = gear1.y + Math.sin(angle) * combinedRadius;
+                gear2.x = gear1.x + Math.cos(angle) * combinedPitchRadius;
+                gear2.y = gear1.y + Math.sin(angle) * combinedPitchRadius;
 
                 // Adjust rotation for perfect meshing
                 const rotationOffset = Math.PI / gear2.properties.teeth;
