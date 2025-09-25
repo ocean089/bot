@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>齒輪轉速教學</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling */
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .canvas-container {
+            position: relative;
+            background-color: #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .gear-option {
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .gear-option:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center mb-4">齒輪轉速教學</h1>
+        <p class="text-center text-gray-600 mb-6">請將左邊的齒輪拖曳到灰色區域，然後點擊「啟動」來觀察轉速。</p>
+
+        <!-- Gear selection and canvas -->
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Gear selection panel -->
+            <div class="bg-gray-50 rounded-lg p-6 flex flex-col items-center gap-4 border border-gray-200 lg:w-1/4">
+                <h2 class="text-xl font-bold mb-2">齒輪庫</h2>
+                <div id="gear-palette" class="flex flex-col gap-4">
+                    <!-- Small gear -->
+                    <div id="small-gear" class="gear-option cursor-grab relative w-16 h-16 rounded-full bg-purple-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="small">
+                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">小</span>
+                    </div>
+                    <!-- Medium gear -->
+                    <div id="medium-gear" class="gear-option cursor-grab relative w-20 h-20 rounded-full bg-blue-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="medium">
+                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">中</span>
+                    </div>
+                    <!-- Large gear -->
+                    <div id="large-gear" class="gear-option cursor-grab relative w-24 h-24 rounded-full bg-green-600 shadow-md transform" draggable="true" ondragstart="dragStart(event)" data-size="large">
+                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">大</span>
+                    </div>
+                </div>
+                <button id="reset-button" class="mt-4 px-6 py-2 bg-red-500 text-white font-bold rounded-full shadow-md hover:bg-red-600 transition-colors">重新開始</button>
+            </div>
+
+            <!-- Canvas area -->
+            <div class="lg:w-3/4">
+                <div class="canvas-container">
+                    <canvas id="gear-canvas" class="rounded-lg shadow-inner" ondrop="drop(event)" ondragover="allowDrop(event)"></canvas>
+                </div>
+                <div class="flex flex-col items-center mt-6">
+                    <div class="flex justify-center items-center mb-4">
+                        <button id="start-button" class="px-8 py-3 bg-blue-500 text-white text-lg font-bold rounded-full shadow-lg hover:bg-blue-600 transition-colors">
+                            啟動
+                        </button>
+                    </div>
+
+                    <!-- Manual/Auto Mode Toggle -->
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="font-bold text-sm">手動模式</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" value="" id="mode-toggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <div id="auto-mode-controls" class="w-full max-w-sm flex items-center gap-4">
+                        <span class="font-bold text-sm">轉速調整 (RPM)</span>
+                        <input type="range" id="speed-slider" min="1" max="100" value="50" class="w-full accent-blue-500 cursor-pointer">
+                    </div>
+
+                    <div id="gear-speeds" class="mt-4 text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gear-canvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('start-button');
+        const resetButton = document.getElementById('reset-button');
+        const speedSlider = document.getElementById('speed-slider');
+        const gearSpeedsDisplay = document.getElementById('gear-speeds');
+        const modeToggle = document.getElementById('mode-toggle');
+        const autoModeControls = document.getElementById('auto-mode-controls');
+
+        // Gear sizes and properties
+        const GEAR_PROPERTIES = {
+            'small': { size: 40, teeth: 6, color: '#8b5cf6', textColor: '#ffffff', label: '小', teethLabel: '6 齒' },
+            'medium': { size: 50, teeth: 10, color: '#06b6d4', textColor: '#ffffff', label: '中', teethLabel: '10 齒' },
+            'large': { size: 60, teeth: 14, color: '#10b981', textColor: '#ffffff', label: '大', teethLabel: '14 齒' }
+        };
+
+        let gearsOnCanvas = [];
+        let animationFrameId = null;
+        let isRunning = false;
+        let mouse = { x: 0, y: 0, isDown: false, draggingGear: null };
+        let lastUpdateTime = 0;
+        let isManualMode = false;
+        let lastManualRotation = 0;
+        
+        // --- Helper Functions ---
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function isPointInCircle(point, center, radius) {
+            return Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2)) < radius;
+        }
+
+        // --- Drawing Functions ---
+        function drawGear(x, y, size, teeth, rotation, color, label, teethLabel, textColor, showArrow = false) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+            
+            const radius = size;
+            const toothWidthAngle = (2 * Math.PI / teeth) / 3;
+            const toothSpaceAngle = toothWidthAngle * 2;
+            const outerRadius = radius * 1.2;
+            
+            ctx.beginPath();
+            
+            for (let i = 0; i < teeth; i++) {
+                const angle = i * (2 * Math.PI / teeth);
+                
+                ctx.arc(0, 0, outerRadius, angle, angle + toothWidthAngle);
+                ctx.lineTo(radius * Math.cos(angle + toothWidthAngle), radius * Math.sin(angle + toothWidthAngle));
+                ctx.arc(0, 0, radius, angle + toothWidthAngle, angle + toothSpaceAngle);
+                ctx.lineTo(outerRadius * Math.cos(angle + toothSpaceAngle), outerRadius * Math.sin(angle + toothSpaceAngle));
+            }
+            
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#4b5563';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.3, 0, 2 * Math.PI);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fill();
+
+            ctx.fillStyle = textColor;
+            ctx.font = 'bold 18px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, 0, 0);
+
+            ctx.font = 'bold 12px Inter';
+            ctx.fillStyle = '#4b5563';
+            ctx.fillText(teethLabel, 0, size * 0.5);
+
+            if (showArrow) {
+                ctx.save();
+                ctx.rotate(-rotation);
+                const arrowLength = size * 0.8;
+                const arrowWidth = size * 0.15;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(arrowLength, 0);
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(arrowLength, 0);
+                ctx.lineTo(arrowLength - arrowWidth, arrowWidth);
+                ctx.lineTo(arrowLength - arrowWidth, -arrowWidth);
+                ctx.closePath();
+                ctx.fillStyle = '#ff0000';
+                ctx.fill();
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            gearsOnCanvas.forEach(gear => {
+                drawGear(gear.x, gear.y, gear.properties.size, gear.properties.teeth, gear.rotation, gear.properties.color, gear.properties.label, gear.properties.teethLabel, gear.properties.textColor, true);
+            });
+        }
+
+        function animate(timestamp) {
+            if (!isRunning) {
+                return;
+            }
+            
+            const deltaTime = timestamp - lastUpdateTime;
+            lastUpdateTime = timestamp;
+
+            gearsOnCanvas.forEach(gear => {
+                const rotationRadians = (gear.speedRPM / 60) * (2 * Math.PI / 1000) * deltaTime;
+                gear.rotation += rotationRadians;
+            });
+            
+            drawScene();
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // --- Logic Functions ---
+        function checkIntersection(gear1, gear2) {
+            const dx = gear1.x - gear2.x;
+            const dy = gear1.y - gear2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const combinedRadius = gear1.properties.size * 1.5 + gear2.properties.size * 1.5;
+            return distance < combinedRadius;
+        }
+
+        function connectGears() {
+            if (gearsOnCanvas.length < 2) return;
+
+            const gear1 = gearsOnCanvas[0];
+            const gear2 = gearsOnCanvas[1];
+
+            if (checkIntersection(gear1, gear2)) {
+                // Adjust position for perfect meshing
+                const angle = Math.atan2(gear2.y - gear1.y, gear2.x - gear1.x);
+                const combinedRadius = (gear1.properties.size * 1.1) + (gear2.properties.size * 1.1);
+                
+                gear2.x = gear1.x + Math.cos(angle) * combinedRadius;
+                gear2.y = gear1.y + Math.sin(angle) * combinedRadius;
+
+                // Adjust rotation for perfect meshing
+                const rotationOffset = Math.PI / gear2.properties.teeth;
+                gear2.rotation = gear1.rotation * -1 * (gear1.properties.teeth / gear2.properties.teeth) + rotationOffset;
+
+                // Set speed based on teeth ratio
+                const ratio = gear1.properties.teeth / gear2.properties.teeth;
+                gear2.speedRPM = gear1.speedRPM * ratio * -1;
+            } else {
+                gear2.speedRPM = 0;
+            }
+            updateSpeedDisplay();
+        }
+
+        function updateSpeedDisplay() {
+            if (gearsOnCanvas.length === 2) {
+                const gear1 = gearsOnCanvas[0];
+                const gear2 = gearsOnCanvas[1];
+                gearSpeedsDisplay.innerHTML = `
+                    <p class="text-lg font-medium text-gray-800">
+                        第一個齒輪轉速: <span class="text-blue-600 font-bold">${gear1.speedRPM.toFixed(2)} RPM</span>
+                    </p>
+                    <p class="text-lg font-medium text-gray-800">
+                        第二個齒輪轉速: <span class="text-blue-600 font-bold">${gear2.speedRPM.toFixed(2)} RPM</span>
+                    </p>
+                `;
+            } else {
+                gearSpeedsDisplay.innerHTML = '';
+            }
+        }
+        
+        function getAngle(x1, y1, x2, y2) {
+            return Math.atan2(y2 - y1, x2 - x1);
+        }
+
+        // --- Event Handlers ---
+        function dragStart(e) {
+            e.dataTransfer.setData('gear-size', e.target.dataset.size);
+            const dragImage = document.createElement('div');
+            dragImage.style.cssText = 'position: absolute; top: -100px; left: -100px;';
+            document.body.appendChild(dragImage);
+            e.dataTransfer.setDragImage(dragImage, 0, 0);
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            const size = e.dataTransfer.getData('gear-size');
+            if (!size) return;
+            
+            const pos = getMousePos(e);
+
+            if (gearsOnCanvas.length < 2) {
+                const newGear = {
+                    x: pos.x,
+                    y: pos.y,
+                    properties: GEAR_PROPERTIES[size],
+                    rotation: 0,
+                    speedRPM: 0
+                };
+                
+                gearsOnCanvas.push(newGear);
+                drawScene();
+            }
+            
+            if (gearsOnCanvas.length === 2) {
+                 connectGears();
+            }
+        }
+        
+        startButton.addEventListener('click', () => {
+            if (gearsOnCanvas.length === 2) {
+                isRunning = !isRunning;
+                if (isRunning) {
+                    startButton.textContent = '停止';
+                    if (!isManualMode) {
+                        gearsOnCanvas[0].speedRPM = parseFloat(speedSlider.value);
+                    }
+                    connectGears();
+                    lastUpdateTime = performance.now();
+                    animate(lastUpdateTime);
+                } else {
+                    startButton.textContent = '啟動';
+                    cancelAnimationFrame(animationFrameId);
+                    gearsOnCanvas.forEach(gear => gear.speedRPM = 0);
+                    updateSpeedDisplay();
+                    drawScene();
+                }
+            } else {
+                 alert('請放置兩個齒輪來開始。');
+            }
+        });
+
+        resetButton.addEventListener('click', () => {
+            gearsOnCanvas = [];
+            isRunning = false;
+            startButton.textContent = '啟動';
+            gearSpeedsDisplay.innerHTML = '';
+            cancelAnimationFrame(animationFrameId);
+            drawScene();
+        });
+
+        speedSlider.addEventListener('input', () => {
+            if (isRunning && gearsOnCanvas.length > 0) {
+                gearsOnCanvas[0].speedRPM = parseFloat(speedSlider.value);
+                connectGears();
+            }
+        });
+
+        modeToggle.addEventListener('change', () => {
+            isManualMode = modeToggle.checked;
+            autoModeControls.style.display = isManualMode ? 'none' : 'flex';
+            if (isRunning) {
+                isRunning = false;
+                startButton.textContent = '啟動';
+                gearsOnCanvas.forEach(gear => gear.speedRPM = 0);
+                updateSpeedDisplay();
+                drawScene();
+                cancelAnimationFrame(animationFrameId);
+            }
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (isRunning) return;
+            const pos = getMousePos(e);
+            mouse.isDown = true;
+            mouse.draggingGear = null;
+            
+            for (let i = gearsOnCanvas.length - 1; i >= 0; i--) {
+                const gear = gearsOnCanvas[i];
+                if (isPointInCircle(pos, { x: gear.x, y: gear.y }, gear.properties.size * 1.5)) {
+                    mouse.draggingGear = gear;
+                    mouse.x = pos.x;
+                    mouse.y = pos.y;
+                    canvas.style.cursor = 'grabbing';
+                    
+                    if (isManualMode && i === 0) {
+                         lastManualRotation = getAngle(gear.x, gear.y, pos.x, pos.y);
+                    }
+                    break;
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isRunning) return;
+            const pos = getMousePos(e);
+
+            if (mouse.isDown && mouse.draggingGear) {
+                if (isManualMode && mouse.draggingGear === gearsOnCanvas[0] && gearsOnCanvas.length > 1) {
+                    // Manual mode
+                    const gear = mouse.draggingGear;
+                    const currentAngle = getAngle(gear.x, gear.y, pos.x, pos.y);
+                    const rotationDelta = currentAngle - lastManualRotation;
+
+                    gear.rotation += rotationDelta;
+                    lastManualRotation = currentAngle;
+                    
+                    const gear2 = gearsOnCanvas[1];
+                    const ratio = gear.properties.teeth / gear2.properties.teeth;
+                    gear2.rotation -= rotationDelta * ratio;
+                    
+                    drawScene();
+                } else {
+                    // Dragging mode
+                    mouse.draggingGear.x += pos.x - mouse.x;
+                    mouse.draggingGear.y += pos.y - mouse.y;
+                    mouse.x = pos.x;
+                    mouse.y = pos.y;
+                    drawScene();
+                    
+                    if (gearsOnCanvas.length === 2) {
+                        connectGears();
+                    }
+                }
+            }
+
+            if (!mouse.isDown) {
+                 let cursorFound = false;
+                 for (let i = gearsOnCanvas.length - 1; i >= 0; i--) {
+                     const gear = gearsOnCanvas[i];
+                     if (isPointInCircle(pos, { x: gear.x, y: gear.y }, gear.properties.size * 1.5)) {
+                         canvas.style.cursor = 'grab';
+                         cursorFound = true;
+                         break;
+                     }
+                 }
+                 if (!cursorFound) {
+                     canvas.style.cursor = 'default';
+                 }
+             }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            mouse.isDown = false;
+            mouse.draggingGear = null;
+            canvas.style.cursor = 'default';
+        });
+
+        function resizeCanvas() {
+            const container = document.querySelector('.canvas-container');
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            drawScene();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    </script>
+</body>
+</html>
