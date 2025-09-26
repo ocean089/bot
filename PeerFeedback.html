@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>康樂國小四年乙班學生發表互評系統</title>
+    <title>學生互評系統</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -37,7 +37,7 @@
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
     <div class="max-w-6xl w-full">
-        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-800">康樂國小四年乙班學生發表互評系統</h1>
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-800">學生發表互評系統</h1>
 
         <!-- Course Selection Dropdown -->
         <div class="mb-6 text-center">
@@ -62,7 +62,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Review Submission Form -->
             <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-200">
-                <h2 class="text-2xl font-semibold mb-6 text-gray-700">提交評分</h2>
+                <h2 class="text-2xl font-semibold mb-6 text-gray-700">提交評論</h2>
                 <form id="review-form" class="space-y-6">
                     <div>
                         <label for="reviewer-name" class="block text-gray-700 font-medium mb-2">您的姓名 (評分者)</label>
@@ -199,13 +199,12 @@
         // IMPORTANT: The following global variables are provided by the hosting environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-           apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
-          authDomain: "gen-lang-client-0900734125.firebaseapp.com",
-          projectId: "gen-lang-client-0900734125",
-          storageBucket: "gen-lang-client-0900734125.firebasestorage.app",
-          messagingSenderId: "94701383625",
-          appId: "1:94701383625:web:62d3c3e6faf8d28fa34218"
-
+            apiKey: "mock-api-key",
+            authDomain: "mock-project.firebaseapp.com",
+            projectId: "mock-project",
+            storageBucket: "mock-project.appspot.com",
+            messagingSenderId: "mock-sender-id",
+            appId: "mock-app-id"
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
