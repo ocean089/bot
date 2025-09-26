@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>學生互評系統</title>
+    <title>康樂國小四年乙班學生發表互評系統</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Use Inter font -->
@@ -18,7 +18,7 @@
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
     <div class="max-w-6xl w-full">
-        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-800">康樂國小四乙學生發表互評系統</h1>
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-800">康樂國小四年乙班學生發表互評系統</h1>
 
         <!-- Course Selection Dropdown -->
         <div class="mb-6 text-center">
@@ -27,6 +27,12 @@
                 <option value="">請選擇一個課程...</option>
             </select>
             <div id="course-select-message" class="mt-2 text-sm text-red-500 hidden"></div>
+        </div>
+
+        <!-- Course Confirmation Section -->
+        <div id="course-confirmation" class="mb-6 p-4 rounded-xl shadow-md border-2 border-gray-300 transition duration-300 ease-in-out text-center hidden">
+            <p class="text-lg font-bold text-gray-700">您已選擇課程:</p>
+            <p id="selected-course-name" class="text-2xl font-extrabold mt-1 text-gray-800"></p>
         </div>
 
         <div id="auth-status" class="text-center text-sm mb-4 text-gray-500">
@@ -76,7 +82,7 @@
                     </div>
                     <div>
                         <label for="review-text" class="block text-gray-700 font-medium mb-2">文字建議 (可選)</label>
-                        <textarea id="review-text" rows="6" placeholder="請在此輸入您的建議和心得..."
+                        <textarea id="review-text" rows="3" placeholder="請在此輸入您的建議和心得..."
                                   class="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"></textarea>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105">
@@ -174,7 +180,7 @@
         // IMPORTANT: The following global variables are provided by the hosting environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-         apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
+           apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
           authDomain: "gen-lang-client-0900734125.firebaseapp.com",
           projectId: "gen-lang-client-0900734125",
           storageBucket: "gen-lang-client-0900734125.firebasestorage.app",
@@ -194,6 +200,8 @@
         const authStatusEl = document.getElementById('auth-status');
         const courseSelect = document.getElementById('course-select');
         const courseSelectMessage = document.getElementById('course-select-message');
+        const courseConfirmationEl = document.getElementById('course-confirmation');
+        const selectedCourseNameEl = document.getElementById('selected-course-name');
         const form = document.getElementById('review-form');
         const reviewerNameInput = document.getElementById('reviewer-name');
         const presenterNameInput = document.getElementById('presenter-name');
@@ -217,6 +225,9 @@
         let unsubscribeLeaderboard = null;
         let unsubscribeCourses = null;
         let isAuthReady = false;
+        
+        // A simple color palette for courses
+        const colorPalette = ['bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-red-100', 'bg-indigo-100', 'bg-purple-100', 'bg-pink-100', 'bg-gray-100'];
 
         function showMessage(text, isError = false) {
             messageBox.textContent = text;
@@ -290,15 +301,23 @@
             const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
             const coursesRef = collection(db, coursesCollectionPath);
 
-            unsubscribeCourses = onSnapshot(coursesRef, (querySnapshot) => {
+            unsubscribeCourses = onSnapshot(coursesRef, async (querySnapshot) => {
                 courseSelect.innerHTML = '<option value="">請選擇一個課程...</option>';
-                querySnapshot.forEach((doc) => {
-                    const course = doc.data();
+                const courseDocs = querySnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+
+                // Assign persistent colors to courses if they don't have one
+                for (const doc of courseDocs) {
+                    if (!doc.data.color) {
+                        const newColor = colorPalette[courseDocs.findIndex(d => d.id === doc.id) % colorPalette.length];
+                        const courseDocRef = doc(db, coursesCollectionPath, doc.id);
+                        await setDoc(courseDocRef, { color: newColor }, { merge: true });
+                    }
                     const option = document.createElement('option');
-                    option.value = course.courseId;
-                    option.textContent = course.courseName;
+                    option.value = doc.data.courseId;
+                    option.textContent = doc.data.courseName;
                     courseSelect.appendChild(option);
-                });
+                }
+
             }, (error) => {
                 console.error("Error fetching courses:", error);
             });
@@ -579,9 +598,14 @@
             const courseDoc = doc(coursesRef, courseId);
             
             try {
+                // Get current courses to determine color index
+                const coursesSnapshot = await getDocs(coursesRef);
+                const newColor = colorPalette[coursesSnapshot.docs.length % colorPalette.length];
+
                 await setDoc(courseDoc, {
                     courseName: courseName,
                     courseId: courseId,
+                    color: newColor,
                     timestamp: new Date()
                 }, { merge: true });
                 showPasswordMessage('課程已成功新增！', false);
@@ -593,13 +617,27 @@
         });
         
         // Event listener for course selection change
-        courseSelect.addEventListener('change', () => {
+        courseSelect.addEventListener('change', async () => {
             currentCourseId = courseSelect.value;
+            const selectedCourseName = courseSelect.options[courseSelect.selectedIndex].text;
+            
             if (currentCourseId) {
                 setupRealtimeLeaderboard();
                 courseSelectMessage.classList.add('hidden');
+                
+                // Fetch course data to get the color
+                const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
+                const courseDocRef = doc(db, coursesCollectionPath, currentCourseId);
+                const courseDoc = await getDoc(courseDocRef);
+                const courseData = courseDoc.data();
+                
+                // Update confirmation section
+                selectedCourseNameEl.textContent = selectedCourseName;
+                courseConfirmationEl.classList.remove('hidden', ...colorPalette);
+                courseConfirmationEl.classList.add(courseData.color);
             } else {
                 leaderboardContainer.classList.add('hidden');
+                courseConfirmationEl.classList.add('hidden');
             }
         });
 
