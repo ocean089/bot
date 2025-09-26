@@ -1,1 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生互評系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
+    <div class="max-w-4xl w-full">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-800">學生發表互評系統</h1>
+        <div id="auth-status" class="text-center text-sm mb-4 text-gray-500">
+            <!-- Auth status will be displayed here -->
+        </div>
+
+        <!-- Main content area with two columns for desktop, single column for mobile -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Review Submission Form -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-200">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-700">提交評論</h2>
+                <form id="review-form" class="space-y-6">
+                    <div>
+                        <label for="reviewer-name" class="block text-gray-700 font-medium mb-2">您的姓名 (評分者)</label>
+                        <input type="text" id="reviewer-name" placeholder="請輸入您的姓名" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                    </div>
+                    <div>
+                        <label for="presenter-name" class="block text-gray-700 font-medium mb-2">發表者姓名</label>
+                        <input type="text" id="presenter-name" placeholder="請輸入發表者姓名" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">評分 (1-5分)</label>
+                        <div class="flex flex-wrap gap-4 justify-between">
+                            <div class="flex-1 min-w-0">
+                                <input type="radio" id="score-1" name="score" value="1" class="hidden peer" required>
+                                <label for="score-1" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 transition duration-200 hover:bg-red-100 hover:border-red-500">1</label>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <input type="radio" id="score-2" name="score" value="2" class="hidden peer">
+                                <label for="score-2" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-orange-500 peer-checked:text-white peer-checked:border-orange-500 transition duration-200 hover:bg-orange-100 hover:border-orange-500">2</label>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <input type="radio" id="score-3" name="score" value="3" class="hidden peer">
+                                <label for="score-3" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-yellow-500 peer-checked:text-white peer-checked:border-yellow-500 transition duration-200 hover:bg-yellow-100 hover:border-yellow-500">3</label>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <input type="radio" id="score-4" name="score" value="4" class="hidden peer">
+                                <label for="score-4" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-lime-500 peer-checked:text-white peer-checked:border-lime-500 transition duration-200 hover:bg-lime-100 hover:border-lime-500">4</label>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <input type="radio" id="score-5" name="score" value="5" class="hidden peer">
+                                <label for="score-5" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500 transition duration-200 hover:bg-green-100 hover:border-green-500">5</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105">
+                        提交評分
+                    </button>
+                    <div id="message-box" class="mt-4 p-4 rounded-lg text-center hidden" role="alert"></div>
+                </form>
+            </div>
+
+            <!-- Leaderboard Section -->
+            <div id="leaderboard-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-200 hidden">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-700">排行榜 (前10名)</h2>
+                <div id="leaderboard-list" class="space-y-4">
+                    <!-- Leaderboard items will be inserted here dynamically -->
+                    <div class="text-center text-gray-500">
+                        正在載入排行榜...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Reviews and Export Section -->
+        <div class="mt-8 w-full bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-700">老師功能</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Management Controls -->
+                <div class="space-y-6">
+                    <div>
+                        <label for="password-input" class="block text-gray-700 font-medium mb-2">顯示排行榜</label>
+                        <div class="flex">
+                            <input type="password" id="password-input" placeholder="請輸入密碼"
+                                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                            <button id="show-leaderboard-btn" class="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                                開啟
+                            </button>
+                        </div>
+                    </div>
+                    <div id="password-message" class="mt-2 p-4 rounded-lg text-center hidden" role="alert"></div>
+
+                    <button id="export-reviews" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300 transform hover:scale-105">
+                        匯出所有成績 (.csv)
+                    </button>
+                    <div id="export-status" class="mt-4 p-4 rounded-lg text-center hidden" role="alert"></div>
+                </div>
+
+                <!-- Personal Reviews Section -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">查詢學生評分紀錄</h3>
+                    <div class="mb-4">
+                        <label for="my-name-input" class="block text-gray-700 font-medium mb-2">輸入學生姓名以查詢</label>
+                        <div class="flex">
+                            <input type="text" id="my-name-input" placeholder="請輸入學生的姓名"
+                                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                            <button id="search-my-reviews" class="ml-2 bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">
+                                查詢
+                            </button>
+                        </div>
+                    </div>
+                    <div id="my-reviews-list" class="space-y-2">
+                        <!-- Personal review items will be inserted here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IMPORTANT: The following global variables are provided by the hosting environment.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Set Firebase debug log level
+        setLogLevel('debug');
+
+        let db;
+        let auth;
+        let userId = 'anonymous';
+        const LEADERBOARD_PASSWORD = "popoyu";
+
+        const authStatusEl = document.getElementById('auth-status');
+        const form = document.getElementById('review-form');
+        const reviewerNameInput = document.getElementById('reviewer-name');
+        const presenterNameInput = document.getElementById('presenter-name');
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const messageBox = document.getElementById('message-box');
+        const myNameInput = document.getElementById('my-name-input');
+        const searchMyReviewsBtn = document.getElementById('search-my-reviews');
+        const myReviewsList = document.getElementById('my-reviews-list');
+        const exportReviewsBtn = document.getElementById('export-reviews');
+        const exportStatusEl = document.getElementById('export-status');
+        const leaderboardContainer = document.getElementById('leaderboard-container');
+        const passwordInput = document.getElementById('password-input');
+        const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
+        const passwordMessage = document.getElementById('password-message');
+
+        let isAuthReady = false;
+
+        // Display a message to the user
+        function showMessage(text, isError = false) {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden');
+            if (isError) {
+                messageBox.className = 'mt-4 p-4 rounded-lg text-center bg-red-100 text-red-700';
+            } else {
+                messageBox.className = 'mt-4 p-4 rounded-lg text-center bg-green-100 text-green-700';
+            }
+        }
+
+        // Display a message for the export status
+        function showExportStatus(text, isError = false) {
+            exportStatusEl.textContent = text;
+            exportStatusEl.classList.remove('hidden');
+            if (isError) {
+                exportStatusEl.className = 'mt-4 p-4 rounded-lg text-center bg-red-100 text-red-700';
+            } else {
+                exportStatusEl.className = 'mt-4 p-4 rounded-lg text-center bg-green-100 text-green-700';
+            }
+        }
+
+        // Display a message for the password check
+        function showPasswordMessage(text, isError = false) {
+            passwordMessage.textContent = text;
+            passwordMessage.classList.remove('hidden');
+            if (isError) {
+                passwordMessage.className = 'mt-2 p-2 text-center rounded-lg bg-red-100 text-red-700';
+            } else {
+                passwordMessage.className = 'mt-2 p-2 text-center rounded-lg bg-green-100 text-green-700';
+            }
+        }
+
+        // Initialize Firebase and set up auth listener
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        authStatusEl.textContent = `使用者 ID: ${userId}`;
+                        isAuthReady = true;
+                        console.log('User signed in with UID:', userId);
+                        setupRealtimeLeaderboard();
+                    } else {
+                        isAuthReady = true;
+                        console.log('User signed out.');
+                        if (!initialAuthToken) {
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+            } catch (error) {
+                console.error("Firebase initialization or authentication failed:", error);
+                showMessage('錯誤: 無法初始化系統，請檢查控制台。', true);
+            }
+        }
+
+        // Setup Firestore real-time listener for the leaderboard
+        function setupRealtimeLeaderboard() {
+            if (!isAuthReady) {
+                console.log('Authentication not ready. Retrying setupRealtimeLeaderboard...');
+                setTimeout(setupRealtimeLeaderboard, 500);
+                return;
+            }
+
+            const reviewsCollectionPath = `/artifacts/${appId}/public/data/student-reviews`;
+            const reviewsRef = collection(db, reviewsCollectionPath);
+            const q = query(reviewsRef);
+
+            onSnapshot(q, (querySnapshot) => {
+                const presenters = {};
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const name = data.presenterName;
+                    const score = parseInt(data.score, 10);
+
+                    if (!presenters[name]) {
+                        presenters[name] = { totalScore: 0, reviewCount: 0 };
+                    }
+                    presenters[name].totalScore += score;
+                    presenters[name].reviewCount += 1;
+                });
+
+                const leaderboardData = Object.keys(presenters).map(name => {
+                    return {
+                        name: name,
+                        totalScore: presenters[name].totalScore,
+                        averageScore: (presenters[name].totalScore / presenters[name].reviewCount).toFixed(2),
+                        reviewCount: presenters[name].reviewCount
+                    };
+                });
+
+                leaderboardData.sort((a, b) => b.totalScore - a.totalScore);
+                const top10 = leaderboardData.slice(0, 10);
+
+                renderLeaderboard(top10);
+            }, (error) => {
+                console.error("Error fetching leaderboard data: ", error);
+                showMessage('錯誤: 無法載入排行榜。', true);
+            });
+        }
+
+        // Render the leaderboard UI
+        function renderLeaderboard(data) {
+            leaderboardList.innerHTML = '';
+            if (data.length === 0) {
+                leaderboardList.innerHTML = '<div class="text-center text-gray-500">目前沒有任何評論。</div>';
+                return;
+            }
+
+            data.forEach((item, index) => {
+                const rank = index + 1;
+                const podiumColor = rank === 1 ? 'bg-amber-400' : rank === 2 ? 'bg-zinc-400' : rank === 3 ? 'bg-amber-600' : 'bg-white';
+                const podiumText = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+
+                const itemHtml = `
+                    <div class="flex items-center space-x-4 p-4 rounded-xl shadow-md border ${podiumColor} transition duration-300 transform hover:scale-[1.02]">
+                        <div class="text-xl font-bold w-8 text-center text-gray-800">${rank}.</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg text-gray-800">${item.name} ${podiumText}</h3>
+                            <p class="text-sm text-gray-600">總分: ${item.totalScore} | 評論數: ${item.reviewCount}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-2xl font-bold text-gray-800">${item.averageScore}</span>
+                            <span class="text-sm text-gray-500">分</span>
+                        </div>
+                    </div>
+                `;
+                leaderboardList.innerHTML += itemHtml;
+            });
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const reviewerName = reviewerNameInput.value.trim();
+            const presenterName = presenterNameInput.value.trim();
+            const selectedScore = document.querySelector('input[name="score"]:checked');
+
+            if (!reviewerName || !presenterName || !selectedScore) {
+                showMessage('請輸入您的姓名、發表者姓名並選擇評分!', true);
+                return;
+            }
+
+            if (!isAuthReady) {
+                showMessage('系統正在載入中，請稍候再試。', true);
+                return;
+            }
+
+            const reviewsCollectionPath = `/artifacts/${appId}/public/data/student-reviews`;
+            const reviewsRef = collection(db, reviewsCollectionPath);
+
+            try {
+                await addDoc(reviewsRef, {
+                    reviewerName: reviewerName,
+                    presenterName: presenterName,
+                    score: parseInt(selectedScore.value, 10),
+                    timestamp: new Date()
+                });
+                showMessage('評分已成功提交！', false);
+                form.reset();
+                reviewerNameInput.value = reviewerName; // Keep reviewer name for next review
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showMessage('提交評分時發生錯誤，請重試。', true);
+            }
+        });
+
+        // Handle personal review search
+        searchMyReviewsBtn.addEventListener('click', async () => {
+            const myName = myNameInput.value.trim();
+            if (!myName) {
+                myReviewsList.innerHTML = '<p class="text-red-500">請輸入學生的姓名以查詢。</p>';
+                return;
+            }
+
+            if (!isAuthReady) {
+                myReviewsList.innerHTML = '<p class="text-gray-500">系統正在載入中，請稍候再試。</p>';
+                return;
+            }
+
+            myReviewsList.innerHTML = '<p class="text-gray-500">正在查詢評分記錄...</p>';
+
+            const reviewsCollectionPath = `/artifacts/${appId}/public/data/student-reviews`;
+            const reviewsRef = collection(db, reviewsCollectionPath);
+            const q = query(reviewsRef, where("reviewerName", "==", myName));
+
+            try {
+                const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                    if (querySnapshot.empty) {
+                        myReviewsList.innerHTML = '<p class="text-gray-500">找不到該學生的評分記錄。</p>';
+                        return;
+                    }
+
+                    myReviewsList.innerHTML = '';
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const itemHtml = `
+                            <div class="p-3 bg-gray-100 rounded-lg">
+                                <p class="font-semibold text-gray-800">
+                                    發表者: ${data.presenterName}
+                                    <span class="text-lg ml-2 font-bold text-blue-600">${data.score}</span>
+                                    <span class="text-sm text-gray-500">分</span>
+                                </p>
+                            </div>
+                        `;
+                        myReviewsList.innerHTML += itemHtml;
+                    });
+                });
+            } catch (error) {
+                console.error("Error fetching personal reviews:", error);
+                myReviewsList.innerHTML = '<p class="text-red-500">查詢失敗，請重試。</p>';
+            }
+        });
+        
+        // Function to handle the export
+        async function handleExport() {
+            if (!isAuthReady) {
+                showExportStatus('系統正在載入中，請稍候再試。', true);
+                return;
+            }
+
+            showExportStatus('正在準備匯出檔案...', false);
+
+            const reviewsCollectionPath = `/artifacts/${appId}/public/data/student-reviews`;
+            const reviewsRef = collection(db, reviewsCollectionPath);
+            try {
+                const querySnapshot = await getDocs(reviewsRef);
+                const allReviews = [];
+                const reviewers = new Set();
+                
+                querySnapshot.forEach((doc) => {
+                    const review = doc.data();
+                    allReviews.push(review);
+                    reviewers.add(review.reviewerName);
+                });
+
+                // Generate CSV data for all reviews
+                const csvHeader = '評分者,發表者,分數,時間\n';
+                const csvRows = allReviews.map(review => {
+                    const reviewerName = `"${review.reviewerName.replace(/"/g, '""')}"`;
+                    const presenterName = `"${review.presenterName.replace(/"/g, '""')}"`;
+                    const score = review.score;
+                    const timestamp = review.timestamp.toDate().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+                    return `${reviewerName},${presenterName},${score},${timestamp}`;
+                });
+
+                const fullCsvData = csvHeader + csvRows.join('\n');
+                const fullCsvBlob = new Blob([fullCsvData], { type: 'text/csv;charset=utf-8;' });
+                const fullCsvUrl = URL.createObjectURL(fullCsvBlob);
+                const fullCsvLink = document.createElement('a');
+                fullCsvLink.href = fullCsvUrl;
+                fullCsvLink.download = `學生互評成績_${new Date().toISOString().slice(0, 10)}.csv`;
+                document.body.appendChild(fullCsvLink);
+                fullCsvLink.click();
+                document.body.removeChild(fullCsvLink);
+                URL.revokeObjectURL(fullCsvUrl);
+                
+                showExportStatus('匯出成功！檔案已下載。', false);
+
+            } catch (error) {
+                console.error("Error exporting data: ", error);
+                showExportStatus('匯出成績時發生錯誤。', true);
+            }
+        }
+        
+        // Event listener for the show leaderboard button
+        showLeaderboardBtn.addEventListener('click', () => {
+            const enteredPassword = passwordInput.value;
+            if (enteredPassword === LEADERBOARD_PASSWORD) {
+                leaderboardContainer.classList.remove('hidden');
+                showPasswordMessage('密碼正確！排行榜已顯示。', false);
+                passwordInput.value = ''; // Clear the password input
+            } else {
+                showPasswordMessage('密碼錯誤，請再試一次。', true);
+            }
+        });
+
+        // Event listener for export button
+        exportReviewsBtn.addEventListener('click', handleExport);
+
+        // Initialize everything
+        window.onload = () => {
+            initializeFirebase();
+        };
+    </script>
+</body>
+</html>
 
