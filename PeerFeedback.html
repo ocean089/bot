@@ -199,7 +199,7 @@
         // IMPORTANT: The following global variables are provided by the hosting environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
+            apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
           authDomain: "gen-lang-client-0900734125.firebaseapp.com",
           projectId: "gen-lang-client-0900734125",
           storageBucket: "gen-lang-client-0900734125.firebasestorage.app",
@@ -321,24 +321,16 @@ apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
             const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
             const coursesRef = collection(db, coursesCollectionPath);
 
-            unsubscribeCourses = onSnapshot(coursesRef, async (querySnapshot) => {
+            unsubscribeCourses = onSnapshot(coursesRef, (querySnapshot) => {
                 courseSelect.innerHTML = '<option value="">請選擇一個課程...</option>';
-                const courseDocs = querySnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
-
-                // Assign persistent colors to courses if they don't have one
-                for (const doc of courseDocs) {
-                    if (!doc.data.color) {
-                        const newColor = colorPalette[courseDocs.findIndex(d => d.id === doc.id) % colorPalette.length];
-                        const courseDocRef = doc(db, coursesCollectionPath, doc.id);
-                        await setDoc(courseDocRef, { color: newColor }, { merge: true });
-                    }
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
                     const option = document.createElement('option');
-                    option.value = doc.data.courseId;
-                    option.textContent = doc.data.courseName;
-                    option.dataset.color = doc.data.color; // Store color in data attribute
+                    option.value = data.courseId;
+                    option.textContent = data.courseName;
+                    option.dataset.color = data.color; // Read color from doc
                     courseSelect.appendChild(option);
-                }
-
+                });
             }, (error) => {
                 console.error("Error fetching courses:", error);
             });
