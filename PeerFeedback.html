@@ -199,7 +199,7 @@
         // IMPORTANT: The following global variables are provided by the hosting environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-           apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
+apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
           authDomain: "gen-lang-client-0900734125.firebaseapp.com",
           projectId: "gen-lang-client-0900734125",
           storageBucket: "gen-lang-client-0900734125.firebasestorage.app",
@@ -335,6 +335,7 @@
                     const option = document.createElement('option');
                     option.value = doc.data.courseId;
                     option.textContent = doc.data.courseName;
+                    option.dataset.color = doc.data.color; // Store color in data attribute
                     courseSelect.appendChild(option);
                 }
 
@@ -639,24 +640,20 @@
         // Event listener for course selection change
         courseSelect.addEventListener('change', async () => {
             currentCourseId = courseSelect.value;
-            const selectedCourseName = courseSelect.options[courseSelect.selectedIndex].text;
+            const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+            const selectedCourseName = selectedOption.textContent;
+            const selectedColor = selectedOption.dataset.color;
             
             if (currentCourseId) {
                 setupRealtimeLeaderboard();
                 courseSelectMessage.classList.add('hidden');
                 
-                // Fetch course data to get the color
-                const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
-                const courseDocRef = doc(db, coursesCollectionPath, currentCourseId);
-                const courseDoc = await getDoc(courseDocRef);
-                const courseData = courseDoc.data();
-                
                 // Remove existing color classes from the body
                 document.body.className = document.body.className.split(' ').filter(c => !c.startsWith('bg-')).join(' ');
                 
                 // Add the new background color class to the body
-                if (courseData.color) {
-                    document.body.classList.add(courseData.color);
+                if (selectedColor) {
+                    document.body.classList.add(selectedColor);
                 }
 
                 // Update confirmation section
