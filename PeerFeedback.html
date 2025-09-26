@@ -19,6 +19,16 @@
 <body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
     <div class="max-w-4xl w-full">
         <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-800">學生發表互評系統</h1>
+
+        <!-- Course Selection Dropdown -->
+        <div class="mb-6 text-center">
+            <label for="course-select" class="block text-gray-700 font-medium mb-2">請選擇課程</label>
+            <select id="course-select" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                <option value="">請選擇一個課程...</option>
+            </select>
+            <div id="course-select-message" class="mt-2 text-sm text-red-500 hidden"></div>
+        </div>
+
         <div id="auth-status" class="text-center text-sm mb-4 text-gray-500">
             <!-- Auth status will be displayed here -->
         </div>
@@ -44,25 +54,30 @@
                         <div class="flex flex-wrap gap-4 justify-between">
                             <div class="flex-1 min-w-0">
                                 <input type="radio" id="score-1" name="score" value="1" class="hidden peer" required>
-                                <label for="score-1" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 transition duration-200 hover:bg-red-100 hover:border-red-500">1</label>
+                                <label for="score-1" class="block w-full py-4 text-xl text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 transition duration-200 hover:bg-red-100 hover:border-red-500">1</label>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <input type="radio" id="score-2" name="score" value="2" class="hidden peer">
-                                <label for="score-2" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-orange-500 peer-checked:text-white peer-checked:border-orange-500 transition duration-200 hover:bg-orange-100 hover:border-orange-500">2</label>
+                                <label for="score-2" class="block w-full py-4 text-xl text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-orange-500 peer-checked:text-white peer-checked:border-orange-500 transition duration-200 hover:bg-orange-100 hover:border-orange-500">2</label>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <input type="radio" id="score-3" name="score" value="3" class="hidden peer">
-                                <label for="score-3" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-yellow-500 peer-checked:text-white peer-checked:border-yellow-500 transition duration-200 hover:bg-yellow-100 hover:border-yellow-500">3</label>
+                                <label for="score-3" class="block w-full py-4 text-xl text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-yellow-500 peer-checked:text-white peer-checked:border-yellow-500 transition duration-200 hover:bg-yellow-100 hover:border-yellow-500">3</label>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <input type="radio" id="score-4" name="score" value="4" class="hidden peer">
-                                <label for="score-4" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-lime-500 peer-checked:text-white peer-checked:border-lime-500 transition duration-200 hover:bg-lime-100 hover:border-lime-500">4</label>
+                                <label for="score-4" class="block w-full py-4 text-xl text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-lime-500 peer-checked:text-white peer-checked:border-lime-500 transition duration-200 hover:bg-lime-100 hover:border-lime-500">4</label>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <input type="radio" id="score-5" name="score" value="5" class="hidden peer">
-                                <label for="score-5" class="block w-full py-3 text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500 transition duration-200 hover:bg-green-100 hover:border-green-500">5</label>
+                                <label for="score-5" class="block w-full py-4 text-xl text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500 transition duration-200 hover:bg-green-100 hover:border-green-500">5</label>
                             </div>
                         </div>
+                    </div>
+                    <div>
+                        <label for="review-text" class="block text-gray-700 font-medium mb-2">文字建議 (可選)</label>
+                        <textarea id="review-text" rows="6" placeholder="請在此輸入您的建議和心得..."
+                                  class="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"></textarea>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105">
                         提交評分
@@ -90,26 +105,48 @@
                 <!-- Management Controls -->
                 <div class="space-y-6">
                     <div>
-                        <label for="password-input" class="block text-gray-700 font-medium mb-2">顯示排行榜</label>
+                        <h3 class="text-xl font-semibold mb-2">課程管理</h3>
                         <div class="flex">
-                            <input type="password" id="password-input" placeholder="請輸入密碼"
+                            <input type="password" id="admin-password-input" placeholder="請輸入密碼"
                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
-                            <button id="show-leaderboard-btn" class="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
-                                開啟
+                            <button id="show-admin-panel-btn" class="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                                驗證
                             </button>
                         </div>
+                        <div id="admin-password-message" class="mt-2 p-2 text-center rounded-lg hidden" role="alert"></div>
                     </div>
-                    <div id="password-message" class="mt-2 p-2 text-center rounded-lg hidden" role="alert"></div>
+                    
+                    <div id="admin-panel" class="hidden space-y-4">
+                        <div class="space-y-2">
+                            <label for="new-course-name-input" class="block text-gray-700 font-medium">新增課程</label>
+                            <div class="flex">
+                                <input type="text" id="new-course-name-input" placeholder="例如：科學報告"
+                                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                                <button id="add-course-btn" class="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300">
+                                    新增
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <h4 class="font-semibold text-gray-700">管理排行榜</h4>
+                            <div class="flex">
+                                <button id="show-leaderboard-btn" class="flex-1 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                                    顯示排行榜
+                                </button>
+                                <button id="export-reviews" class="flex-1 ml-2 bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300">
+                                    匯出成績 (.csv)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-                    <button id="export-reviews" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300 transform hover:scale-105">
-                        匯出所有成績 (.csv)
-                    </button>
                     <div id="export-status" class="mt-4 p-4 rounded-lg text-center hidden" role="alert"></div>
                 </div>
 
                 <!-- Personal Reviews Section -->
                 <div>
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">查詢學生評分紀錄</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">查詢個人評分紀錄</h3>
                     <div class="mb-4">
                         <label for="my-name-input" class="block text-gray-700 font-medium mb-2">輸入學生姓名以查詢</label>
                         <div class="flex">
@@ -132,13 +169,12 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs, doc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // IMPORTANT: The following global variables are provided by the hosting environment.
-        // We'll add a fallback for `firebaseConfig` and `initialAuthToken` to prevent errors.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-          apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
+            apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
           authDomain: "gen-lang-client-0900734125.firebaseapp.com",
           projectId: "gen-lang-client-0900734125",
           storageBucket: "gen-lang-client-0900734125.firebasestorage.app",
@@ -147,18 +183,21 @@
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Set Firebase debug log level
         setLogLevel('debug');
 
         let db;
         let auth;
         let userId = 'anonymous';
-        const LEADERBOARD_PASSWORD = "popoyu";
+        const ADMIN_PASSWORD = "popoyu";
+        let currentCourseId = '';
 
         const authStatusEl = document.getElementById('auth-status');
+        const courseSelect = document.getElementById('course-select');
+        const courseSelectMessage = document.getElementById('course-select-message');
         const form = document.getElementById('review-form');
         const reviewerNameInput = document.getElementById('reviewer-name');
         const presenterNameInput = document.getElementById('presenter-name');
+        const reviewTextarea = document.getElementById('review-text');
         const leaderboardList = document.getElementById('leaderboard-list');
         const messageBox = document.getElementById('message-box');
         const myNameInput = document.getElementById('my-name-input');
@@ -167,53 +206,48 @@
         const exportReviewsBtn = document.getElementById('export-reviews');
         const exportStatusEl = document.getElementById('export-status');
         const leaderboardContainer = document.getElementById('leaderboard-container');
-        const passwordInput = document.getElementById('password-input');
+        const adminPasswordInput = document.getElementById('admin-password-input');
+        const showAdminPanelBtn = document.getElementById('show-admin-panel-btn');
+        const adminPasswordMessage = document.getElementById('admin-password-message');
+        const adminPanel = document.getElementById('admin-panel');
+        const newCourseNameInput = document.getElementById('new-course-name-input');
+        const addCourseBtn = document.getElementById('add-course-btn');
         const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
-        const passwordMessage = document.getElementById('password-message');
-
+        
+        let unsubscribeLeaderboard = null;
+        let unsubscribeCourses = null;
         let isAuthReady = false;
 
-        // Display a message to the user
         function showMessage(text, isError = false) {
             messageBox.textContent = text;
             messageBox.classList.remove('hidden');
-            if (isError) {
-                messageBox.className = 'mt-4 p-4 rounded-lg text-center bg-red-100 text-red-700';
-            } else {
-                messageBox.className = 'mt-4 p-4 rounded-lg text-center bg-green-100 text-green-700';
-            }
+            messageBox.className = `mt-4 p-4 rounded-lg text-center ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
         }
-
-        // Display a message for the export status
+        
         function showExportStatus(text, isError = false) {
             exportStatusEl.textContent = text;
             exportStatusEl.classList.remove('hidden');
-            if (isError) {
-                exportStatusEl.className = 'mt-4 p-4 rounded-lg text-center bg-red-100 text-red-700';
-            } else {
-                exportStatusEl.className = 'mt-4 p-4 rounded-lg text-center bg-green-100 text-green-700';
-            }
+            exportStatusEl.className = `mt-4 p-4 rounded-lg text-center ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
         }
 
-        // Display a message for the password check
         function showPasswordMessage(text, isError = false) {
-            passwordMessage.textContent = text;
-            passwordMessage.classList.remove('hidden');
-            if (isError) {
-                passwordMessage.className = 'mt-2 p-2 text-center rounded-lg bg-red-100 text-red-700';
-            } else {
-                passwordMessage.className = 'mt-2 p-2 text-center rounded-lg bg-green-100 text-green-700';
-            }
+            adminPasswordMessage.textContent = text;
+            adminPasswordMessage.classList.remove('hidden');
+            adminPasswordMessage.className = `mt-2 p-2 text-center rounded-lg ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
         }
 
-        // Initialize Firebase and set up auth listener
-        async function initializeFirebase() {
-            if (!firebaseConfig) {
-                console.error("Firebase config is missing. Cannot initialize Firebase.");
-                showMessage('錯誤: 缺少 Firebase 設定檔，請檢查環境。', true);
-                return;
-            }
+        function showCourseSelectMessage(text, isError = true) {
+            courseSelectMessage.textContent = text;
+            courseSelectMessage.classList.remove('hidden');
+            courseSelectMessage.className = `mt-2 text-sm ${isError ? 'text-red-500' : 'text-gray-500'}`;
+        }
+        
+        // Sanitize course name to be a valid collection ID
+        function sanitizeCourseName(name) {
+            return name.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+        }
 
+        async function initializeFirebase() {
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -225,7 +259,7 @@
                         authStatusEl.textContent = `使用者 ID: ${userId}`;
                         isAuthReady = true;
                         console.log('User signed in with UID:', userId);
-                        setupRealtimeLeaderboard();
+                        setupRealtimeCoursesListener();
                     } else {
                         isAuthReady = true;
                         console.log('User signed out.');
@@ -246,20 +280,52 @@
                 showMessage('錯誤: 無法初始化系統，請檢查控制台。', true);
             }
         }
+        
+        // Listen for changes in the courses collection
+        function setupRealtimeCoursesListener() {
+            if (unsubscribeCourses) {
+                unsubscribeCourses();
+            }
+
+            const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
+            const coursesRef = collection(db, coursesCollectionPath);
+
+            unsubscribeCourses = onSnapshot(coursesRef, (querySnapshot) => {
+                courseSelect.innerHTML = '<option value="">請選擇一個課程...</option>';
+                querySnapshot.forEach((doc) => {
+                    const course = doc.data();
+                    const option = document.createElement('option');
+                    option.value = course.courseId;
+                    option.textContent = course.courseName;
+                    courseSelect.appendChild(option);
+                });
+            }, (error) => {
+                console.error("Error fetching courses:", error);
+            });
+        }
 
         // Setup Firestore real-time listener for the leaderboard
         function setupRealtimeLeaderboard() {
+            if (unsubscribeLeaderboard) {
+                unsubscribeLeaderboard(); // Unsubscribe from the old listener
+            }
+
             if (!isAuthReady) {
                 console.log('Authentication not ready. Retrying setupRealtimeLeaderboard...');
                 setTimeout(setupRealtimeLeaderboard, 500);
                 return;
             }
 
-            const reviewsCollectionPath = `/artifacts/${appId}/public/data/student-reviews`;
+            if (!currentCourseId) {
+                leaderboardList.innerHTML = '<div class="text-center text-gray-500">請先選擇一個課程。</div>';
+                return;
+            }
+            
+            const reviewsCollectionPath = `/artifacts/${appId}/public/data/${currentCourseId}`;
             const reviewsRef = collection(db, reviewsCollectionPath);
             const q = query(reviewsRef);
 
-            onSnapshot(q, (querySnapshot) => {
+            unsubscribeLeaderboard = onSnapshot(q, (querySnapshot) => {
                 const presenters = {};
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
@@ -326,9 +392,15 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            if (!currentCourseId) {
+                showCourseSelectMessage('請先從下拉式選單選擇一個課程！');
+                return;
+            }
+
             const reviewerName = reviewerNameInput.value.trim();
             const presenterName = presenterNameInput.value.trim();
             const selectedScore = document.querySelector('input[name="score"]:checked');
+            const reviewText = reviewTextarea.value.trim();
 
             if (!reviewerName || !presenterName || !selectedScore) {
                 showMessage('請輸入您的姓名、發表者姓名並選擇評分!', true);
@@ -340,7 +412,7 @@
                 return;
             }
 
-            const reviewsCollectionPath = `/artifacts/${appId}/public/data/student-reviews`;
+            const reviewsCollectionPath = `/artifacts/${appId}/public/data/${currentCourseId}`;
             const reviewsRef = collection(db, reviewsCollectionPath);
 
             try {
@@ -348,6 +420,7 @@
                     reviewerName: reviewerName,
                     presenterName: presenterName,
                     score: parseInt(selectedScore.value, 10),
+                    reviewText: reviewText,
                     timestamp: new Date()
                 });
                 showMessage('評分已成功提交！', false);
@@ -367,14 +440,19 @@
                 return;
             }
 
+            if (!currentCourseId) {
+                myReviewsList.innerHTML = '<p class="text-red-500">請先選擇一個課程！</p>';
+                return;
+            }
+
             if (!isAuthReady) {
                 myReviewsList.innerHTML = '<p class="text-gray-500">系統正在載入中，請稍候再試。</p>';
                 return;
             }
 
             myReviewsList.innerHTML = '<p class="text-gray-500">正在查詢評分記錄...</p>';
-
-            const reviewsCollectionPath = `/artifacts/${appId}/public/data/student-reviews`;
+            
+            const reviewsCollectionPath = `/artifacts/${appId}/public/data/${currentCourseId}`;
             const reviewsRef = collection(db, reviewsCollectionPath);
             const q = query(reviewsRef, where("reviewerName", "==", myName));
 
@@ -395,6 +473,7 @@
                                     <span class="text-lg ml-2 font-bold text-blue-600">${data.score}</span>
                                     <span class="text-sm text-gray-500">分</span>
                                 </p>
+                                ${data.reviewText ? `<p class="mt-2 text-sm text-gray-600">建議: ${data.reviewText}</p>` : ''}
                             </div>
                         `;
                         myReviewsList.innerHTML += itemHtml;
@@ -412,30 +491,33 @@
                 showExportStatus('系統正在載入中，請稍候再試。', true);
                 return;
             }
+            
+            if (!currentCourseId) {
+                showExportStatus('請先選擇一個課程！', true);
+                return;
+            }
 
             showExportStatus('正在準備匯出檔案...', false);
 
-            const reviewsCollectionPath = `/artifacts/${appId}/public/data/student-reviews`;
+            const reviewsCollectionPath = `/artifacts/${appId}/public/data/${currentCourseId}`;
             const reviewsRef = collection(db, reviewsCollectionPath);
             try {
                 const querySnapshot = await getDocs(reviewsRef);
                 const allReviews = [];
-                const reviewers = new Set();
                 
                 querySnapshot.forEach((doc) => {
-                    const review = doc.data();
-                    allReviews.push(review);
-                    reviewers.add(review.reviewerName);
+                    allReviews.push(doc.data());
                 });
 
                 // Generate CSV data for all reviews
-                const csvHeader = '評分者,發表者,分數,時間\n';
+                const csvHeader = '評分者,發表者,分數,建議,時間\n';
                 const csvRows = allReviews.map(review => {
                     const reviewerName = `"${review.reviewerName.replace(/"/g, '""')}"`;
                     const presenterName = `"${review.presenterName.replace(/"/g, '""')}"`;
                     const score = review.score;
+                    const reviewText = `"${(review.reviewText || '').replace(/"/g, '""')}"`;
                     const timestamp = review.timestamp.toDate().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-                    return `${reviewerName},${presenterName},${score},${timestamp}`;
+                    return `${reviewerName},${presenterName},${score},${reviewText},${timestamp}`;
                 });
 
                 const fullCsvData = csvHeader + csvRows.join('\n');
@@ -443,7 +525,7 @@
                 const fullCsvUrl = URL.createObjectURL(fullCsvBlob);
                 const fullCsvLink = document.createElement('a');
                 fullCsvLink.href = fullCsvUrl;
-                fullCsvLink.download = `學生互評成績_${new Date().toISOString().slice(0, 10)}.csv`;
+                fullCsvLink.download = `學生互評成績_${currentCourseId}_${new Date().toISOString().slice(0, 10)}.csv`;
                 document.body.appendChild(fullCsvLink);
                 fullCsvLink.click();
                 document.body.removeChild(fullCsvLink);
@@ -457,15 +539,61 @@
             }
         }
         
-        // Event listener for the show leaderboard button
-        showLeaderboardBtn.addEventListener('click', () => {
-            const enteredPassword = passwordInput.value;
-            if (enteredPassword === LEADERBOARD_PASSWORD) {
-                leaderboardContainer.classList.remove('hidden');
-                showPasswordMessage('密碼正確！排行榜已顯示。', false);
-                passwordInput.value = ''; // Clear the password input
+        // Event listener for the show admin panel button
+        showAdminPanelBtn.addEventListener('click', () => {
+            const enteredPassword = adminPasswordInput.value;
+            if (enteredPassword === ADMIN_PASSWORD) {
+                adminPanel.classList.remove('hidden');
+                adminPasswordMessage.classList.add('hidden');
             } else {
                 showPasswordMessage('密碼錯誤，請再試一次。', true);
+            }
+        });
+        
+        // Event listener for adding a new course
+        addCourseBtn.addEventListener('click', async () => {
+            const courseName = newCourseNameInput.value.trim();
+            if (!courseName) {
+                showPasswordMessage('請輸入有效的課程名稱！', true);
+                return;
+            }
+
+            const courseId = sanitizeCourseName(courseName);
+            const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
+            const coursesRef = collection(db, coursesCollectionPath);
+            const courseDoc = doc(coursesRef, courseId);
+            
+            try {
+                await setDoc(courseDoc, {
+                    courseName: courseName,
+                    courseId: courseId,
+                    timestamp: new Date()
+                }, { merge: true });
+                showPasswordMessage('課程已成功新增！', false);
+                newCourseNameInput.value = '';
+            } catch (error) {
+                console.error("Error adding course:", error);
+                showPasswordMessage('新增課程時發生錯誤。', true);
+            }
+        });
+        
+        // Event listener for course selection change
+        courseSelect.addEventListener('change', () => {
+            currentCourseId = courseSelect.value;
+            if (currentCourseId) {
+                setupRealtimeLeaderboard();
+                courseSelectMessage.classList.add('hidden');
+            } else {
+                leaderboardContainer.classList.add('hidden');
+            }
+        });
+
+        // Event listener for showing the leaderboard
+        showLeaderboardBtn.addEventListener('click', () => {
+            if (currentCourseId) {
+                leaderboardContainer.classList.remove('hidden');
+            } else {
+                showPasswordMessage('請先選擇一個課程！', true);
             }
         });
 
