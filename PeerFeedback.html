@@ -99,7 +99,7 @@
                             </button>
                         </div>
                     </div>
-                    <div id="password-message" class="mt-2 p-4 rounded-lg text-center hidden" role="alert"></div>
+                    <div id="password-message" class="mt-2 p-2 text-center rounded-lg hidden" role="alert"></div>
 
                     <button id="export-reviews" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300 transform hover:scale-105">
                         匯出所有成績 (.csv)
@@ -136,7 +136,7 @@
 
         // IMPORTANT: The following global variables are provided by the hosting environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         // Set Firebase debug log level
@@ -200,6 +200,12 @@
 
         // Initialize Firebase and set up auth listener
         async function initializeFirebase() {
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing. Cannot initialize Firebase.");
+                showMessage('錯誤: 缺少 Firebase 設定檔，請檢查環境。', true);
+                return;
+            }
+
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -459,10 +465,7 @@
         exportReviewsBtn.addEventListener('click', handleExport);
 
         // Initialize everything
-        window.onload = () => {
-            initializeFirebase();
-        };
+        window.onload = initializeFirebase;
     </script>
 </body>
 </html>
-
