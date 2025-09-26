@@ -17,7 +17,7 @@
     </style>
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
-    <div class="max-w-4xl w-full">
+    <div class="max-w-6xl w-full">
         <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-800">學生發表互評系統</h1>
 
         <!-- Course Selection Dropdown -->
@@ -88,7 +88,7 @@
 
             <!-- Leaderboard Section -->
             <div id="leaderboard-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-200 hidden">
-                <h2 class="text-2xl font-semibold mb-6 text-gray-700">排行榜 (前10名)</h2>
+                <h2 class="text-2xl font-semibold mb-6 text-gray-700">排行榜 (前20名)</h2>
                 <div id="leaderboard-list" class="space-y-4">
                     <!-- Leaderboard items will be inserted here dynamically -->
                     <div class="text-center text-gray-500">
@@ -174,7 +174,7 @@
         // IMPORTANT: The following global variables are provided by the hosting environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
+         apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
           authDomain: "gen-lang-client-0900734125.firebaseapp.com",
           projectId: "gen-lang-client-0900734125",
           storageBucket: "gen-lang-client-0900734125.firebasestorage.app",
@@ -326,11 +326,26 @@
             const q = query(reviewsRef);
 
             unsubscribeLeaderboard = onSnapshot(q, (querySnapshot) => {
-                const presenters = {};
+                // To store only the latest review from each reviewer for a specific presenter
+                const latestReviews = {};
+
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    const name = data.presenterName;
-                    const score = parseInt(data.score, 10);
+                    const key = `${data.reviewerName}-${data.presenterName}`;
+                    const timestamp = data.timestamp.toDate();
+
+                    if (!latestReviews[key] || timestamp > latestReviews[key].timestamp) {
+                        latestReviews[key] = {
+                            ...data,
+                            timestamp
+                        };
+                    }
+                });
+
+                const presenters = {};
+                Object.values(latestReviews).forEach(review => {
+                    const name = review.presenterName;
+                    const score = parseInt(review.score, 10);
 
                     if (!presenters[name]) {
                         presenters[name] = { totalScore: 0, reviewCount: 0 };
@@ -349,9 +364,9 @@
                 });
 
                 leaderboardData.sort((a, b) => b.totalScore - a.totalScore);
-                const top10 = leaderboardData.slice(0, 10);
+                const top20 = leaderboardData.slice(0, 20);
 
-                renderLeaderboard(top10);
+                renderLeaderboard(top20);
             }, (error) => {
                 console.error("Error fetching leaderboard data: ", error);
                 showMessage('錯誤: 無法載入排行榜。', true);
