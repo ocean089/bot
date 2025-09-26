@@ -6,13 +6,32 @@
     <title>康樂國小四年乙班學生發表互評系統</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'blue-100': '#dbeafe',
+                        'green-100': '#dcfce7',
+                        'yellow-100': '#fef9c3',
+                        'red-100': '#fee2e2',
+                        'indigo-100': '#e0e7ff',
+                        'purple-100': '#f3e8ff',
+                        'pink-100': '#fce7f3',
+                        'gray-100': '#f3f4f6',
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Use Inter font -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #f3f4f6; /* Default background color */
             color: #1f2937;
+            transition: background-color 0.5s ease-in-out;
         }
     </style>
 </head>
@@ -30,7 +49,7 @@
         </div>
 
         <!-- Course Confirmation Section -->
-        <div id="course-confirmation" class="mb-6 p-4 rounded-xl shadow-md border-2 border-gray-300 transition duration-300 ease-in-out text-center hidden">
+        <div id="course-confirmation" class="mb-6 p-4 rounded-xl shadow-md border-2 border-gray-300 text-center hidden">
             <p class="text-lg font-bold text-gray-700">您已選擇課程:</p>
             <p id="selected-course-name" class="text-2xl font-extrabold mt-1 text-gray-800"></p>
         </div>
@@ -43,7 +62,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Review Submission Form -->
             <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-200">
-                <h2 class="text-2xl font-semibold mb-6 text-gray-700">提交評論</h2>
+                <h2 class="text-2xl font-semibold mb-6 text-gray-700">提交評分</h2>
                 <form id="review-form" class="space-y-6">
                     <div>
                         <label for="reviewer-name" class="block text-gray-700 font-medium mb-2">您的姓名 (評分者)</label>
@@ -175,7 +194,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs, doc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs, doc, setDoc, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // IMPORTANT: The following global variables are provided by the hosting environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -186,6 +205,7 @@
           storageBucket: "gen-lang-client-0900734125.firebasestorage.app",
           messagingSenderId: "94701383625",
           appId: "1:94701383625:web:62d3c3e6faf8d28fa34218"
+
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
@@ -631,13 +651,23 @@
                 const courseDoc = await getDoc(courseDocRef);
                 const courseData = courseDoc.data();
                 
+                // Remove existing color classes from the body
+                document.body.className = document.body.className.split(' ').filter(c => !c.startsWith('bg-')).join(' ');
+                
+                // Add the new background color class to the body
+                if (courseData.color) {
+                    document.body.classList.add(courseData.color);
+                }
+
                 // Update confirmation section
                 selectedCourseNameEl.textContent = selectedCourseName;
-                courseConfirmationEl.classList.remove('hidden', ...colorPalette);
-                courseConfirmationEl.classList.add(courseData.color);
+                courseConfirmationEl.classList.remove('hidden');
             } else {
                 leaderboardContainer.classList.add('hidden');
                 courseConfirmationEl.classList.add('hidden');
+                // Revert to default background color
+                document.body.className = document.body.className.split(' ').filter(c => !c.startsWith('bg-')).join(' ');
+                document.body.classList.add('bg-gray-100');
             }
         });
 
