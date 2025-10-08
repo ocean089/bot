@@ -33,6 +33,19 @@
             color: #1f2937;
             transition: background-color 0.5s ease-in-out;
         }
+        /* Custom styles for the seat buttons */
+        #presenter-seat-grid button {
+            background-color: white;
+            color: #4b5563; /* text-gray-700 */
+        }
+        #presenter-seat-grid button.active {
+            background-color: #2563eb; /* bg-blue-600 */
+            color: white;
+            border-color: #2563eb;
+        }
+        #presenter-seat-grid button:hover:not(.active) {
+             background-color: #eff6ff; /* hover:bg-blue-100 */
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
@@ -69,11 +82,18 @@
                         <input type="text" id="reviewer-name" placeholder="請輸入您的姓名" required
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
                     </div>
+                    
+                    <!-- UPDATED: Presenter Name changed to clickable grid for seat number (1-30) -->
                     <div>
-                        <label for="presenter-name" class="block text-gray-700 font-medium mb-2">發表者姓名</label>
-                        <input type="text" id="presenter-name" placeholder="請輸入發表者姓名" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                        <label class="block text-gray-700 font-medium mb-2">發表者座號 (1-30號)</label>
+                        <!-- Button Grid (3 rows x 10 columns) -->
+                        <div id="presenter-seat-grid" class="grid grid-cols-10 gap-2 p-2 border border-gray-300 rounded-lg bg-gray-50">
+                            <!-- Buttons will be populated by JavaScript -->
+                        </div>
+                        <!-- Hidden field to hold the selected value for form submission -->
+                        <input type="hidden" id="presenter-name-value" name="presenter-name" required>
                     </div>
+
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">評分 (1-4分)</label>
                         <div class="flex flex-wrap gap-4 justify-between">
@@ -223,7 +243,12 @@
         const selectedCourseNameEl = document.getElementById('selected-course-name');
         const form = document.getElementById('review-form');
         const reviewerNameInput = document.getElementById('reviewer-name');
-        const presenterNameInput = document.getElementById('presenter-name');
+        
+        // NEW: References for the button grid
+        const presenterSeatGrid = document.getElementById('presenter-seat-grid');
+        const presenterNameValueInput = document.getElementById('presenter-name-value'); // Hidden input to store selection
+        let selectedPresenterSeat = null;
+
         const reviewTextarea = document.getElementById('review-text');
         const leaderboardList = document.getElementById('leaderboard-list');
         const messageBox = document.getElementById('message-box');
@@ -275,6 +300,38 @@
         // Sanitize course name to be a valid collection ID
         function sanitizeCourseName(name) {
             return name.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+        }
+
+        // Function to render the 30 seat buttons (replacing the dropdown population)
+        function renderPresenterGrid() {
+            presenterSeatGrid.innerHTML = '';
+            for (let i = 1; i <= 30; i++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.seat = i;
+                button.textContent = i;
+                // Base classes defined in custom <style> tag for easier management of active state
+                button.className = 'w-full py-2 text-sm font-semibold border border-gray-300 rounded-md transition duration-150';
+                
+                // Add click listener
+                button.addEventListener('click', function() {
+                    // 1. Clear previous selection highlight
+                    document.querySelectorAll('#presenter-seat-grid button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+
+                    // 2. Highlight current selection
+                    this.classList.add('active');
+
+                    // 3. Update state and hidden input
+                    selectedPresenterSeat = i.toString();
+                    presenterNameValueInput.value = selectedPresenterSeat;
+                    // Reset custom validity to allow form submission
+                    presenterNameValueInput.setCustomValidity(''); 
+                });
+
+                presenterSeatGrid.appendChild(button);
+            }
         }
 
         async function initializeFirebase() {
@@ -414,6 +471,9 @@
 
             data.forEach((item, index) => {
                 const rank = index + 1;
+                // Since presenter name is now seat number, we adjust the display text
+                const presenterDisplay = item.name.endsWith('號') ? item.name : `${item.name}號`;
+                
                 const podiumColor = rank === 1 ? 'bg-amber-400' : rank === 2 ? 'bg-zinc-400' : rank === 3 ? 'bg-amber-600' : 'bg-white';
                 const podiumText = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
 
@@ -421,7 +481,7 @@
                     <div class="flex items-center space-x-4 p-4 rounded-xl shadow-md border ${podiumColor} transition duration-300 transform hover:scale-[1.02]">
                         <div class="text-xl font-bold w-8 text-center text-gray-800">${rank}.</div>
                         <div class="flex-1">
-                            <h3 class="font-bold text-lg text-gray-800">${item.name} ${podiumText}</h3>
+                            <h3 class="font-bold text-lg text-gray-800">${presenterDisplay} ${podiumText}</h3>
                             <p class="text-sm text-gray-600">總分: ${item.totalScore} | 評論數: ${item.reviewCount}</p>
                         </div>
                         <div class="text-right">
@@ -444,12 +504,13 @@
             }
 
             const reviewerName = reviewerNameInput.value.trim();
-            const presenterName = presenterNameInput.value.trim();
+            const presenterName = presenterNameValueInput.value.trim(); // Reads value from hidden input
             const selectedScore = document.querySelector('input[name="score"]:checked');
             const reviewText = reviewTextarea.value.trim();
 
+            // Check if presenterName is empty (which means no button was clicked)
             if (!reviewerName || !presenterName || !selectedScore) {
-                showMessage('請輸入您的姓名、發表者姓名並選擇評分!', true);
+                showMessage('請輸入您的姓名、選擇發表者座號並選擇評分!', true);
                 return;
             }
 
@@ -464,14 +525,26 @@
             try {
                 await addDoc(reviewsRef, {
                     reviewerName: reviewerName,
-                    presenterName: presenterName,
+                    presenterName: presenterName + '號', // Store as "1號", "2號", etc. for clarity in Firestore/Export
                     score: parseInt(selectedScore.value, 10),
                     reviewText: reviewText,
                     timestamp: new Date()
                 });
+                
                 showMessage('評分已成功提交！', false);
+                
+                // Keep reviewer name, reset score and presenter selection
+                const previousReviewerName = reviewerName;
                 form.reset();
-                reviewerNameInput.value = reviewerName; // Keep reviewer name for next review
+                reviewerNameInput.value = previousReviewerName; 
+                
+                // Reset button state
+                selectedPresenterSeat = null;
+                presenterNameValueInput.value = '';
+                document.querySelectorAll('#presenter-seat-grid button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
             } catch (error) {
                 console.error("Error adding document: ", error);
                 showMessage('提交評分時發生錯誤，請重試。', true);
@@ -556,10 +629,11 @@
                 });
 
                 // Generate CSV data for all reviews
-                const csvHeader = '評分者,發表者,分數,建議,時間\n';
+                const csvHeader = '評分者,發表者座號,分數,建議,時間\n';
                 const csvRows = allReviews.map(review => {
                     const reviewerName = `"${review.reviewerName.replace(/"/g, '""')}"`;
-                    const presenterName = `"${review.presenterName.replace(/"/g, '""')}"`;
+                    // presenterName is now stored as "1號", "2號" etc.
+                    const presenterName = `"${review.presenterName.replace(/"/g, '""')}"`; 
                     const score = review.score;
                     const reviewText = `"${(review.reviewText || '').replace(/"/g, '""')}"`;
                     const timestamp = review.timestamp.toDate().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
@@ -671,8 +745,11 @@
         // Event listener for export button
         exportReviewsBtn.addEventListener('click', handleExport);
 
-        // Initialize everything
-        window.onload = initializeFirebase;
+        // Initialize everything and render the button grid
+        window.onload = () => {
+            renderPresenterGrid();
+            initializeFirebase();
+        };
     </script>
 </body>
 </html>
