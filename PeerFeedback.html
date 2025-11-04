@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>學生互評系統</title>
+    <title>學生發表互評系統</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -19,6 +19,8 @@
                         'purple-100': '#f3e8ff',
                         'pink-100': '#fce7f3',
                         'gray-100': '#f3f4f6',
+                        'orange-500': '#f97316', // Added orange for score 2
+                        'orange-100': '#ffedd5', // Added light orange for hover
                     }
                 }
             }
@@ -108,12 +110,12 @@
                                 <input type="radio" id="score-2" name="score" value="2" class="hidden peer">
                                 <label for="score-2" class="block w-full py-4 text-xl text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-orange-500 peer-checked:text-white peer-checked:border-orange-500 transition duration-200 hover:bg-orange-100 hover:border-orange-500">2</label>
                             </div>
-                            <!-- Score 3 (New, was 4): Blue -->
+                            <!-- Score 3: Blue -->
                             <div class="flex-1 min-w-0">
                                 <input type="radio" id="score-3" name="score" value="3" class="hidden peer">
                                 <label for="score-3" class="block w-full py-4 text-xl text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 transition duration-200 hover:bg-blue-100 hover:border-blue-500">3</label>
                             </div>
-                            <!-- Score 4 (New, was 5): Green -->
+                            <!-- Score 4: Green -->
                             <div class="flex-1 min-w-0">
                                 <input type="radio" id="score-4" name="score" value="4" class="hidden peer">
                                 <label for="score-4" class="block w-full py-4 text-xl text-center border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500 transition duration-200 hover:bg-green-100 hover:border-green-500">4</label>
@@ -219,16 +221,29 @@
 
         // IMPORTANT: The following global variables are provided by the hosting environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-           apiKey: "AIzaSyBO63V745LTHV4Kt9hbTFDMI5cvJ0GhHo8",
-          authDomain: "gen-lang-client-0900734125.firebaseapp.com",
-          projectId: "gen-lang-client-0900734125",
-          storageBucket: "gen-lang-client-0900734125.firebasestorage.app",
-          messagingSenderId: "94701383625",
-          appId: "1:94701383625:web:62d3c3e6faf8d28fa34218"
-
-        };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // --- START: Safer Firebase Config Parsing ---
+        const mockConfig = {
+            apiKey: "mock-api-key",
+            authDomain: "mock-project.firebaseapp.com",
+            projectId: "mock-project",
+            storageBucket: "mock-project.appspot.com",
+            messagingSenderId: "mock-sender-id",
+            appId: "mock-app-id"
+        };
+        let firebaseConfig = mockConfig;
+        
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            try {
+                // Safely parse the config string provided by the environment
+                firebaseConfig = JSON.parse(__firebase_config);
+            } catch (e) {
+                console.error("⚠️ FATAL: Could not parse __firebase_config. Using mock config.", e);
+                // Continue using mockConfig
+            }
+        }
+        // --- END: Safer Firebase Config Parsing ---
 
         setLogLevel('debug');
 
@@ -342,7 +357,7 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                // NEW: Set initial status
+                // Set initial status
                 authStatusEl.textContent = '正在連線到系統...'; 
 
                 onAuthStateChanged(auth, async (user) => {
@@ -371,7 +386,7 @@
                 }
 
             } catch (error) {
-                console.error("Firebase initialization or authentication failed:", error);
+                console.error("❌ Firebase initialization or authentication failed:", error); // Make error more prominent
                 authStatusEl.textContent = '連線失敗。請檢查控制台。'; // Update on failure
                 showMessage('錯誤: 無法初始化系統，請檢查控制台。', true);
             }
