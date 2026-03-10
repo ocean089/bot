@@ -1,503 +1,548 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, User, Bot, Trophy, ArrowLeft } from 'lucide-react';
-
-const BOARD_SIZE = 15;
-
-// --- 修改：優化平板音效支援 (Web Audio API) ---
-// 建立全域的 AudioContext，解決 iPad/iOS 點擊後沒有聲音或延遲的問題
-let audioCtx = null;
-
-const initAudio = () => {
-  try {
-    if (!audioCtx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) audioCtx = new AudioContext();
-    }
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-  } catch (e) {
-    console.error("Audio init failed", e);
-  }
-};
-
-const playSound = (type) => {
-  try {
-    if (!audioCtx) return;
-    const ctx = audioCtx;
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-
-    osc.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    const now = ctx.currentTime;
-
-    if (type === 'place') {
-      // 下棋聲：可愛的「啵」聲
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, now);
-      osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
-      gainNode.gain.setValueAtTime(0.4, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-      osc.start(now);
-      osc.stop(now + 0.1);
-    } else if (type === 'win') {
-      // 勝利聲：歡樂的升階音階 (C5, E5, G5, C6)
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(523.25, now);
-      osc.frequency.setValueAtTime(659.25, now + 0.1);
-      osc.frequency.setValueAtTime(783.99, now + 0.2);
-      osc.frequency.setValueAtTime(1046.50, now + 0.3);
-      gainNode.gain.setValueAtTime(0.3, now);
-      gainNode.gain.linearRampToValueAtTime(0, now + 0.6);
-      osc.start(now);
-      osc.stop(now + 0.6);
-    } else if (type === 'draw') {
-      // 平手聲：平緩的「嘟——」
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(300, now);
-      osc.frequency.linearRampToValueAtTime(250, now + 0.4);
-      gainNode.gain.setValueAtTime(0.1, now);
-      gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
-      osc.start(now);
-      osc.stop(now + 0.4);
-    } else if (type === 'click') {
-      // 按鈕點擊聲：清脆的「滴」
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, now);
-      gainNode.gain.setValueAtTime(0.2, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-      osc.start(now);
-      osc.stop(now + 0.05);
-    }
-  } catch (e) {
-    console.error("Audio playback failed", e);
-  }
-};
-
-// 建立空棋盤
-const createEmptyBoard = () => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
-
-export default function GomokuGame() {
-  const [board, setBoard] = useState(createEmptyBoard());
-  const [isBlackTurn, setIsBlackTurn] = useState(true);
-  const [winner, setWinner] = useState(null); // 'black', 'white', 'draw'
-  const [winningLine, setWinningLine] = useState([]);
-  const [gameMode, setGameMode] = useState('pvp'); // 'pvp' (玩家vs玩家) 或 'pve' (玩家vs電腦)
-  const [isThinking, setIsThinking] = useState(false);
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>歡樂五子棋</title>
   
-  // --- 新增的選單與難度狀態 ---
-  const [gameState, setGameState] = useState('menu'); // 'menu' (主選單) 或 'playing' (遊戲中)
-  const [difficulty, setDifficulty] = useState('medium'); // 'easy', 'medium', 'hard'
-  const [showDifficultySelect, setShowDifficultySelect] = useState(false);
+  <!-- 載入 Tailwind CSS 來處理排版和樣式 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 載入 React 核心套件 (瀏覽器版) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- 載入 Babel 轉譯器 (讓瀏覽器看得懂 JSX 語法) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  // 檢查是否獲勝
-  const checkWin = useCallback((currentBoard, row, col, player) => {
-    const directions = [
-      [[0, 1], [0, -1]],  // 橫向
-      [[1, 0], [-1, 0]],  // 直向
-      [[1, 1], [-1, -1]], // 右斜
-      [[1, -1], [-1, 1]]  // 左斜
-    ];
-
-    for (let dir of directions) {
-      let count = 1;
-      let line = [{ row, col }];
-
-      // 往兩個方向檢查
-      for (let [dr, dc] of dir) {
-        let r = row + dr;
-        let c = col + dc;
-        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && currentBoard[r][c] === player) {
-          count++;
-          line.push({ row: r, col: c });
-          r += dr;
-          c += dc;
-        }
-      }
-
-      if (count >= 5) {
-        return line;
-      }
-    }
-    return null;
-  }, []);
-
-  // 電腦 AI 邏輯 (評估分數)
-  const evaluateScore = (currentBoard, r, c, player) => {
-    let score = 0;
-    const directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
-    
-    for (let [dr, dc] of directions) {
-      let count = 1;
-      let blocked = 0;
-      
-      // 往前看
-      let nr = r + dr, nc = c + dc;
-      while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && currentBoard[nr][nc] === player) {
-        count++;
-        nr += dr; nc += dc;
-      }
-      if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE || currentBoard[nr][nc] !== null) blocked++;
-
-      // 往後看
-      nr = r - dr; nc = c - dc;
-      while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && currentBoard[nr][nc] === player) {
-        count++;
-        nr -= dr; nc -= dc;
-      }
-      if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE || currentBoard[nr][nc] !== null) blocked++;
-
-      // 給予分數 (基於連線數量和是否被阻擋)
-      if (count >= 5) score += 100000;
-      else if (count === 4 && blocked === 0) score += 10000;
-      else if (count === 4 && blocked === 1) score += 1000;
-      else if (count === 3 && blocked === 0) score += 1000;
-      else if (count === 3 && blocked === 1) score += 100;
-      else if (count === 2 && blocked === 0) score += 100;
-      else if (count === 2 && blocked === 1) score += 10;
-      else if (count === 1 && blocked === 0) score += 1;
-    }
-    return score;
-  };
-
-  // 電腦下棋
-  const makeComputerMove = useCallback(() => {
-    if (winner) return;
-
-    setIsThinking(true);
-    
-    setTimeout(() => {
-      // 如果是第一步，下在中間
-      let isEmpty = true;
-      for(let r=0; r<BOARD_SIZE; r++) {
-          for(let c=0; c<BOARD_SIZE; c++) {
-              if(board[r][c] !== null) isEmpty = false;
-          }
-      }
-      
-      if (isEmpty) {
-          handleCellClick(7, 7, true);
-          setIsThinking(false);
-          return;
-      }
-
-      // 評估每個空位並收集所有可能的分數
-      let candidates = [];
-      for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-          if (board[r][c] === null) {
-            // 白子(電腦)的攻擊分數 + 黑子(玩家)的防守分數 (防守權重稍微高一點點)
-            const attackScore = evaluateScore(board, r, c, 'white');
-            const defenseScore = evaluateScore(board, r, c, 'black') * 1.2; 
-            candidates.push({ r, c, score: attackScore + defenseScore });
-          }
-        }
-      }
-
-      // 依照分數由高到低排序
-      candidates.sort((a, b) => b.score - a.score);
-
-      let move;
-      // 根據難度決定下法
-      if (difficulty === 'easy') {
-        // 簡單模式：從前 8 名隨機挑選，電腦會常常漏看防守，讓孩子容易贏
-        const pool = candidates.slice(0, Math.min(8, candidates.length));
-        move = pool[Math.floor(Math.random() * pool.length)];
-      } else if (difficulty === 'medium') {
-        // 中等模式：從前 3 名隨機挑選，具備基礎的防守與進攻能力
-        const pool = candidates.slice(0, Math.min(3, candidates.length));
-        move = pool[Math.floor(Math.random() * pool.length)];
-      } else {
-        // 困難模式：只挑選最高分的位子，絕不手下留情
-        const bestScore = candidates[0].score;
-        const bestMoves = candidates.filter(m => m.score === bestScore);
-        move = bestMoves[Math.floor(Math.random() * bestMoves.length)];
-      }
-      
-      if (move) {
-        handleCellClick(move.r, move.c, true);
-      }
-      setIsThinking(false);
-    }, 600); // 模擬思考時間，讓小孩覺得電腦在想
-  }, [board, winner, difficulty]); // 加入 difficulty 作為相依變數
-
-  // 處理點擊棋盤
-  const handleCellClick = (row, col, isComputer = false) => {
-    // 遊戲結束、已經有棋子、或是還沒輪到玩家時不能點
-    if (winner || board[row][col] || (!isComputer && gameMode === 'pve' && !isBlackTurn)) return;
-
-    const currentPlayer = isBlackTurn ? 'black' : 'white';
-    const newBoard = board.map(r => [...r]);
-    newBoard[row][col] = currentPlayer;
-    setBoard(newBoard);
-
-    const winLine = checkWin(newBoard, row, col, currentPlayer);
-    
-    if (winLine) {
-      playSound('win');
-      setWinner(currentPlayer);
-      setWinningLine(winLine);
-    } else {
-      // 檢查平手
-      const isDraw = newBoard.every(r => r.every(cell => cell !== null));
-      if (isDraw) {
-        playSound('draw');
-        setWinner('draw');
-      } else {
-        playSound('place');
-        setIsBlackTurn(!isBlackTurn);
-      }
-    }
-  };
-
-  // 當輪到白子且是 PVE 模式時，觸發電腦下棋
-  useEffect(() => {
-    if (gameMode === 'pve' && !isBlackTurn && !winner) {
-      makeComputerMove();
-    }
-  }, [isBlackTurn, gameMode, winner, makeComputerMove]);
-
-  // 重新開始遊戲
-  const restartGame = () => {
-    setBoard(createEmptyBoard());
-    setIsBlackTurn(true);
-    setWinner(null);
-    setWinningLine([]);
-    setIsThinking(false);
-  };
-
-  // 回到主選單
-  const backToMenu = () => {
-    playSound('click');
-    setGameState('menu');
-    setShowDifficultySelect(false);
-  };
-
-  // 渲染棋盤線條 (SVG)
-  const renderGridLines = () => {
-    const lines = [];
-    const step = 100 / (BOARD_SIZE - 1);
-    
-    for (let i = 0; i < BOARD_SIZE; i++) {
-      const pos = i * step;
-      // 橫線
-      lines.push(<line key={`h-${i}`} x1="0" y1={`${pos}%`} x2="100%" y2={`${pos}%`} stroke="#5c4033" strokeWidth="2" />);
-      // 直線
-      lines.push(<line key={`v-${i}`} x1={`${pos}%`} y1="0" x2={`${pos}%`} y2="100%" stroke="#5c4033" strokeWidth="2" />);
+  <style>
+    /* 針對平板/手機做額外防呆優化，禁止預設的雙擊放大與選取文字 */
+    body, html {
+      margin: 0;
+      padding: 0;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     
-    // 畫星位 (天元及四個角落的黑點)
-    const stars = [
-        {r: 3, c: 3}, {r: 3, c: 11}, 
-        {r: 7, c: 7}, 
-        {r: 11, c: 3}, {r: 11, c: 11}
-    ];
-    stars.forEach((star, idx) => {
-        lines.push(
-            <circle key={`star-${idx}`} cx={`${star.c * step}%`} cy={`${star.r * step}%`} r="1.5%" fill="#5c4033" />
-        );
-    });
+    /* 設定基礎動畫效果，取代原本 tailwind 預設沒包進來的動畫 */
+    @keyframes bounce-custom {
+      0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+      50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
+    }
+    .animate-bounce-custom {
+      animation: bounce-custom 1s infinite;
+    }
+  </style>
+</head>
+<body class="bg-orange-50">
+  
+  <!-- 遊戲會渲染在這個 div 裡面 -->
+  <div id="root"></div>
 
-    return lines;
-  };
+  <!-- React 遊戲邏輯程式碼 -->
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
 
-  // 檢查是否為獲勝的棋子，用來加高亮特效
-  const isWinningPiece = (r, c) => {
-    return winningLine.some(p => p.row === r && p.col === c);
-  };
-
-  // --- 渲染選單畫面 ---
-  if (gameState === 'menu') {
-    return (
-      <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center py-6 font-sans select-none touch-manipulation">
-        <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md flex flex-col gap-6 border-4 border-orange-300 text-center animate-in zoom-in duration-300 mx-4">
-          
-          <h1 className="text-4xl font-black text-orange-800 mb-2 drop-shadow-sm flex items-center justify-center gap-3">
-            🐼 歡樂五子棋 🐻‍❄️
-          </h1>
-          
-          {!showDifficultySelect ? (
-            <>
-              <p className="text-orange-600 font-bold mb-4 text-lg">請選擇遊戲模式：</p>
-              
-              <button
-                onClick={() => {
-                  initAudio();
-                  playSound('click');
-                  setGameMode('pvp');
-                  setGameState('playing');
-                  restartGame();
-                }}
-                className="bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold py-4 px-6 rounded-2xl text-xl shadow-md transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 border-2 border-orange-300"
-              >
-                <User size={28} /> 雙人對戰 (和朋友玩)
-              </button>
-
-              <button
-                onClick={() => { initAudio(); playSound('click'); setShowDifficultySelect(true); }}
-                className="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-4 px-6 rounded-2xl text-xl shadow-md transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 border-2 border-blue-300"
-              >
-                <Bot size={28} /> 單人挑戰 (和電腦玩)
-              </button>
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => { playSound('click'); setShowDifficultySelect(false); }}
-                className="self-start text-gray-500 hover:text-gray-700 active:text-gray-900 flex items-center gap-1 font-bold -mt-2 -ml-2 p-2 active:scale-95 transition-transform"
-              >
-                <ArrowLeft size={20} /> 返回
-              </button>
-              
-              <p className="text-blue-600 font-bold mb-2 text-lg">請選擇電腦的難度：</p>
-              
-              <button
-                onClick={() => { playSound('click'); setGameMode('pve'); setDifficulty('easy'); setGameState('playing'); restartGame(); }}
-                className="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-3 px-6 rounded-2xl text-lg shadow-sm transition-transform hover:scale-105 active:scale-95 border-2 border-green-300"
-              >
-                🌟 新手村 (簡單)
-              </button>
-              
-              <button
-                onClick={() => { playSound('click'); setGameMode('pve'); setDifficulty('medium'); setGameState('playing'); restartGame(); }}
-                className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold py-3 px-6 rounded-2xl text-lg shadow-sm transition-transform hover:scale-105 active:scale-95 border-2 border-yellow-300"
-              >
-                🔥 小試身手 (中等)
-              </button>
-              
-              <button
-                onClick={() => { playSound('click'); setGameMode('pve'); setDifficulty('hard'); setGameState('playing'); restartGame(); }}
-                className="bg-red-100 hover:bg-red-200 text-red-800 font-bold py-3 px-6 rounded-2xl text-lg shadow-sm transition-transform hover:scale-105 active:scale-95 border-2 border-red-300"
-              >
-                👑 大師挑戰 (困難)
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+    // --- 圖示元件 (原本使用 lucide-react，現改為純 SVG 確保協作平台可用) ---
+    const IconUser = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     );
-  }
+    const IconBot = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="14" x="3" y="8" rx="2"/><path d="M12 5a3 3 0 1 0-3 3"/><path d="M9 8v2"/><path d="M15 8v2"/><path d="M15 14v.01"/><path d="M9 14v.01"/></svg>
+    );
+    const IconArrowLeft = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+    );
+    const IconRefreshCw = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    );
+    const IconTrophy = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+    );
 
-  // --- 渲染遊戲畫面 ---
-  return (
-    <div className="min-h-screen bg-orange-50 flex flex-col items-center py-6 font-sans select-none touch-manipulation">
-      
-      {/* 遊戲頂部控制列 */}
-      <div className="w-full max-w-[450px] flex justify-between items-center mb-4 px-4">
-        <button
-          onClick={backToMenu}
-          className="flex items-center gap-2 bg-white text-orange-600 font-bold py-2 px-4 rounded-xl shadow-sm hover:bg-orange-100 transition-colors border border-orange-200"
-        >
-          <ArrowLeft size={18} /> 主選單
-        </button>
-        <div className="font-bold text-orange-800 bg-orange-200 px-3 py-1 rounded-full text-sm">
-          {gameMode === 'pvp' ? '👥 雙人對戰' : `🤖 電腦 (${difficulty === 'easy' ? '簡單' : difficulty === 'medium' ? '中等' : '困難'})`}
-        </div>
-      </div>
+    const BOARD_SIZE = 15;
 
-      {/* 狀態指示器 */}
-      <div className="bg-white p-3 rounded-2xl shadow-md mb-6 w-full max-w-[450px] border-2 border-orange-200 mx-4">
-        <div className="flex items-center justify-between bg-orange-50 p-2 rounded-xl border border-orange-100">
-          
-          <div className={`flex items-center gap-2 font-bold text-xl px-3 py-1 rounded-lg ${isBlackTurn && !winner ? 'bg-orange-200 text-orange-900 animate-pulse' : 'text-gray-400'}`}>
-            <div className="w-6 h-6 rounded-full bg-slate-900 border-2 border-slate-700 shadow-sm"></div>
-            黑子
-          </div>
+    // --- 音效處理 (Web Audio API) ---
+    let audioCtx = null;
+    const initAudio = () => {
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      } catch (e) {
+        console.error("Audio init failed", e);
+      }
+    };
 
-          <div className="text-xl font-black text-orange-600">
-            {winner === 'black' ? '🎉 黑子獲勝！' : 
-             winner === 'white' ? '🎉 白子獲勝！' : 
-             winner === 'draw'  ? '🤝 平手！' :
-             isThinking ? '電腦思考中...' : 'VS'}
-          </div>
+    const playSound = (type) => {
+      try {
+        if (!audioCtx) return;
+        const ctx = audioCtx;
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
 
-          <div className={`flex items-center gap-2 font-bold text-xl px-3 py-1 rounded-lg ${!isBlackTurn && !winner ? 'bg-orange-200 text-orange-900 animate-pulse' : 'text-gray-400'}`}>
-            白子
-            <div className="w-6 h-6 rounded-full bg-slate-100 border-2 border-slate-300 shadow-sm"></div>
-          </div>
-        </div>
-      </div>
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
 
-      {/* 棋盤區域 */}
-      <div className="relative w-full max-w-[450px] aspect-square bg-[#e6b981] p-4 rounded-lg shadow-xl border-4 border-[#8b5a2b]">
+        const now = ctx.currentTime;
+
+        if (type === 'place') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+          gainNode.gain.setValueAtTime(0.4, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (type === 'win') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.1);
+          osc.frequency.setValueAtTime(783.99, now + 0.2);
+          osc.frequency.setValueAtTime(1046.50, now + 0.3);
+          gainNode.gain.setValueAtTime(0.3, now);
+          gainNode.gain.linearRampToValueAtTime(0, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        } else if (type === 'draw') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.linearRampToValueAtTime(250, now + 0.4);
+          gainNode.gain.setValueAtTime(0.1, now);
+          gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, now);
+          gainNode.gain.setValueAtTime(0.2, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        }
+      } catch (e) {
+        console.error("Audio playback failed", e);
+      }
+    };
+
+    const createEmptyBoard = () => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+
+    function GomokuGame() {
+      const [board, setBoard] = useState(createEmptyBoard());
+      const [isBlackTurn, setIsBlackTurn] = useState(true);
+      const [winner, setWinner] = useState(null);
+      const [winningLine, setWinningLine] = useState([]);
+      const [gameMode, setGameMode] = useState('pvp');
+      const [isThinking, setIsThinking] = useState(false);
+      const [gameState, setGameState] = useState('menu');
+      const [difficulty, setDifficulty] = useState('medium');
+      const [showDifficultySelect, setShowDifficultySelect] = useState(false);
+
+      const checkWin = useCallback((currentBoard, row, col, player) => {
+        const directions = [
+          [[0, 1], [0, -1]],
+          [[1, 0], [-1, 0]],
+          [[1, 1], [-1, -1]],
+          [[1, -1], [-1, 1]]
+        ];
+
+        for (let dir of directions) {
+          let count = 1;
+          let line = [{ row, col }];
+
+          for (let [dr, dc] of dir) {
+            let r = row + dr;
+            let c = col + dc;
+            while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && currentBoard[r][c] === player) {
+              count++;
+              line.push({ row: r, col: c });
+              r += dr;
+              c += dc;
+            }
+          }
+
+          if (count >= 5) return line;
+        }
+        return null;
+      }, []);
+
+      const evaluateScore = (currentBoard, r, c, player) => {
+        let score = 0;
+        const directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
         
-        {/* 內層木板 (包含線條) */}
-        <div className="relative w-full h-full">
-          {/* SVG 畫線 */}
-          <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
-            {renderGridLines()}
-          </svg>
+        for (let [dr, dc] of directions) {
+          let count = 1;
+          let blocked = 0;
+          
+          let nr = r + dr, nc = c + dc;
+          while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && currentBoard[nr][nc] === player) {
+            count++;
+            nr += dr; nc += dc;
+          }
+          if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE || currentBoard[nr][nc] !== null) blocked++;
 
-          {/* 互動網格 (隱形按鈕) */}
-          <div className="absolute top-0 left-0 w-full h-full grid" style={{
-            gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-            gridTemplateRows: `repeat(${BOARD_SIZE}, 1fr)`
-          }}>
-            {board.map((row, r) => (
-              row.map((cell, c) => (
-                <button
-                  key={`${r}-${c}`}
-                  onClick={() => handleCellClick(r, c)}
-                  disabled={winner !== null || cell !== null}
-                  className="relative flex items-center justify-center w-full h-full cursor-pointer hover:bg-black/10 active:bg-black/20 rounded-full transition-colors z-10"
-                  aria-label={`Row ${r}, Column ${c}`}
-                >
-                  {/* 渲染棋子 */}
-                  {cell && (
-                    <div 
-                      className={`
-                        w-[85%] h-[85%] rounded-full shadow-[2px_4px_6px_rgba(0,0,0,0.4)]
-                        transform transition-transform duration-200 ease-out scale-100 animate-in zoom-in
-                        ${cell === 'black' ? 'bg-gradient-to-br from-slate-600 to-slate-900' : 'bg-gradient-to-br from-white to-slate-200'}
-                        ${isWinningPiece(r, c) ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-[#e6b981] z-20 animate-bounce' : ''}
-                      `}
-                    />
-                  )}
-                </button>
-              ))
-            ))}
+          nr = r - dr; nc = c - dc;
+          while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && currentBoard[nr][nc] === player) {
+            count++;
+            nr -= dr; nc -= dc;
+          }
+          if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE || currentBoard[nr][nc] !== null) blocked++;
+
+          if (count >= 5) score += 100000;
+          else if (count === 4 && blocked === 0) score += 10000;
+          else if (count === 4 && blocked === 1) score += 1000;
+          else if (count === 3 && blocked === 0) score += 1000;
+          else if (count === 3 && blocked === 1) score += 100;
+          else if (count === 2 && blocked === 0) score += 100;
+          else if (count === 2 && blocked === 1) score += 10;
+          else if (count === 1 && blocked === 0) score += 1;
+        }
+        return score;
+      };
+
+      const makeComputerMove = useCallback(() => {
+        if (winner) return;
+        setIsThinking(true);
+        
+        setTimeout(() => {
+          let isEmpty = true;
+          for(let r=0; r<BOARD_SIZE; r++) {
+              for(let c=0; c<BOARD_SIZE; c++) {
+                  if(board[r][c] !== null) isEmpty = false;
+              }
+          }
+          
+          if (isEmpty) {
+              handleCellClick(7, 7, true);
+              setIsThinking(false);
+              return;
+          }
+
+          let candidates = [];
+          for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+              if (board[r][c] === null) {
+                const attackScore = evaluateScore(board, r, c, 'white');
+                const defenseScore = evaluateScore(board, r, c, 'black') * 1.2; 
+                candidates.push({ r, c, score: attackScore + defenseScore });
+              }
+            }
+          }
+
+          candidates.sort((a, b) => b.score - a.score);
+
+          let move;
+          if (difficulty === 'easy') {
+            const pool = candidates.slice(0, Math.min(8, candidates.length));
+            move = pool[Math.floor(Math.random() * pool.length)];
+          } else if (difficulty === 'medium') {
+            const pool = candidates.slice(0, Math.min(3, candidates.length));
+            move = pool[Math.floor(Math.random() * pool.length)];
+          } else {
+            const bestScore = candidates[0].score;
+            const bestMoves = candidates.filter(m => m.score === bestScore);
+            move = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+          }
+          
+          if (move) {
+            handleCellClick(move.r, move.c, true);
+          }
+          setIsThinking(false);
+        }, 600);
+      }, [board, winner, difficulty]);
+
+      const handleCellClick = (row, col, isComputer = false) => {
+        initAudio(); // 確保平板音效處於喚醒狀態，不會因為太久沒點擊而睡著
+        if (winner || board[row][col] || (!isComputer && gameMode === 'pve' && !isBlackTurn)) return;
+
+        const currentPlayer = isBlackTurn ? 'black' : 'white';
+        const newBoard = board.map(r => [...r]);
+        newBoard[row][col] = currentPlayer;
+        setBoard(newBoard);
+
+        const winLine = checkWin(newBoard, row, col, currentPlayer);
+        
+        if (winLine) {
+          playSound('win');
+          setWinner(currentPlayer);
+          setWinningLine(winLine);
+        } else {
+          const isDraw = newBoard.every(r => r.every(cell => cell !== null));
+          if (isDraw) {
+            playSound('draw');
+            setWinner('draw');
+          } else {
+            playSound('place');
+            setIsBlackTurn(!isBlackTurn);
+          }
+        }
+      };
+
+      useEffect(() => {
+        if (gameMode === 'pve' && !isBlackTurn && !winner) {
+          makeComputerMove();
+        }
+      }, [isBlackTurn, gameMode, winner, makeComputerMove]);
+
+      const restartGame = () => {
+        setBoard(createEmptyBoard());
+        setIsBlackTurn(true);
+        setWinner(null);
+        setWinningLine([]);
+        setIsThinking(false);
+      };
+
+      const backToMenu = () => {
+        playSound('click');
+        setGameState('menu');
+        setShowDifficultySelect(false);
+      };
+
+      const renderGridLines = () => {
+        const lines = [];
+        const step = 100 / BOARD_SIZE;
+        const offset = step / 2;
+        const length = 100 - step; // 設定明確的長度，避免 iOS 邊界計算錯誤
+        
+        // 橫線
+        for (let i = 0; i < BOARD_SIZE; i++) {
+          const pos = i * step + offset;
+          lines.push(
+            <div key={`h-${i}`} style={{ 
+              position: 'absolute',
+              backgroundColor: '#5c4033', // 改用純 CSS 上色，確保平板絕對能顯示顏色
+              top: `${pos}%`, 
+              left: `${offset}%`, 
+              width: `${length}%`, 
+              height: '2px', 
+              marginTop: '-1px' 
+            }} />
+          );
+        }
+        // 直線
+        for (let i = 0; i < BOARD_SIZE; i++) {
+          const pos = i * step + offset;
+          lines.push(
+            <div key={`v-${i}`} style={{ 
+              position: 'absolute',
+              backgroundColor: '#5c4033', 
+              left: `${pos}%`, 
+              top: `${offset}%`, 
+              height: `${length}%`, 
+              width: '2px', 
+              marginLeft: '-1px' 
+            }} />
+          );
+        }
+        
+        // 星位 (天元及四個角落的黑點)
+        const stars = [{r: 3, c: 3}, {r: 3, c: 11}, {r: 7, c: 7}, {r: 11, c: 3}, {r: 11, c: 11}];
+        stars.forEach((star, idx) => {
+          const cx = star.c * step + offset;
+          const cy = star.r * step + offset;
+          lines.push(
+            <div key={`star-${idx}`} style={{ 
+              position: 'absolute',
+              backgroundColor: '#5c4033', 
+              borderRadius: '50%',
+              left: `${cx}%`, 
+              top: `${cy}%`, 
+              width: '8px', 
+              height: '8px', 
+              marginLeft: '-4px',
+              marginTop: '-4px'
+            }} />
+          );
+        });
+
+        return lines;
+      };
+
+      const isWinningPiece = (r, c) => {
+        return winningLine.some(p => p.row === r && p.col === c);
+      };
+
+      if (gameState === 'menu') {
+        return (
+          <div className="min-h-screen flex flex-col items-center justify-center py-6 font-sans">
+            <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md flex flex-col gap-6 border-4 border-orange-300 text-center mx-4">
+              
+              <h1 className="text-4xl font-black text-orange-800 mb-2 drop-shadow-sm flex items-center justify-center gap-3">
+                🐼 歡樂五子棋 🐻‍❄️
+              </h1>
+              
+              {!showDifficultySelect ? (
+                <>
+                  <p className="text-orange-600 font-bold mb-4 text-lg">請選擇遊戲模式：</p>
+                  <button
+                    onClick={() => { initAudio(); playSound('click'); setGameMode('pvp'); setGameState('playing'); restartGame(); }}
+                    className="bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold py-4 px-6 rounded-2xl text-xl shadow-md transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 border-2 border-orange-300"
+                  >
+                    <IconUser size={28} /> 雙人對戰 (和朋友玩)
+                  </button>
+                  <button
+                    onClick={() => { initAudio(); playSound('click'); setShowDifficultySelect(true); }}
+                    className="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-4 px-6 rounded-2xl text-xl shadow-md transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 border-2 border-blue-300"
+                  >
+                    <IconBot size={28} /> 單人挑戰 (和電腦玩)
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => { playSound('click'); setShowDifficultySelect(false); }}
+                    className="self-start text-gray-500 hover:text-gray-700 active:text-gray-900 flex items-center gap-1 font-bold -mt-2 -ml-2 p-2 active:scale-95 transition-transform"
+                  >
+                    <IconArrowLeft size={20} /> 返回
+                  </button>
+                  <p className="text-blue-600 font-bold mb-2 text-lg">請選擇電腦的難度：</p>
+                  <button
+                    onClick={() => { playSound('click'); setGameMode('pve'); setDifficulty('easy'); setGameState('playing'); restartGame(); }}
+                    className="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-3 px-6 rounded-2xl text-lg shadow-sm transition-transform hover:scale-105 active:scale-95 border-2 border-green-300"
+                  >
+                    🌟 新手村 (簡單)
+                  </button>
+                  <button
+                    onClick={() => { playSound('click'); setGameMode('pve'); setDifficulty('medium'); setGameState('playing'); restartGame(); }}
+                    className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold py-3 px-6 rounded-2xl text-lg shadow-sm transition-transform hover:scale-105 active:scale-95 border-2 border-yellow-300"
+                  >
+                    🔥 小試身手 (中等)
+                  </button>
+                  <button
+                    onClick={() => { playSound('click'); setGameMode('pve'); setDifficulty('hard'); setGameState('playing'); restartGame(); }}
+                    className="bg-red-100 hover:bg-red-200 text-red-800 font-bold py-3 px-6 rounded-2xl text-lg shadow-sm transition-transform hover:scale-105 active:scale-95 border-2 border-red-300"
+                  >
+                    👑 大師挑戰 (困難)
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        );
+      }
 
-        {/* 勝利特效遮罩 */}
-        {winner && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/40 backdrop-blur-[2px] rounded-lg animate-in fade-in duration-500">
-            <div className="bg-white px-6 py-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4 border-4 border-yellow-400 transform scale-105">
-              <Trophy className="text-yellow-500 w-16 h-16 animate-bounce" />
-              <h2 className="text-3xl font-black text-orange-600">
-                {winner === 'draw' ? '遊戲平手！' : `${winner === 'black' ? '黑子' : '白子'} 贏了！`}
-              </h2>
-              <div className="flex gap-2 mt-2 w-full justify-center">
-                <button
-                  onClick={() => { playSound('click'); restartGame(); }}
-                  className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-4 rounded-full text-base shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
-                >
-                  <RefreshCw size={18} /> 再玩一次
-                </button>
-                <button
-                  onClick={backToMenu}
-                  className="bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold py-3 px-4 rounded-full text-base shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
-                >
-                  <ArrowLeft size={18} /> 回主選單
-                </button>
+      return (
+        <div className="min-h-screen flex flex-col items-center py-6 font-sans">
+          
+          <div className="w-full max-w-[450px] flex justify-between items-center mb-4 px-4">
+            <button
+              onClick={backToMenu}
+              className="flex items-center gap-2 bg-white text-orange-600 font-bold py-2 px-4 rounded-xl shadow-sm hover:bg-orange-100 transition-colors border border-orange-200 active:scale-95"
+            >
+              <IconArrowLeft size={18} /> 主選單
+            </button>
+            <div className="font-bold text-orange-800 bg-orange-200 px-3 py-1 rounded-full text-sm">
+              {gameMode === 'pvp' ? '👥 雙人對戰' : `🤖 電腦 (${difficulty === 'easy' ? '簡單' : difficulty === 'medium' ? '中等' : '困難'})`}
+            </div>
+          </div>
+
+          <div className="bg-white p-3 rounded-2xl shadow-md mb-6 w-full max-w-[450px] border-2 border-orange-200 mx-4">
+            <div className="flex items-center justify-between bg-orange-50 p-2 rounded-xl border border-orange-100">
+              <div className={`flex items-center gap-2 font-bold text-xl px-3 py-1 rounded-lg ${isBlackTurn && !winner ? 'bg-orange-200 text-orange-900 animate-pulse' : 'text-gray-400'}`}>
+                <div className="w-6 h-6 rounded-full bg-slate-900 border-2 border-slate-700 shadow-sm"></div>
+                黑子
+              </div>
+              <div className="text-xl font-black text-orange-600 text-center">
+                {winner === 'black' ? '🎉 黑子獲勝！' : 
+                 winner === 'white' ? '🎉 白子獲勝！' : 
+                 winner === 'draw'  ? '🤝 平手！' :
+                 isThinking ? '電腦思考中...' : 'VS'}
+              </div>
+              <div className={`flex items-center gap-2 font-bold text-xl px-3 py-1 rounded-lg ${!isBlackTurn && !winner ? 'bg-orange-200 text-orange-900 animate-pulse' : 'text-gray-400'}`}>
+                白子
+                <div className="w-6 h-6 rounded-full bg-slate-100 border-2 border-slate-300 shadow-sm"></div>
               </div>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* 重新開始按鈕 (遊戲進行中顯示) */}
-      {!winner && (
-        <button
-          onClick={() => { playSound('click'); restartGame(); }}
-          className="mt-6 flex items-center gap-2 bg-white text-orange-600 border-2 border-orange-200 hover:bg-orange-50 font-bold py-3 px-6 rounded-full text-lg shadow-sm transition-transform hover:scale-105 active:scale-95 hover:shadow"
-        >
-          <RefreshCw size={20} /> 重新開始這局
-        </button>
-      )}
-      
-    </div>
-  );
-}
+          <div className="relative w-full max-w-[450px] aspect-square bg-[#e6b981] p-4 rounded-lg shadow-xl border-4 border-[#8b5a2b]">
+            <div className="relative w-full h-full">
+              
+              {/* 改用 HTML div 繪製格線，徹底解決平板 SVG 縮放 Bug */}
+              <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                {renderGridLines()}
+              </div>
+
+              <div className="absolute top-0 left-0 w-full h-full grid" style={{
+                gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
+                gridTemplateRows: `repeat(${BOARD_SIZE}, 1fr)`,
+                touchAction: 'none'
+              }}>
+                {board.map((row, r) => (
+                  row.map((cell, c) => (
+                    <div
+                      key={`${r}-${c}`}
+                      onPointerDown={(e) => {
+                        e.preventDefault(); // 防止 iOS 觸發多餘的事件或滑動
+                        handleCellClick(r, c);
+                      }}
+                      className="relative flex items-center justify-center w-full h-full cursor-pointer hover:bg-black/10 active:bg-black/20 rounded-full transition-colors z-10 bg-black/0"
+                      aria-label={`Row ${r}, Column ${c}`}
+                    >
+                      {cell && (
+                        <div 
+                          className={`
+                            w-[85%] h-[85%] rounded-full shadow-[2px_4px_6px_rgba(0,0,0,0.4)]
+                            transform transition-transform duration-200 ease-out scale-100
+                            ${cell === 'black' ? 'bg-gradient-to-br from-slate-600 to-slate-900' : 'bg-gradient-to-br from-white to-slate-200'}
+                            ${isWinningPiece(r, c) ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-[#e6b981] z-20 animate-bounce-custom' : ''}
+                          `}
+                        />
+                      )}
+                    </div>
+                  ))
+                ))}
+              </div>
+            </div>
+
+            {winner && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/40 backdrop-blur-sm rounded-lg transition-opacity duration-500">
+                <div className="bg-white px-6 py-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4 border-4 border-yellow-400 transform scale-105">
+                  <IconTrophy size={64} className="text-yellow-500 animate-bounce-custom" />
+                  <h2 className="text-3xl font-black text-orange-600">
+                    {winner === 'draw' ? '遊戲平手！' : `${winner === 'black' ? '黑子' : '白子'} 贏了！`}
+                  </h2>
+                  <div className="flex gap-2 mt-2 w-full justify-center">
+                    <button
+                      onClick={() => { playSound('click'); restartGame(); }}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-4 rounded-full text-base shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                    >
+                      <IconRefreshCw size={18} /> 再玩一次
+                    </button>
+                    <button
+                      onClick={backToMenu}
+                      className="bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold py-3 px-4 rounded-full text-base shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                    >
+                      <IconArrowLeft size={18} /> 回主選單
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {!winner && (
+            <button
+              onClick={() => { playSound('click'); restartGame(); }}
+              className="mt-6 flex items-center gap-2 bg-white text-orange-600 border-2 border-orange-200 hover:bg-orange-50 font-bold py-3 px-6 rounded-full text-lg shadow-sm transition-transform hover:scale-105 active:scale-95 hover:shadow"
+            >
+              <IconRefreshCw size={20} /> 重新開始這局
+            </button>
+          )}
+          
+        </div>
+      );
+    }
+
+    // 將 React 元件掛載到 HTML 上
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<GomokuGame />);
+  </script>
+</body>
+</html>
