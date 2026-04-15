@@ -1,410 +1,384 @@
-import React, { useState, useEffect } from 'react';
-import { CheckCircle2, RotateCcw, AlertCircle, ChevronLeft, ChevronRight, Eraser } from 'lucide-react';
-
-// 將 30 題的題目 (p) 與解答 (s) 轉換為字串陣列以節省空間與維持程式碼整潔
-// 0 代表空格(null)，其他數字代表題目預設數字
-const PUZZLE_DATA = [
-  { p: "0000023103242003", s: "3142423113242413" }, // 第 1 題 (已根據圖片完美還原)
-  { p: "2003302102300002", s: "2143342112344312" }, // 第 2 題 (已根據圖片完美還原)
-  { p: "1000423000103102", s: "1324423124133142" }, // 第 3 題 (已根據圖片完美還原)
-  { p: "3010012020300302", s: "3214412324311342" }, // 第 4 題 (已根據圖片完美還原)
-  { p: "0030020103240410", s: "4132324113242413" }, // 第 5 題 (已根據圖片完美還原)
-  { p: "0140420100000423", s: "3142423123141423" }, // 第 6 題 (已根據圖片完美還原)
-  { p: "1040020301340001", s: "1342421321343421" }, // 第 7 題 (已根據圖片完美還原)
-  { p: "0003034201004031", s: "2413134231244231" }, // 第 8 題 (已根據圖片完美還原)
-  { p: "2400012000100342", s: "2431312442131342" }, // 第 9 題 (已根據圖片完美還原)
-  { p: "1420031002004030", s: "1423231432414132" }, // 第 10 題 (已根據圖片完美還原)
-  { p: "4120034000041400", s: "4123234132141432" }, // 第 11 題 (已根據圖片完美還原)
-  { p: "1020241001003040", s: "1324241341323241" }, // 第 12 題 (已根據圖片完美還原)
-  { p: "2040341000044300", s: "2143341212344321" }, // 第 13 題 (已根據圖片完美還原)
-  { p: "0230400200033401", s: "1234431221433421" }, // 第 14 題 (已根據圖片完美還原)
-  { p: "3000002310300341", s: "3214412314322341" }, // 第 15 題 (已根據圖片完美還原)
-  { p: "1034000003014103", s: "1234341223414123" }, // 第 16 題 (已根據圖片完美還原)
-  { p: "1032204001044000", s: "1432234131244213" }, // 第 17 題 (已根據圖片完美還原)
-  { p: "0014400010230240", s: "2314413214233241" }, // 第 18 題 (已根據圖片完美還原)
-  { p: "2003004202301300", s: "2413314242311324" }, // 第 19 題 (已根據圖片完美還原)
-  { p: "0400204132100003", s: "1432234132144123" }, // 第 20 題 (已根據圖片完美還原)
-  { p: "2103402000001430", s: "2143432132141432" }, // 第 21 題 (已根據圖片完美還原)
-  { p: "0204042100002043", s: "1234342143122143" }, // 第 22 題 (已根據圖片完美還原)
-  { p: "0320120000122040", s: "4321123434122143" }, // 第 23 題 (已根據圖片完美還原)
-  { p: "4030320010030014", s: "4132324114232314" }, // 第 24 題 (已根據圖片完美還原)
-  { p: "3401000003101203", s: "3421213443121243" }, // 第 25 題 (已根據圖片完美還原)
-  { p: "0304102040000142", s: "2314142342313142" }, // 第 26 題 (已根據圖片完美還原)
-  { p: "0300002302401032", s: "2314412332411432" }, // 第 27 題 (已根據圖片完美還原)
-  { p: "0103034100000432", s: "4123234132141432" }, // 第 28 題 (已根據圖片完美還原)
-  { p: "0134400202400001", s: "2134431212433421" }, // 第 29 題 (已根據圖片完美還原)
-  { p: "1002201400000241", s: "1432231441233241" }, // 第 30 題 (已根據圖片完美還原)
-];
-
-// 將字串轉化為 4x4 陣列的輔助函數
-const parseGrid = (str) => {
-  const grid = [];
-  for (let i = 0; i < 4; i++) {
-    const row = [];
-    for (let j = 0; j < 4; j++) {
-      const val = parseInt(str[i * 4 + j], 10);
-      row.push(val === 0 ? null : val);
-    }
-    grid.push(row);
-  }
-  return grid;
-};
-
-// 音效產生器 (使用 Web Audio API，不需外部檔案)
-const playAudio = (type) => {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
-    
-    if (type === 'place') {
-      // 填寫音效：輕快的短音
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } else if (type === 'clear') {
-      // 清除音效：低沉的短音
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(400, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } else if (type === 'success') {
-      // 過關音效：歡樂的琶音和弦
-      const playNote = (freq, time) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.3, time);
-        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(time);
-        osc.stop(time + 0.2);
-      };
-      playNote(440, ctx.currentTime); // A4
-      playNote(554.37, ctx.currentTime + 0.1); // C#5
-      playNote(659.25, ctx.currentTime + 0.2); // E5
-      playNote(880, ctx.currentTime + 0.3); // A5
-    }
-  } catch (e) {
-    console.log("Audio play skipped", e);
-  }
-};
-
-// 格式化時間
-const formatTime = (seconds) => {
-  if (seconds < 60) return `${seconds} 秒`;
-  return `${Math.floor(seconds / 60)} 分 ${seconds % 60} 秒`;
-};
-
-export default function App() {
-  const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
-  const [board, setBoard] = useState(() => parseGrid(PUZZLE_DATA[0].p));
-  const [errors, setErrors] = useState(Array(4).fill(null).map(() => Array(4).fill(false)));
-  const [isComplete, setIsComplete] = useState(false);
-  const [activeNumber, setActiveNumber] = useState(null);
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>康樂國小創意科技 - 4x4 數獨</title>
   
-  // 新增計時器狀態
-  const [startTime, setStartTime] = useState(Date.now());
-  const [timeTaken, setTimeTaken] = useState(null);
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  const currentPuzzle = parseGrid(PUZZLE_DATA[currentPuzzleIndex].p);
-  const currentSolution = parseGrid(PUZZLE_DATA[currentPuzzleIndex].s);
+  <style>
+    body { background-color: #f8fafc; margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
 
-  useEffect(() => {
-    setBoard(parseGrid(PUZZLE_DATA[currentPuzzleIndex].p));
-    setErrors(Array(4).fill(null).map(() => Array(4).fill(false)));
-    setIsComplete(false);
-    setActiveNumber(null);
-    setStartTime(Date.now()); // 切換題目時重置計時
-    setTimeTaken(null);
-  }, [currentPuzzleIndex]);
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-  const isBoardFull = board.every(row => row.every(cell => cell !== null));
+    // --- 圖示元件 (取代原本需要安裝的 lucide-react) ---
+    const IconChevronLeft = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>;
+    const IconChevronRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
+    const IconCheckCircle = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+    const IconRotate = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+    const IconAlert = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+    const IconEraser = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>;
 
-  const handleDragStart = (e, item) => {
-    e.dataTransfer.setData('number', item.toString());
-    setActiveNumber(item);
-  };
+    // 30 題題庫
+    const PUZZLE_DATA = [
+      { p: "0000023103242003", s: "3142423113242413" },
+      { p: "2003302102300002", s: "2143342112344312" },
+      { p: "1000423000103102", s: "1324423124133142" },
+      { p: "3010012020300302", s: "3214412324311342" },
+      { p: "0030020103240410", s: "4132324113242413" },
+      { p: "0140420100000423", s: "3142423123141423" },
+      { p: "1040020301340001", s: "1342421321343421" },
+      { p: "0003034201004031", s: "2413134231244231" },
+      { p: "2400012000100342", s: "2431312442131342" },
+      { p: "1420031002004030", s: "1423231432414132" },
+      { p: "4120034000041400", s: "4123234132141432" },
+      { p: "1020241001003040", s: "1324241341323241" },
+      { p: "2040341000044300", s: "2143341212344321" },
+      { p: "0230400200033401", s: "1234431221433421" },
+      { p: "3000002310300341", s: "3214412314322341" },
+      { p: "1034000003014103", s: "1234341223414123" },
+      { p: "1032204001044000", s: "1432234131244213" },
+      { p: "0014400010230240", s: "2314413214233241" },
+      { p: "2003004202301300", s: "2413314242311324" },
+      { p: "0400204132100003", s: "1432234132144123" },
+      { p: "2103402000001430", s: "2143432132141432" },
+      { p: "0204042100002043", s: "1234342143122143" },
+      { p: "0320120000122040", s: "4321123434122143" },
+      { p: "4030320010030014", s: "4132324114232314" },
+      { p: "3401000003101203", s: "3421213443121243" },
+      { p: "0304102040000142", s: "2314142342313142" },
+      { p: "0300002302401032", s: "2314412332411432" },
+      { p: "0103034100000432", s: "4123234132141432" },
+      { p: "0134400202400001", s: "2134431212433421" },
+      { p: "1002201400000241", s: "1432231441233241" }
+    ];
 
-  const handleDragOver = (e) => e.preventDefault();
-
-  const handleDrop = (e, rowIndex, colIndex) => {
-    e.preventDefault();
-    const draggedData = e.dataTransfer.getData('number');
-    
-    if (draggedData === 'eraser') {
-      fillCell(rowIndex, colIndex, 'eraser');
-    } else {
-      const droppedNumber = parseInt(draggedData, 10);
-      if (!isNaN(droppedNumber)) {
-        fillCell(rowIndex, colIndex, droppedNumber);
-      }
-    }
-  };
-
-  const handleCellClick = (rowIndex, colIndex) => {
-    if (currentPuzzle[rowIndex][colIndex] !== null) return;
-
-    if (activeNumber !== null) {
-      fillCell(rowIndex, colIndex, activeNumber);
-    } else if (board[rowIndex][colIndex] !== null) {
-      // 未選擇工具時，點擊有寫數字的格子預設為「清除」
-      fillCell(rowIndex, colIndex, 'eraser');
-    }
-  };
-
-  const fillCell = (rowIndex, colIndex, numberOrEraser) => {
-    if (currentPuzzle[rowIndex][colIndex] !== null) return;
-    
-    const newBoard = [...board];
-    const newValue = numberOrEraser === 'eraser' ? null : numberOrEraser;
-    
-    // 只有當內容確實有改變時才播放音效
-    if (newBoard[rowIndex][colIndex] !== newValue) {
-      playAudio(newValue === null ? 'clear' : 'place');
-    }
-    
-    newBoard[rowIndex][colIndex] = newValue;
-    setBoard(newBoard);
-    
-    const newErrors = [...errors];
-    newErrors[rowIndex][colIndex] = false;
-    setErrors(newErrors);
-    setIsComplete(false);
-  };
-
-  const checkSolution = () => {
-    let hasError = false;
-    const newErrors = Array(4).fill(null).map(() => Array(4).fill(false));
-
-    for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < 4; j++) {
-        if (board[i][j] !== currentSolution[i][j]) {
-          newErrors[i][j] = true;
-          hasError = true;
+    const parseGrid = (str) => {
+      const grid = [];
+      for (let i = 0; i < 4; i++) {
+        const row = [];
+        for (let j = 0; j < 4; j++) {
+          const val = parseInt(str[i * 4 + j], 10);
+          row.push(val === 0 ? null : val);
         }
+        grid.push(row);
       }
-    }
+      return grid;
+    };
 
-    setErrors(newErrors);
-    
-    if (!hasError) {
-      setIsComplete(true);
-      setTimeTaken(Math.floor((Date.now() - startTime) / 1000));
-      playAudio('success'); // 播放過關音效
-    } else {
-      playAudio('clear'); // 答錯時給予一個低沉提示音
-    }
-  };
-
-  const resetGame = () => {
-    setBoard(parseGrid(PUZZLE_DATA[currentPuzzleIndex].p));
-    setErrors(Array(4).fill(null).map(() => Array(4).fill(false)));
-    setIsComplete(false);
-    setActiveNumber(null);
-    setStartTime(Date.now()); // 重置計時
-    setTimeTaken(null);
-  };
-
-  const handlePrev = () => {
-    if (currentPuzzleIndex > 0) setCurrentPuzzleIndex(currentPuzzleIndex - 1);
-  };
-
-  const handleNext = () => {
-    if (currentPuzzleIndex < PUZZLE_DATA.length - 1) setCurrentPuzzleIndex(currentPuzzleIndex + 1);
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-10 font-sans text-gray-800">
-      <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
+    const playAudio = (type) => {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
         
-        <div className="text-center mb-4">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">康樂國小創意科技<br/>4x4 數獨</h1>
-          <p className="text-slate-500 text-sm">請將 1~4 拖拉或點選填入淡藍色空格中。<br/>選取「橡皮擦」或再次點擊格子可清除數字。</p>
-        </div>
+        if (type === 'place') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } else if (type === 'clear') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } else if (type === 'success') {
+          const playNote = (freq, time) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.3, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(time);
+            osc.stop(time + 0.2);
+          };
+          playNote(440, ctx.currentTime); 
+          playNote(554.37, ctx.currentTime + 0.1); 
+          playNote(659.25, ctx.currentTime + 0.2); 
+          playNote(880, ctx.currentTime + 0.3); 
+        }
+      } catch (e) {
+        console.log("Audio play skipped", e);
+      }
+    };
 
-        {/* 題號選擇導覽列 */}
-        <div className="flex items-center justify-between bg-slate-100 p-2 sm:p-3 rounded-xl mb-6">
-          <button 
-            onClick={handlePrev} 
-            disabled={currentPuzzleIndex === 0}
-            className="p-2 flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-bold text-sm"
-          >
-            <ChevronLeft size={20} />
-            <span className="hidden sm:inline">上一題</span>
-          </button>
-          
-          <select 
-            value={currentPuzzleIndex} 
-            onChange={(e) => setCurrentPuzzleIndex(Number(e.target.value))}
-            className="bg-white border-2 border-slate-300 text-slate-800 text-base sm:text-lg font-bold py-1.5 px-3 sm:px-6 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center cursor-pointer"
-          >
-            {PUZZLE_DATA.map((_, idx) => (
-              <option key={idx} value={idx}>第 {idx + 1} 題</option>
-            ))}
-          </select>
+    const formatTime = (seconds) => {
+      if (seconds < 60) return `${seconds} 秒`;
+      return `${Math.floor(seconds / 60)} 分 ${seconds % 60} 秒`;
+    };
 
-          <button 
-            onClick={handleNext} 
-            disabled={currentPuzzleIndex === PUZZLE_DATA.length - 1}
-            className="p-2 flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-bold text-sm"
-          >
-            <span className="hidden sm:inline">下一題</span>
-            <ChevronRight size={20} />
-          </button>
-        </div>
+    function App() {
+      const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
+      const [board, setBoard] = useState(() => parseGrid(PUZZLE_DATA[0].p));
+      const [errors, setErrors] = useState(Array(4).fill(null).map(() => Array(4).fill(false)));
+      const [isComplete, setIsComplete] = useState(false);
+      const [activeNumber, setActiveNumber] = useState(null);
+      const [startTime, setStartTime] = useState(Date.now());
+      const [timeTaken, setTimeTaken] = useState(null);
 
-        {/* 數獨網格 */}
-        <div className="mb-8 flex justify-center">
-          <div className="grid grid-cols-4 border-4 border-slate-800 rounded-lg overflow-hidden bg-slate-800 gap-[1px]">
-            {board.map((row, rowIndex) => (
-              row.map((cell, colIndex) => {
-                const isInitial = currentPuzzle[rowIndex][colIndex] !== null;
-                const isError = errors[rowIndex][colIndex];
-                
-                const borderClasses = `
-                  ${colIndex === 1 ? 'border-r-4 border-r-slate-800' : ''}
-                  ${rowIndex === 1 ? 'border-b-4 border-b-slate-800' : ''}
-                `;
+      const currentPuzzle = parseGrid(PUZZLE_DATA[currentPuzzleIndex].p);
+      const currentSolution = parseGrid(PUZZLE_DATA[currentPuzzleIndex].s);
 
-                let bgClass = "bg-[#e0f2fe]";
-                let textClass = "text-blue-900";
-                
-                if (isInitial) {
-                  bgClass = "bg-white";
-                  textClass = "text-slate-900";
-                } else if (isError) {
-                  bgClass = "bg-red-500";
-                  textClass = "text-white";
-                } else if (cell !== null) {
-                  bgClass = "bg-blue-100";
-                  textClass = "text-blue-900";
-                }
+      useEffect(() => {
+        setBoard(parseGrid(PUZZLE_DATA[currentPuzzleIndex].p));
+        setErrors(Array(4).fill(null).map(() => Array(4).fill(false)));
+        setIsComplete(false);
+        setActiveNumber(null);
+        setStartTime(Date.now());
+        setTimeTaken(null);
+      }, [currentPuzzleIndex]);
 
-                return (
-                  <div
-                    key={`${rowIndex}-${colIndex}`}
-                    className={`
-                      w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center
-                      text-3xl font-bold cursor-pointer transition-colors duration-200
-                      ${borderClasses}
-                      ${bgClass} ${textClass}
-                    `}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, rowIndex, colIndex)}
-                    onClick={() => handleCellClick(rowIndex, colIndex)}
-                  >
-                    {cell}
-                  </div>
-                );
-              })
-            ))}
-          </div>
-        </div>
+      const isBoardFull = board.every(row => row.every(cell => cell !== null));
 
-        {/* 數字與工具選擇區 */}
-        {!isComplete && (
-          <div className="mb-6">
-            <p className="text-center text-sm text-slate-500 mb-3">數字與工具盤 (可點選或拖拉)</p>
-            <div className="flex justify-center gap-3 sm:gap-4">
-              {[1, 2, 3, 4, 'eraser'].map(item => (
-                <div
-                  key={item}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, item)}
-                  onClick={() => setActiveNumber(activeNumber === item ? null : item)}
-                  className={`
-                    w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold shadow-md cursor-pointer
-                    transition-transform transform hover:scale-110 active:scale-95
-                    ${activeNumber === item 
-                      ? (item === 'eraser' ? 'bg-red-500 text-white shadow-red-500/50' : 'bg-blue-600 text-white shadow-blue-500/50') 
-                      : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-400'}
-                  `}
-                  title={item === 'eraser' ? '清除' : `數字 ${item}`}
-                >
-                  {item === 'eraser' ? <Eraser size={24} /> : item}
-                </div>
-              ))}
+      const handleDragStart = (e, item) => {
+        e.dataTransfer.setData('number', item.toString());
+        setActiveNumber(item);
+      };
+
+      const handleDragOver = (e) => e.preventDefault();
+
+      const handleDrop = (e, rowIndex, colIndex) => {
+        e.preventDefault();
+        const draggedData = e.dataTransfer.getData('number');
+        if (draggedData === 'eraser') {
+          fillCell(rowIndex, colIndex, 'eraser');
+        } else {
+          const droppedNumber = parseInt(draggedData, 10);
+          if (!isNaN(droppedNumber)) fillCell(rowIndex, colIndex, droppedNumber);
+        }
+      };
+
+      const handleCellClick = (rowIndex, colIndex) => {
+        if (currentPuzzle[rowIndex][colIndex] !== null) return;
+        if (activeNumber !== null) {
+          fillCell(rowIndex, colIndex, activeNumber);
+        } else if (board[rowIndex][colIndex] !== null) {
+          fillCell(rowIndex, colIndex, 'eraser');
+        }
+      };
+
+      const fillCell = (rowIndex, colIndex, numberOrEraser) => {
+        if (currentPuzzle[rowIndex][colIndex] !== null) return;
+        const newBoard = [...board];
+        const newValue = numberOrEraser === 'eraser' ? null : numberOrEraser;
+        
+        if (newBoard[rowIndex][colIndex] !== newValue) {
+          playAudio(newValue === null ? 'clear' : 'place');
+        }
+        
+        newBoard[rowIndex][colIndex] = newValue;
+        setBoard(newBoard);
+        
+        const newErrors = [...errors];
+        newErrors[rowIndex][colIndex] = false;
+        setErrors(newErrors);
+        setIsComplete(false);
+      };
+
+      const checkSolution = () => {
+        let hasError = false;
+        const newErrors = Array(4).fill(null).map(() => Array(4).fill(false));
+
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            if (board[i][j] !== currentSolution[i][j]) {
+              newErrors[i][j] = true;
+              hasError = true;
+            }
+          }
+        }
+
+        setErrors(newErrors);
+        if (!hasError) {
+          setIsComplete(true);
+          setTimeTaken(Math.floor((Date.now() - startTime) / 1000));
+          playAudio('success');
+        } else {
+          playAudio('clear');
+        }
+      };
+
+      const resetGame = () => {
+        setBoard(parseGrid(PUZZLE_DATA[currentPuzzleIndex].p));
+        setErrors(Array(4).fill(null).map(() => Array(4).fill(false)));
+        setIsComplete(false);
+        setActiveNumber(null);
+        setStartTime(Date.now());
+        setTimeTaken(null);
+      };
+
+      const handlePrev = () => {
+        if (currentPuzzleIndex > 0) setCurrentPuzzleIndex(currentPuzzleIndex - 1);
+      };
+
+      const handleNext = () => {
+        if (currentPuzzleIndex < PUZZLE_DATA.length - 1) setCurrentPuzzleIndex(currentPuzzleIndex + 1);
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col items-center py-10 font-sans text-gray-800">
+          <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
+            <div className="text-center mb-4">
+              <h1 className="text-3xl font-bold text-slate-800 mb-2">康樂國小創意科技<br/>4x4 數獨</h1>
+              <p className="text-slate-500 text-sm">請將 1~4 拖拉或點選填入淡藍色空格中。<br/>選取「橡皮擦」或再次點擊格子可清除數字。</p>
             </div>
-          </div>
-        )}
 
-        {/* 控制按鈕區 */}
-        <div className="flex flex-col gap-3 mt-8">
-          {!isComplete ? (
-            <button
-              onClick={checkSolution}
-              disabled={!isBoardFull}
-              className={`
-                w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2
-                ${isBoardFull 
-                  ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/30' 
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
-              `}
-            >
-              <CheckCircle2 size={24} />
-              完成
-            </button>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <div className="bg-green-100 border-2 border-green-500 text-green-700 p-4 rounded-xl text-center font-bold text-lg animate-pulse flex flex-col items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={32} className="text-green-600" />
-                  <span>恭喜你！完全答對了！</span>
-                </div>
-                {timeTaken !== null && (
-                  <span className="text-sm font-medium mt-1 bg-green-200 text-green-800 px-4 py-1 rounded-full shadow-sm">
-                    ⏱️ 挑戰時間：{formatTime(timeTaken)}
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center justify-between bg-slate-100 p-2 sm:p-3 rounded-xl mb-6">
+              <button 
+                onClick={handlePrev} 
+                disabled={currentPuzzleIndex === 0}
+                className="p-2 flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-bold text-sm"
+              >
+                <IconChevronLeft />
+                <span className="hidden sm:inline">上一題</span>
+              </button>
               
-              {currentPuzzleIndex < PUZZLE_DATA.length - 1 && (
-                <button
-                  onClick={handleNext}
-                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2"
-                >
-                  進入下一題 <ChevronRight size={24} />
-                </button>
-              )}
+              <select 
+                value={currentPuzzleIndex} 
+                onChange={(e) => setCurrentPuzzleIndex(Number(e.target.value))}
+                className="bg-white border-2 border-slate-300 text-slate-800 text-base sm:text-lg font-bold py-1.5 px-3 sm:px-6 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center cursor-pointer"
+              >
+                {PUZZLE_DATA.map((_, idx) => (
+                  <option key={idx} value={idx}>第 {idx + 1} 題</option>
+                ))}
+              </select>
+
+              <button 
+                onClick={handleNext} 
+                disabled={currentPuzzleIndex === PUZZLE_DATA.length - 1}
+                className="p-2 flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-bold text-sm"
+              >
+                <span className="hidden sm:inline">下一題</span>
+                <IconChevronRight />
+              </button>
             </div>
-          )}
 
-          <button
-            onClick={resetGame}
-            className="w-full py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
-          >
-            <RotateCcw size={20} />
-            重新開始
-          </button>
-        </div>
+            <div className="mb-8 flex justify-center">
+              <div className="grid grid-cols-4 border-4 border-slate-800 rounded-lg overflow-hidden bg-slate-800 gap-[1px]">
+                {board.map((row, rowIndex) => (
+                  row.map((cell, colIndex) => {
+                    const isInitial = currentPuzzle[rowIndex][colIndex] !== null;
+                    const isError = errors[rowIndex][colIndex];
+                    const borderClasses = `
+                      ${colIndex === 1 ? 'border-r-4 border-r-slate-800' : ''}
+                      ${rowIndex === 1 ? 'border-b-4 border-b-slate-800' : ''}
+                    `;
+                    let bgClass = "bg-[#e0f2fe]";
+                    let textClass = "text-blue-900";
+                    if (isInitial) { bgClass = "bg-white"; textClass = "text-slate-900"; } 
+                    else if (isError) { bgClass = "bg-red-500"; textClass = "text-white"; } 
+                    else if (cell !== null) { bgClass = "bg-blue-100"; textClass = "text-blue-900"; }
 
-        {/* 錯誤提示文字 */}
-        {errors.some(row => row.some(err => err)) && !isComplete && (
-          <div className="mt-4 flex items-center justify-center gap-2 text-red-500 font-medium">
-            <AlertCircle size={20} />
-            <span>有紅色的錯誤格子，請使用橡皮擦清除或重新填寫！</span>
-          </div>
-        )}
+                    return (
+                      <div
+                        key={`${rowIndex}-${colIndex}`}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-3xl font-bold cursor-pointer transition-colors duration-200 ${borderClasses} ${bgClass} ${textClass}`}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, rowIndex, colIndex)}
+                        onClick={() => handleCellClick(rowIndex, colIndex)}
+                      >
+                        {cell}
+                      </div>
+                    );
+                  })
+                ))}
+              </div>
+            </div>
 
-      </div>
-    </div>
-  );
-}
+            {!isComplete && (
+              <div className="mb-6">
+                <p className="text-center text-sm text-slate-500 mb-3">數字與工具盤 (可點選或拖拉)</p>
+                <div className="flex justify-center gap-3 sm:gap-4">
+                  {[1, 2, 3, 4, 'eraser'].map(item => (
+                    <div
+                      key={item}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item)}
+                      onClick={() => setActiveNumber(activeNumber === item ? null : item)}
+                      className={`
+                        w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold shadow-md cursor-pointer
+                        transition-transform transform hover:scale-110 active:scale-95
+                        ${activeNumber === item 
+                          ? (item === 'eraser' ? 'bg-red-500 text-white shadow-red-500/50' : 'bg-blue-600 text-white shadow-blue-500/50') 
+                          : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-400'}
+                      `}
+                      title={item === 'eraser' ? '清除' : `數字 ${item}`}
+                    >
+                      {item === 'eraser' ? <IconEraser /> : item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 mt-8">
+              {!isComplete ? (
+                <button
+                  onClick={checkSolution}
+                  disabled={!isBoardFull}
+                  className={`
+                    w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2
+                    ${isBoardFull 
+                      ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/30' 
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
+                  `}
+                >
+                  <IconCheckCircle />
+                  完成
+                </button>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <div className="bg-green-100 border-2 border-green-500 text-green-700 p-4 rounded-xl text-center font-bold text-lg animate-pulse flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <IconCheckCircle size={32} className="text-green-600" />
+                      <span>恭喜你！完全答對了！</span>
+                    </div>
+                    {timeTaken !== null && (
+                      <span className="text-sm font-medium mt-1 bg-green-200 text-green-800 px-4 py-1 rounded-full shadow-sm">
+                        ⏱️ 挑戰時間：{formatTime(timeTaken)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {currentPuzzleIndex < PUZZLE_DATA.length - 1 && (
+                    <button
+                      onClick={handleNext}
+                      className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2"
+                    >
+                      進入下一題 <IconChevronRight />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={resetGame}
+                className="w-full py-3 rounded-xl font-bold text-slate-600
