@@ -1,0 +1,547 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Ship, Droplets, Eraser, RefreshCw, Info, CheckCircle2, Home, Volume2, VolumeX } from 'lucide-react';
+
+// 遊戲難度設定檔
+const LEVELS = {
+  EASY: { size: 5, fleet: [3, 2, 1, 1], name: "簡單 (5x5)", hints: 3 },
+  MEDIUM: { size: 6, fleet: [3, 2, 2, 1, 1, 1], name: "中等 (6x6)", hints: 4 },
+  HARD: { size: 8, fleet: [4, 3, 2, 2, 1, 1, 1, 1], name: "困難 (8x8)", hints: 5 }
+};
+
+// 狀態對應常數
+const EMPTY = 0;
+const WATER = 1;
+const SHIP = 2;
+
+// 簡易音效合成器 (Web Audio API)
+const playSound = (type, soundEnabled) => {
+  if (!soundEnabled) return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'ship') {
+      // 沉穩的低音 (船隻)
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } else if (type === 'water') {
+      // 清脆的高音 (水滴)
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } else if (type === 'erase') {
+      // 短促的擦除聲
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.05);
+    } else if (type === 'win') {
+      // 勝利的琶音
+      const freqs = [440, 554, 659, 880];
+      freqs.forEach((f, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = f;
+        o.connect(g);
+        g.connect(ctx.destination);
+        g.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
+        g.gain.linearRampToValueAtTime(0.2, ctx.currentTime + i * 0.1 + 0.05);
+        g.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.1 + 0.3);
+        o.start(ctx.currentTime + i * 0.1);
+        o.stop(ctx.currentTime + i * 0.1 + 0.3);
+      });
+    }
+  } catch (e) {
+    console.error("Audio playback error", e);
+  }
+};
+
+// 產生遊戲盤面解答的函數
+const generatePuzzle = (size, fleetReq) => {
+  let valid = false;
+  let grid = [];
+  let rowClues = [];
+  let colClues = [];
+
+  while (!valid) {
+    grid = Array(size).fill(0).map(() => Array(size).fill(EMPTY));
+    valid = true;
+
+    for (let len of fleetReq) {
+      let placed = false;
+      let attempts = 0;
+      
+      while (!placed && attempts < 300) {
+        attempts++;
+        const isHoriz = Math.random() > 0.5;
+        const r = Math.floor(Math.random() * (isHoriz ? size : size - len + 1));
+        const c = Math.floor(Math.random() * (isHoriz ? size - len + 1 : size));
+
+        let canPlace = true;
+        // 檢查是否與其他船隻相鄰 (含對角線)
+        for (let i = 0; i < len; i++) {
+          const rr = isHoriz ? r : r + i;
+          const cc = isHoriz ? c + i : c;
+          
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const nr = rr + dr;
+              const nc = cc + dc;
+              if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                if (grid[nr][nc] === SHIP) {
+                  canPlace = false;
+                }
+              }
+            }
+          }
+        }
+
+        if (canPlace) {
+          for (let i = 0; i < len; i++) {
+            grid[isHoriz ? r : r + i][isHoriz ? c + i : c] = SHIP;
+          }
+          placed = true;
+        }
+      }
+
+      if (!placed) {
+        valid = false;
+        break; // 無法擺放，重新產生整個盤面
+      }
+    }
+
+    if (valid) {
+      // 計算行列提示數字
+      rowClues = grid.map(row => row.filter(cell => cell === SHIP).length);
+      colClues = [];
+      for (let c = 0; c < size; c++) {
+        let sum = 0;
+        for (let r = 0; r < size; r++) {
+          if (grid[r][c] === SHIP) sum++;
+        }
+        colClues.push(sum);
+      }
+    }
+  }
+
+  return { solution: grid, rowClues, colClues };
+};
+
+export default function App() {
+  const [appState, setAppState] = useState('MENU');
+  const [difficultyKey, setDifficultyKey] = useState('EASY');
+  const [puzzle, setPuzzle] = useState({ solution: [], rowClues: [], colClues: [] });
+  const [userGrid, setUserGrid] = useState([]);
+  const [lockedCells, setLockedCells] = useState([]);
+  const [tool, setTool] = useState(SHIP);
+  const [isWon, setIsWon] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  const currentLevel = LEVELS[difficultyKey];
+
+  // 初始化遊戲
+  const startNewGame = useCallback((levelKey = difficultyKey) => {
+    const level = LEVELS[levelKey];
+    const newPuzzle = generatePuzzle(level.size, level.fleet);
+    setPuzzle(newPuzzle);
+    
+    // 產生初始網格並給予隨機提示
+    const initialGrid = Array(level.size).fill(0).map(() => Array(level.size).fill(EMPTY));
+    const newLocked = Array(level.size).fill(0).map(() => Array(level.size).fill(false));
+    
+    let hintsGiven = 0;
+    while (hintsGiven < level.hints) {
+      const r = Math.floor(Math.random() * level.size);
+      const c = Math.floor(Math.random() * level.size);
+      if (!newLocked[r][c]) {
+        initialGrid[r][c] = newPuzzle.solution[r][c] === SHIP ? SHIP : WATER;
+        newLocked[r][c] = true;
+        hintsGiven++;
+      }
+    }
+
+    setUserGrid(initialGrid);
+    setLockedCells(newLocked);
+    setIsWon(false);
+    setDifficultyKey(levelKey);
+    setAppState('PLAYING');
+  }, [difficultyKey]);
+
+  // 處理點擊格子
+  const handleCellClick = (r, c) => {
+    if (lockedCells[r][c] || isWon) return;
+
+    const newGrid = [...userGrid];
+    if (newGrid[r][c] === tool) {
+      newGrid[r][c] = EMPTY;
+      playSound('erase', soundEnabled);
+    } else {
+      newGrid[r][c] = tool;
+      playSound(tool === SHIP ? 'ship' : 'water', soundEnabled);
+    }
+    setUserGrid(newGrid);
+    checkWinCondition(newGrid);
+  };
+
+  // 檢查勝利條件
+  const checkWinCondition = (grid) => {
+    const size = currentLevel.size;
+    // 1. 檢查行、列數字是否吻合
+    for (let r = 0; r < size; r++) {
+      const sum = grid[r].filter(cell => cell === SHIP).length;
+      if (sum !== puzzle.rowClues[r]) return;
+    }
+    for (let c = 0; c < size; c++) {
+      let sum = 0;
+      for (let r = 0; r < size; r++) if (grid[r][c] === SHIP) sum++;
+      if (sum !== puzzle.colClues[c]) return;
+    }
+
+    // 2. 尋找所有船隻並檢查規則 (不相連、不轉彎)
+    const visited = Array(size).fill(0).map(() => Array(size).fill(false));
+    const foundShips = [];
+
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (grid[r][c] === SHIP && !visited[r][c]) {
+          const shipCells = [];
+          const q = [[r, c]];
+          visited[r][c] = true;
+
+          while (q.length > 0) {
+            const [currR, currC] = q.shift();
+            shipCells.push([currR, currC]);
+
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                const nr = currR + dr;
+                const nc = currC + dc;
+                
+                if (nr >= 0 && nr < size && nc >= 0 && nc < size && grid[nr][nc] === SHIP) {
+                  // 對角線相連即失敗
+                  if (Math.abs(dr) === 1 && Math.abs(dc) === 1) return;
+                  
+                  if (!visited[nr][nc]) {
+                    visited[nr][nc] = true;
+                    q.push([nr, nc]);
+                  }
+                }
+              }
+            }
+          }
+
+          // 檢查是否為直線 (同行或同列)
+          const isHoriz = shipCells.every(cell => cell[0] === shipCells[0][0]);
+          const isVert = shipCells.every(cell => cell[1] === shipCells[0][1]);
+          if (!isHoriz && !isVert) return; // 變成 L 型或不規則形狀
+
+          foundShips.push(shipCells.length);
+        }
+      }
+    }
+
+    // 3. 檢查艦隊數量與大小是否完全吻合
+    const sortedFound = foundShips.sort((a, b) => b - a);
+    if (sortedFound.length !== currentLevel.fleet.length) return;
+    
+    for (let i = 0; i < currentLevel.fleet.length; i++) {
+      if (sortedFound[i] !== currentLevel.fleet[i]) return;
+    }
+
+    // 全部通過，獲得勝利！
+    setIsWon(true);
+    playSound('win', soundEnabled);
+  };
+
+  // 取得格子的視覺樣式 (處理船隻圓角)
+  const getCellClassName = (r, c) => {
+    const state = userGrid[r]?.[c];
+    const isLocked = lockedCells[r]?.[c];
+    let base = "w-full h-full flex items-center justify-center transition-all duration-200 select-none ";
+    
+    if (state === EMPTY) return base + (isLocked ? "bg-gray-100" : "bg-slate-50 hover:bg-blue-50 cursor-pointer");
+    if (state === WATER) return base + "bg-blue-100 text-blue-400 " + (isLocked ? "opacity-80" : "cursor-pointer hover:bg-blue-200");
+    
+    if (state === SHIP) {
+      const size = currentLevel.size;
+      const hasTop = r > 0 && userGrid[r - 1][c] === SHIP;
+      const hasBottom = r < size - 1 && userGrid[r + 1][c] === SHIP;
+      const hasLeft = c > 0 && userGrid[r][c - 1] === SHIP;
+      const hasRight = c < size - 1 && userGrid[r][c + 1] === SHIP;
+
+      let shapeClass = "bg-slate-700 text-slate-700 ";
+      if (!hasTop && !hasBottom && !hasLeft && !hasRight) shapeClass += "rounded-full scale-75";
+      else if (hasTop && hasBottom) shapeClass += "rounded-none scale-y-100 scale-x-75";
+      else if (hasLeft && hasRight) shapeClass += "rounded-none scale-x-100 scale-y-75";
+      else if (hasRight && !hasLeft && !hasTop && !hasBottom) shapeClass += "rounded-l-full scale-y-75 origin-right";
+      else if (hasLeft && !hasRight && !hasTop && !hasBottom) shapeClass += "rounded-r-full scale-y-75 origin-left";
+      else if (hasBottom && !hasTop && !hasLeft && !hasRight) shapeClass += "rounded-t-full scale-x-75 origin-bottom";
+      else if (hasTop && !hasBottom && !hasLeft && !hasRight) shapeClass += "rounded-b-full scale-x-75 origin-top";
+      else shapeClass += "rounded-none scale-75"; 
+
+      return base + shapeClass + (isLocked ? " opacity-90" : " cursor-pointer hover:bg-slate-600");
+    }
+  };
+
+  // 取得行/列的目前船隻數量
+  const getRowCount = (r) => userGrid[r]?.filter(cell => cell === SHIP).length || 0;
+  const getColCount = (c) => {
+    let sum = 0;
+    for (let r = 0; r < currentLevel.size; r++) if (userGrid[r]?.[c] === SHIP) sum++;
+    return sum;
+  };
+
+  // 分組渲染剩餘艦隊指示器
+  const renderFleetHints = () => {
+    const fleetGroups = {};
+    currentLevel.fleet.forEach(f => {
+      fleetGroups[f] = (fleetGroups[f] || 0) + 1;
+    });
+
+    return Object.entries(fleetGroups).sort((a,b) => b[0] - a[0]).map(([size, count]) => (
+      <div key={`fleet-${size}`} className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+        <span className="text-sm font-bold text-slate-600">{size}格船</span>
+        <span className="text-xs text-slate-400 mr-1">x {count}</span>
+        <div className="flex gap-[1px] bg-slate-700 p-[1px] rounded-full">
+          {Array(Number(size)).fill(0).map((_, i) => (
+             <div key={i} className={`w-4 h-4 sm:w-5 sm:h-5 bg-slate-700 ${size === '1' ? 'rounded-full' : ''}`}></div>
+          ))}
+        </div>
+      </div>
+    ));
+  };
+
+  if (appState === 'MENU') {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans text-slate-800">
+        <div className="max-w-xl w-full bg-white p-8 rounded-2xl shadow-xl border border-slate-200 relative">
+          
+          <button 
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
+          >
+            {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
+          </button>
+
+          <div className="flex flex-col items-center mb-8">
+            <Ship className="w-16 h-16 text-blue-600 mb-4" />
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">海戰棋</h1>
+            <p className="text-slate-500 font-medium">挑戰你的邏輯推理！</p>
+          </div>
+
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-slate-700 leading-relaxed">
+            <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
+              <Info className="text-blue-500" size={24}/>
+              遊戲規則
+            </h3>
+            <ul className="space-y-3 list-none">
+              <li className="flex gap-3">
+                <span className="text-blue-500 font-bold mt-1">•</span>
+                <span>依據提示數字找出隱藏的船。邊緣數字代表該直行或橫列的<strong>船格總數</strong>。</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-blue-500 font-bold mt-1">•</span>
+                <span><strong>最重要規則：</strong>船跟船之間<strong>絕對不能碰在一起</strong> (連斜角都不行)！</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-blue-500 font-bold mt-1">•</span>
+                <span>善用「標記水域」：確定沒有船的地方，畫上水滴💧，能幫你更快找出剩下的船！</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-center font-bold text-slate-500 mb-2">請選擇難度 (每次皆為隨機新題目)</h3>
+            <button
+              onClick={() => startNewGame('EASY')}
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-1 text-lg flex justify-between items-center"
+            >
+              <span>🌟 簡單</span>
+              <span className="text-sm font-normal bg-green-600 px-3 py-1 rounded-full">5x5</span>
+            </button>
+            <button
+              onClick={() => startNewGame('MEDIUM')}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-1 text-lg flex justify-between items-center"
+            >
+              <span>⭐ 中等</span>
+              <span className="text-sm font-normal bg-blue-600 px-3 py-1 rounded-full">6x6</span>
+            </button>
+            <button
+              onClick={() => startNewGame('HARD')}
+              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-1 text-lg flex justify-between items-center"
+            >
+              <span>🔥 困難</span>
+              <span className="text-sm font-normal bg-purple-600 px-3 py-1 rounded-full">8x8</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100 py-8 px-4 flex flex-col items-center font-sans text-slate-800">
+      
+      {/* 頂部標題與按鈕 */}
+      <div className="max-w-xl w-full flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2">
+            <Ship className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
+            海戰棋 - {currentLevel.name}
+          </h1>
+        </div>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 transition"
+            title="音效開關"
+          >
+            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
+          <button 
+            onClick={() => setAppState('MENU')}
+            className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 transition"
+            title="回首頁選難度"
+          >
+            <Home size={20} />
+          </button>
+          <button 
+            onClick={() => startNewGame(difficultyKey)}
+            className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition"
+            title="換下一題"
+          >
+            <RefreshCw size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* 勝利訊息 */}
+      {isWon && (
+        <div className="max-w-xl w-full bg-green-100 border border-green-300 text-green-800 p-4 rounded-xl mb-6 flex items-center justify-center gap-2 font-bold animate-pulse text-lg">
+          <CheckCircle2 size={28} />
+          太棒了！你成功找出所有艦隊！
+        </div>
+      )}
+
+      {/* 遊戲主網格區域 */}
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200 overflow-x-auto max-w-full">
+        <div className="flex flex-col items-center" style={{ minWidth: `${currentLevel.size * 48 + 50}px` }}>
+          <div className="w-fit">
+            {/* 頂部列數字提示 */}
+            <div className="flex mb-1" style={{ marginLeft: currentLevel.size >= 8 ? '36px' : '48px' }}>
+              {puzzle.colClues.map((clue, c) => {
+                const currentCount = getColCount(c);
+                const isSatisfied = currentCount === clue;
+                const isOver = currentCount > clue;
+                // 根據網格大小調整格子尺寸
+                const sizeClass = currentLevel.size >= 8 ? 'w-10 sm:w-12 h-10 sm:h-12 text-lg sm:text-xl' : 'w-12 sm:w-16 h-12 sm:h-16 text-xl sm:text-2xl';
+                return (
+                  <div key={`col-${c}`} className={`${sizeClass} flex items-center justify-center font-bold transition-colors ${isSatisfied ? 'text-slate-300' : isOver ? 'text-red-500' : 'text-slate-700'}`}>
+                    {clue}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 網格主體 */}
+            <div className="flex flex-col gap-[2px] bg-slate-300 border-2 border-slate-400 p-[2px] rounded-lg">
+              {userGrid.map((row, r) => (
+                <div key={`row-${r}`} className="flex gap-[2px]">
+                  {/* 左側行數字提示 */}
+                  {(() => {
+                    const clue = puzzle.rowClues[r];
+                    const currentCount = getRowCount(r);
+                    const isSatisfied = currentCount === clue;
+                    const isOver = currentCount > clue;
+                    const sizeClass = currentLevel.size >= 8 ? 'w-[34px] h-10 sm:h-12 text-lg sm:text-xl' : 'w-[46px] h-12 sm:h-16 text-xl sm:text-2xl';
+                    return (
+                      <div className={`${sizeClass} bg-white flex items-center justify-center font-bold mr-[2px] rounded-l`}>
+                        <span className={`${isSatisfied ? 'text-slate-300' : isOver ? 'text-red-500' : 'text-slate-700'} transition-colors`}>
+                          {clue}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* 網格單元 */}
+                  {row.map((cell, c) => {
+                    const cellSize = currentLevel.size >= 8 ? 'w-10 h-10 sm:w-12 sm:h-12' : 'w-12 h-12 sm:w-16 sm:h-16';
+                    return (
+                      <div 
+                        key={`cell-${r}-${c}`} 
+                        className={`${cellSize} bg-white relative p-[2px] rounded-sm cursor-pointer hover:bg-slate-50`}
+                        onClick={() => handleCellClick(r, c)}
+                      >
+                        <div className={getCellClassName(r, c)}>
+                          {cell === WATER && <Droplets size={currentLevel.size >= 8 ? 20 : 28} strokeWidth={2.5} />}
+                        </div>
+                        {lockedCells[r]?.[c] && (
+                          <div className="absolute top-1 right-1 w-2 h-2 bg-black rounded-full opacity-20"></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 繪圖工具列 */}
+      <div className="max-w-xl w-full mt-6 bg-white p-2 rounded-xl shadow-sm border border-slate-200 flex justify-center gap-4">
+        <button
+          onClick={() => setTool(SHIP)}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold transition-all ${
+            tool === SHIP 
+              ? 'bg-slate-700 text-white shadow-md transform scale-[1.02]' 
+              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+          }`}
+        >
+          <div className={`w-4 h-4 rounded-sm ${tool === SHIP ? 'bg-white' : 'bg-slate-400'}`}></div>
+          標記船隻
+        </button>
+        <button
+          onClick={() => setTool(WATER)}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold transition-all ${
+            tool === WATER 
+              ? 'bg-blue-500 text-white shadow-md transform scale-[1.02]' 
+              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+          }`}
+        >
+          <Droplets size={20} strokeWidth={2.5} />
+          標記水域
+        </button>
+      </div>
+
+      {/* 剩餘艦隊指示器 (僅供視覺參考) */}
+      <div className="max-w-xl w-full mt-6 text-center">
+        <h4 className="text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">目標艦隊清單</h4>
+        <div className="flex justify-center flex-wrap gap-4">
+          {renderFleetHints()}
+        </div>
+      </div>
+
+    </div>
+  );
+}
