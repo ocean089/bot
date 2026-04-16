@@ -2,21 +2,43 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>康樂國小創意科技 - 4x4 數獨</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
 
   <style>
-    /* 強制將網頁底色設為純白 */
-    body { background-color: #ffffff; margin: 0; padding: 0; }
+    /* 防止手機瀏覽器雙擊放大、禁止反白文字，讓體驗更像原生 App */
+    body { 
+      background-color: #ffffff; 
+      margin: 0; 
+      padding: 0; 
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    
+    /* 格子選中時的動畫特效 */
+    .cell-selected {
+      transform: scale(1.08);
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
+      z-index: 10;
+    }
   </style>
 </head>
-<body class="bg-white">
+<body class="bg-white text-slate-800">
+  
+  <div id="error-message" style="color: red; padding: 20px; font-weight: bold; text-align: center;"></div>
   <div id="root"></div>
+
+  <script>
+    window.addEventListener('error', function(event) {
+      document.getElementById('error-message').innerText = '系統載入發生錯誤：' + event.message;
+    });
+  </script>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
@@ -137,7 +159,11 @@
       const [board, setBoard] = useState(() => parseGrid(PUZZLE_DATA[0].p));
       const [errors, setErrors] = useState(Array(4).fill(null).map(() => Array(4).fill(false)));
       const [isComplete, setIsComplete] = useState(false);
-      const [activeNumber, setActiveNumber] = useState(null);
+      
+      // 新增：雙向選擇模式的狀態管理
+      const [selectedCell, setSelectedCell] = useState(null); // 記錄目前被選中的格子 {r, c}
+      const [activeNumber, setActiveNumber] = useState(null); // 記錄目前被選中的數字工具
+
       const [startTime, setStartTime] = useState(Date.now());
       const [timeTaken, setTimeTaken] = useState(null);
 
@@ -148,6 +174,7 @@
         setBoard(parseGrid(PUZZLE_DATA[currentPuzzleIndex].p));
         setErrors(Array(4).fill(null).map(() => Array(4).fill(false)));
         setIsComplete(false);
+        setSelectedCell(null);
         setActiveNumber(null);
         setStartTime(Date.now());
         setTimeTaken(null);
@@ -155,49 +182,56 @@
 
       const isBoardFull = board.every(row => row.every(cell => cell !== null));
 
-      const handleDragStart = (e, item) => {
-        e.dataTransfer.setData('number', item.toString());
-        setActiveNumber(item);
-      };
-
-      const handleDragOver = (e) => e.preventDefault();
-
-      const handleDrop = (e, rowIndex, colIndex) => {
-        e.preventDefault();
-        const draggedData = e.dataTransfer.getData('number');
-        if (draggedData === 'eraser') {
-          fillCell(rowIndex, colIndex, 'eraser');
-        } else {
-          const droppedNumber = parseInt(draggedData, 10);
-          if (!isNaN(droppedNumber)) fillCell(rowIndex, colIndex, droppedNumber);
-        }
-      };
-
-      const handleCellClick = (rowIndex, colIndex) => {
-        if (currentPuzzle[rowIndex][colIndex] !== null) return;
-        if (activeNumber !== null) {
-          fillCell(rowIndex, colIndex, activeNumber);
-        } else if (board[rowIndex][colIndex] !== null) {
-          fillCell(rowIndex, colIndex, 'eraser');
-        }
-      };
-
-      const fillCell = (rowIndex, colIndex, numberOrEraser) => {
-        if (currentPuzzle[rowIndex][colIndex] !== null) return;
+      // 填寫數字的共用邏輯
+      const fillCell = (r, c, val) => {
+        const newValue = val === 'eraser' ? null : val;
         const newBoard = [...board];
-        const newValue = numberOrEraser === 'eraser' ? null : numberOrEraser;
         
-        if (newBoard[rowIndex][colIndex] !== newValue) {
+        if (newBoard[r][c] !== newValue) {
           playAudio(newValue === null ? 'clear' : 'place');
+          newBoard[r][c] = newValue;
+          setBoard(newBoard);
+          
+          const newErrors = [...errors];
+          newErrors[r][c] = false;
+          setErrors(newErrors);
+          setIsComplete(false);
         }
+      };
+
+      // 點擊網格事件
+      const handleCellClick = (rowIndex, colIndex) => {
+        if (currentPuzzle[rowIndex][colIndex] !== null) return; // 題目固定的格子不能點
         
-        newBoard[rowIndex][colIndex] = newValue;
-        setBoard(newBoard);
-        
-        const newErrors = [...errors];
-        newErrors[rowIndex][colIndex] = false;
-        setErrors(newErrors);
-        setIsComplete(false);
+        if (activeNumber !== null) {
+          // 模式 B：「蓋印章模式」 (已經先選了下面板子的數字，點擊格子就填入)
+          fillCell(rowIndex, colIndex, activeNumber);
+          setSelectedCell(null); 
+        } else {
+          // 模式 A：「先選格子模式」 (點擊格子讓它亮起來)
+          if (selectedCell?.r === rowIndex && selectedCell?.c === colIndex) {
+            setSelectedCell(null); // 再點一次取消選取
+          } else {
+            setSelectedCell({ r: rowIndex, c: colIndex }); // 選取這個格子
+          }
+        }
+      };
+
+      // 點擊下方數字盤事件
+      const handleNumberClick = (item) => {
+        if (selectedCell !== null) {
+          // 模式 A：因為已經有選取的格子，所以點數字就直接填進去
+          fillCell(selectedCell.r, selectedCell.c, item);
+          setSelectedCell(null); // 填完就自動取消黃框
+          setActiveNumber(null);
+        } else {
+          // 模式 B：沒有選格子，那就選中這個數字工具 (蓋印章準備)
+          if (activeNumber === item) {
+            setActiveNumber(null); // 再點一次取消選取
+          } else {
+            setActiveNumber(item);
+          }
+        }
       };
 
       const checkSolution = () => {
@@ -214,6 +248,9 @@
         }
 
         setErrors(newErrors);
+        setSelectedCell(null); // 檢查時取消選取
+        setActiveNumber(null);
+
         if (!hasError) {
           setIsComplete(true);
           setTimeTaken(Math.floor((Date.now() - startTime) / 1000));
@@ -227,6 +264,7 @@
         setBoard(parseGrid(PUZZLE_DATA[currentPuzzleIndex].p));
         setErrors(Array(4).fill(null).map(() => Array(4).fill(false)));
         setIsComplete(false);
+        setSelectedCell(null);
         setActiveNumber(null);
         setStartTime(Date.now());
         setTimeTaken(null);
@@ -241,18 +279,21 @@
       };
 
       return (
-        <div className="min-h-screen bg-white flex flex-col items-center py-10 font-sans text-gray-800">
-          <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.1)] border border-gray-100">
-            <div className="text-center mb-4">
-              <h1 className="text-3xl font-bold text-slate-800 mb-2">康樂國小創意科技<br/>4x4 數獨</h1>
-              <p className="text-slate-500 text-sm">請將 1~4 拖拉或點選填入淡藍色空格中。<br/>選取「橡皮擦」或再次點擊格子可清除數字。</p>
+        <div className="min-h-screen bg-white flex flex-col items-center py-6 sm:py-10 font-sans">
+          <div className="max-w-md w-full bg-white p-4 sm:p-8 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.1)] border border-gray-100">
+            
+            <div className="text-center mb-5">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">康樂國小創意科技<br/>4x4 數獨</h1>
+              <div className="bg-yellow-50 text-yellow-800 p-3 rounded-lg border border-yellow-200 inline-block text-sm font-medium shadow-sm">
+                👆 玩法：先點選淡藍色格子，再選下方數字！<br/>(也可以先點數字，再像蓋印章一樣點格子喔)
+              </div>
             </div>
 
             <div className="flex items-center justify-between bg-slate-50 border border-slate-100 p-2 sm:p-3 rounded-xl mb-6">
               <button 
                 onClick={handlePrev} 
                 disabled={currentPuzzleIndex === 0}
-                className="p-2 flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-bold text-sm"
+                className="p-2 flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 transition-colors font-bold text-sm"
               >
                 <IconChevronLeft />
                 <span className="hidden sm:inline">上一題</span>
@@ -261,7 +302,7 @@
               <select 
                 value={currentPuzzleIndex} 
                 onChange={(e) => setCurrentPuzzleIndex(Number(e.target.value))}
-                className="bg-white border-2 border-slate-300 text-slate-800 text-base sm:text-lg font-bold py-1.5 px-3 sm:px-6 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center cursor-pointer"
+                className="bg-white border-2 border-slate-300 text-slate-800 text-base sm:text-lg font-bold py-1.5 px-3 sm:px-6 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center"
               >
                 {PUZZLE_DATA.map((_, idx) => (
                   <option key={idx} value={idx}>第 {idx + 1} 題</option>
@@ -271,35 +312,50 @@
               <button 
                 onClick={handleNext} 
                 disabled={currentPuzzleIndex === PUZZLE_DATA.length - 1}
-                className="p-2 flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-bold text-sm"
+                className="p-2 flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 transition-colors font-bold text-sm"
               >
                 <span className="hidden sm:inline">下一題</span>
                 <IconChevronRight />
               </button>
             </div>
 
+            {/* 數獨網格區 */}
             <div className="mb-8 flex justify-center">
-              <div className="grid grid-cols-4 border-4 border-slate-800 rounded-lg overflow-hidden bg-slate-800 gap-[1px]">
+              <div className="grid grid-cols-4 border-4 border-slate-800 rounded-lg bg-slate-800 gap-[1px]">
                 {board.map((row, rowIndex) => (
                   row.map((cell, colIndex) => {
                     const isInitial = currentPuzzle[rowIndex][colIndex] !== null;
                     const isError = errors[rowIndex][colIndex];
+                    const isSelected = selectedCell?.r === rowIndex && selectedCell?.c === colIndex;
+                    
                     const borderClasses = `
                       ${colIndex === 1 ? 'border-r-4 border-r-slate-800' : ''}
                       ${rowIndex === 1 ? 'border-b-4 border-b-slate-800' : ''}
                     `;
+                    
                     let bgClass = "bg-[#e0f2fe]";
                     let textClass = "text-blue-900";
-                    if (isInitial) { bgClass = "bg-white"; textClass = "text-slate-900"; } 
-                    else if (isError) { bgClass = "bg-red-500"; textClass = "text-white"; } 
-                    else if (cell !== null) { bgClass = "bg-blue-100"; textClass = "text-blue-900"; }
+                    
+                    if (isInitial) { 
+                      bgClass = "bg-white"; 
+                      textClass = "text-slate-900"; 
+                    } else if (isError) { 
+                      bgClass = "bg-red-500"; 
+                      textClass = "text-white"; 
+                    } else if (cell !== null) { 
+                      bgClass = "bg-blue-100"; 
+                      textClass = "text-blue-900"; 
+                    }
+
+                    // 如果被選中，覆蓋顏色並加上動畫 class
+                    if (isSelected) {
+                      bgClass = "bg-yellow-100 border-2 border-yellow-400 cell-selected";
+                    }
 
                     return (
                       <div
                         key={`${rowIndex}-${colIndex}`}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-3xl font-bold cursor-pointer transition-colors duration-200 ${borderClasses} ${bgClass} ${textClass}`}
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, rowIndex, colIndex)}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-3xl font-bold cursor-pointer transition-all duration-150 ${borderClasses} ${bgClass} ${textClass}`}
                         onClick={() => handleCellClick(rowIndex, colIndex)}
                       >
                         {cell}
@@ -310,32 +366,30 @@
               </div>
             </div>
 
+            {/* 數字與工具盤 */}
             {!isComplete && (
               <div className="mb-6">
-                <p className="text-center text-sm text-slate-500 mb-3">數字與工具盤 (可點選或拖拉)</p>
                 <div className="flex justify-center gap-3 sm:gap-4">
                   {[1, 2, 3, 4, 'eraser'].map(item => (
-                    <div
+                    <button
                       key={item}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, item)}
-                      onClick={() => setActiveNumber(activeNumber === item ? null : item)}
+                      onClick={() => handleNumberClick(item)}
                       className={`
-                        w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold shadow-md cursor-pointer
-                        transition-transform transform hover:scale-110 active:scale-95
+                        w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-md 
+                        transition-transform transform active:scale-90
                         ${activeNumber === item 
-                          ? (item === 'eraser' ? 'bg-red-500 text-white shadow-red-500/50' : 'bg-blue-600 text-white shadow-blue-500/50') 
+                          ? (item === 'eraser' ? 'bg-red-500 text-white shadow-red-500/50 scale-110 ring-4 ring-red-200' : 'bg-blue-600 text-white shadow-blue-500/50 scale-110 ring-4 ring-blue-200') 
                           : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-400'}
                       `}
-                      title={item === 'eraser' ? '清除' : `數字 ${item}`}
                     >
                       {item === 'eraser' ? <IconEraser /> : item}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* 控制按鈕區 */}
             <div className="flex flex-col gap-3 mt-8">
               {!isComplete ? (
                 <button
@@ -344,12 +398,12 @@
                   className={`
                     w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2
                     ${isBoardFull 
-                      ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/30' 
+                      ? 'bg-green-500 hover:bg-green-600 text-white shadow-[0_4px_15px_rgba(34,197,94,0.4)] transform hover:-translate-y-1' 
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
                   `}
                 >
                   <IconCheckCircle />
-                  完成
+                  完成送出
                 </button>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -368,7 +422,7 @@
                   {currentPuzzleIndex < PUZZLE_DATA.length - 1 && (
                     <button
                       onClick={handleNext}
-                      className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-[0_4px_15px_rgba(37,99,235,0.4)] transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
                     >
                       進入下一題 <IconChevronRight />
                     </button>
@@ -378,7 +432,7 @@
 
               <button
                 onClick={resetGame}
-                className="w-full py-3 rounded-xl font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl font-bold text-slate-500 bg-slate-50 border-2 border-slate-200 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
               >
                 <IconRotate />
                 重新開始
@@ -386,9 +440,9 @@
             </div>
 
             {errors.some(row => row.some(err => err)) && !isComplete && (
-              <div className="mt-4 flex items-center justify-center gap-2 text-red-500 font-medium">
+              <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200 flex items-center justify-center gap-2 text-red-600 font-medium text-sm">
                 <IconAlert />
-                <span>有紅色的錯誤格子，請使用橡皮擦清除或重新填寫！</span>
+                <span>有紅色的錯誤格子，請選橡皮擦清除或直接蓋掉它！</span>
               </div>
             )}
 
