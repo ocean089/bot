@@ -155,6 +155,9 @@ const PUZZLES = [
   ]
 ];
 
+// 建立全域唯一的 AudioContext 以防止瀏覽器超出建立數量限制而崩潰
+let globalAudioContext = null;
+
 export default function App() {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [initialBoard, setInitialBoard] = useState([]);
@@ -168,11 +171,19 @@ export default function App() {
   // 音效引擎
   const playAudio = useCallback((type) => {
     if (!soundEnabled) return;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
     
-    // 初始化或取得 AudioContext
-    const ctx = new AudioContext();
+    // 初始化或取得唯一的 AudioContext
+    if (!globalAudioContext) {
+      globalAudioContext = new AudioContextClass();
+    }
+    const ctx = globalAudioContext;
+
+    // 如果 AudioContext 被暫停(例如瀏覽器安全政策)，嘗試恢復它
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
     
     const playOscillator = (freq, wave, duration, startTime = ctx.currentTime) => {
       const osc = ctx.createOscillator();
@@ -399,7 +410,8 @@ export default function App() {
     return className;
   };
 
-  if (board.length === 0) return null;
+  // 防呆機制：若板子還沒準備好就不渲染
+  if (!board || board.length === 0 || !initialBoard || initialBoard.length === 0) return null;
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center py-6 px-4 font-sans">
@@ -472,7 +484,7 @@ export default function App() {
 
           {/* 勝利提示覆蓋層 */}
           {isWon && (
-            <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl z-10 animate-in fade-in duration-500">
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl z-10 duration-500">
               <Trophy className="w-20 h-20 text-yellow-500 mb-4 drop-shadow-md" />
               <h2 className="text-3xl font-bold text-slate-800 mb-2">恭喜過關！</h2>
               <p className="text-slate-600 mb-6">您已成功解開題目 {currentLevel + 1}</p>
