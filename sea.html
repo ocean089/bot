@@ -49,6 +49,7 @@
 
     // --- 遊戲常數與狀態 ---
     const LEVELS = {
+      MICRO: { rows: 1, cols: 4, fleet: [1, 1], name: "超入門 (4x1)", icon: "🌱", hints: 1, totalPuzzles: 3, next: 'PRACTICE', color: 'slate' },
       PRACTICE: { rows: 2, cols: 4, fleet: [2, 1], name: "練習 (4x2)", icon: "📝", hints: 1, totalPuzzles: 5, next: 'BEGINNER', color: 'yellow' },
       BEGINNER: { rows: 4, cols: 4, fleet: [2, 1, 1], name: "入門 (4x4)", icon: "👶", hints: 2, totalPuzzles: 7, next: 'EASY', color: 'teal' },
       EASY: { rows: 5, cols: 5, fleet: [3, 2, 1, 1], name: "簡單 (5x5)", icon: "🌟", hints: 3, totalPuzzles: 7, next: 'MEDIUM', color: 'green' },
@@ -60,7 +61,7 @@
 
     let state = {
       appState: 'MENU',
-      difficultyKey: 'BEGINNER',
+      difficultyKey: 'MICRO',
       puzzleNum: 1,
       puzzle: { solution: [], rowClues: [], colClues: [] },
       userGrid: [],
@@ -345,6 +346,7 @@
       return Object.entries(LEVELS).map(([key, level]) => {
         // 根據難度設定顏色主題
         let btnColors = `bg-${level.color}-100 hover:bg-${level.color}-200 text-${level.color}-800 border-${level.color}-300`;
+        if (level.color === 'slate') btnColors = 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300';
         if (level.color === 'yellow') btnColors = 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border-yellow-300';
         if (level.color === 'teal') btnColors = 'bg-teal-100 hover:bg-teal-200 text-teal-800 border-teal-300';
         if (level.color === 'green') btnColors = 'bg-green-100 hover:bg-green-200 text-green-800 border-green-300';
