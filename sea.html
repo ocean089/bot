@@ -27,9 +27,9 @@
     };
 
     // --- 偽隨機數生成器 (PRNG) ---
-    // 確保同一關卡的同一題號，永遠產生一模一樣的盤面與提示點
     const xmur3 = (str) => {
-        for(let i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
+        let h = 1779033703 ^ str.length;
+        for(let i = 0; i < str.length; i++) {
             h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
             h = h << 13 | h >>> 19;
         } return function() {
@@ -49,11 +49,11 @@
 
     // --- 遊戲常數與狀態 ---
     const LEVELS = {
-      PRACTICE: { rows: 2, cols: 4, fleet: [2, 1], name: "練習 (4x2)", hints: 1, totalPuzzles: 5, next: 'BEGINNER' },
-      BEGINNER: { rows: 4, cols: 4, fleet: [2, 1, 1], name: "入門 (4x4)", hints: 2, totalPuzzles: 7, next: 'EASY' },
-      EASY: { rows: 5, cols: 5, fleet: [3, 2, 1, 1], name: "簡單 (5x5)", hints: 3, totalPuzzles: 7, next: 'MEDIUM' },
-      MEDIUM: { rows: 6, cols: 6, fleet: [3, 2, 2, 1, 1, 1], name: "中等 (6x6)", hints: 4, totalPuzzles: 7, next: 'HARD' },
-      HARD: { rows: 8, cols: 8, fleet: [4, 3, 2, 2, 1, 1, 1, 1], name: "困難 (8x8)", hints: 5, totalPuzzles: 5, next: null }
+      PRACTICE: { rows: 2, cols: 4, fleet: [2, 1], name: "練習 (4x2)", icon: "📝", hints: 1, totalPuzzles: 5, next: 'BEGINNER', color: 'yellow' },
+      BEGINNER: { rows: 4, cols: 4, fleet: [2, 1, 1], name: "入門 (4x4)", icon: "👶", hints: 2, totalPuzzles: 7, next: 'EASY', color: 'teal' },
+      EASY: { rows: 5, cols: 5, fleet: [3, 2, 1, 1], name: "簡單 (5x5)", icon: "🌟", hints: 3, totalPuzzles: 7, next: 'MEDIUM', color: 'green' },
+      MEDIUM: { rows: 6, cols: 6, fleet: [3, 2, 2, 1, 1, 1], name: "中等 (6x6)", icon: "⭐", hints: 4, totalPuzzles: 7, next: 'HARD', color: 'blue' },
+      HARD: { rows: 8, cols: 8, fleet: [4, 3, 2, 2, 1, 1, 1, 1], name: "困難 (8x8)", icon: "🔥", hints: 5, totalPuzzles: 5, next: null, color: 'purple' }
     };
     
     const EMPTY = 0, WATER = 1, SHIP = 2;
@@ -64,7 +64,7 @@
       puzzleNum: 1,
       puzzle: { solution: [], rowClues: [], colClues: [] },
       userGrid: [],
-      initialUserGrid: [], // 用於清除盤面功能
+      initialUserGrid: [],
       lockedCells: [],
       tool: SHIP,
       isWon: false,
@@ -183,7 +183,6 @@
       state.difficultyKey = levelKey;
       state.puzzleNum = puzzleNum;
       
-      // 使用「難度 + 題號」產生固定的亂數種子
       const seedStr = levelKey + "_puzzle_" + puzzleNum;
       const seed = xmur3(seedStr)();
       const random = mulberry32(seed);
@@ -206,11 +205,10 @@
 
       state.puzzle = newPuzzle;
       state.userGrid = initialGrid;
-      // 備份初始盤面，供清除重來使用
       state.initialUserGrid = JSON.parse(JSON.stringify(initialGrid));
       state.lockedCells = newLocked;
       state.isWon = false;
-      state.tool = SHIP; // 每次換題預設為船隻工具
+      state.tool = SHIP; 
       state.appState = 'PLAYING';
       render();
     };
@@ -228,7 +226,6 @@
       const fleet = LEVELS[state.difficultyKey].fleet;
       const grid = state.userGrid;
 
-      // 檢查行列提示
       for (let r = 0; r < rows; r++) {
         if (grid[r].filter(cell => cell === SHIP).length !== state.puzzle.rowClues[r]) return;
       }
@@ -238,7 +235,6 @@
         if (sum !== state.puzzle.colClues[c]) return;
       }
 
-      // 檢查船隻配置是否正確(無對角相鄰)
       const visited = Array(rows).fill(0).map(() => Array(cols).fill(false));
       const foundShips = [];
 
@@ -259,7 +255,7 @@
                   const nr = currR + dr; const nc = currC + dc;
                   
                   if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc] === SHIP) {
-                    if (Math.abs(dr) === 1 && Math.abs(dc) === 1) return; // 對角線相連失敗
+                    if (Math.abs(dr) === 1 && Math.abs(dc) === 1) return;
                     if (!visited[nr][nc]) {
                       visited[nr][nc] = true;
                       q.push([nr, nc]);
@@ -344,9 +340,46 @@
       `).join('');
     };
 
+    // 產生首頁的關卡選擇面板
+    const renderLevelCards = () => {
+      return Object.entries(LEVELS).map(([key, level]) => {
+        // 根據難度設定顏色主題
+        let btnColors = `bg-${level.color}-100 hover:bg-${level.color}-200 text-${level.color}-800 border-${level.color}-300`;
+        if (level.color === 'yellow') btnColors = 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border-yellow-300';
+        if (level.color === 'teal') btnColors = 'bg-teal-100 hover:bg-teal-200 text-teal-800 border-teal-300';
+        if (level.color === 'green') btnColors = 'bg-green-100 hover:bg-green-200 text-green-800 border-green-300';
+        if (level.color === 'blue') btnColors = 'bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-300';
+        if (level.color === 'purple') btnColors = 'bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-300';
+
+        let buttonsHTML = '';
+        for (let i = 1; i <= level.totalPuzzles; i++) {
+          buttonsHTML += `
+            <button data-action="start" data-diff="${key}" data-num="${i}" 
+              class="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg font-bold text-lg transition-transform hover:scale-105 shadow-sm border ${btnColors}">
+              ${i}
+            </button>
+          `;
+        }
+
+        return `
+          <div class="mb-4 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-2">
+              <span class="font-bold text-lg text-slate-700 flex items-center gap-2">
+                ${level.icon} ${level.name}
+              </span>
+              <span class="text-sm font-normal text-slate-400">共 ${level.totalPuzzles} 題</span>
+            </div>
+            <div class="flex flex-wrap gap-2 sm:gap-3">
+              ${buttonsHTML}
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
     const renderMenuHTML = () => `
-      <div class="flex items-center justify-center p-4 min-h-screen">
-        <div class="max-w-xl w-full bg-white p-8 rounded-2xl shadow-xl border border-slate-200 relative">
+      <div class="flex flex-col items-center justify-center p-4 min-h-screen py-10">
+        <div class="max-w-xl w-full bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-200 relative">
           
           <button data-action="toggle-sound" class="absolute top-4 right-4 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
             <div class="w-6 h-6">${state.soundEnabled ? ICONS.Volume2 : ICONS.VolumeX}</div>
@@ -358,35 +391,23 @@
             <p class="text-slate-500 font-medium">挑戰你的邏輯推理！</p>
           </div>
 
-          <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6 text-slate-700 leading-relaxed">
-            <h3 class="font-bold text-xl mb-4 flex items-center gap-2">
-              <div class="text-blue-500 w-6 h-6">${ICONS.Info}</div> 遊戲規則
+          <!-- 遊戲規則縮小放入摺疊面板或直接顯示精簡版 -->
+          <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 mb-8 text-slate-700 text-sm sm:text-base leading-relaxed">
+            <h3 class="font-bold text-lg sm:text-xl mb-3 flex items-center gap-2">
+              <div class="text-blue-500 w-5 h-5 sm:w-6 sm:h-6">${ICONS.Info}</div> 遊戲規則
             </h3>
-            <ul class="space-y-3 list-none">
-              <li class="flex gap-3"><span class="text-blue-500 font-bold mt-1">•</span><span>依據提示數字找出隱藏的船。邊緣數字代表該直行或橫列的<strong>船格總數</strong>。</span></li>
-              <li class="flex gap-3"><span class="text-blue-500 font-bold mt-1">•</span><span><strong>最重要規則：</strong>船跟船之間<strong>絕對不能碰在一起</strong> (連斜角都不行)！</span></li>
-              <li class="flex gap-3"><span class="text-blue-500 font-bold mt-1">•</span><span>善用「標記水域」：確定沒有船的地方，畫上水滴💧，能幫你更快找出剩下的船！</span></li>
+            <ul class="space-y-2 list-none">
+              <li class="flex gap-2"><span class="text-blue-500 font-bold">•</span><span>邊緣數字代表該行或列的<strong>船格總數</strong>。</span></li>
+              <li class="flex gap-2"><span class="text-blue-500 font-bold">•</span><span><strong>最重要規則：</strong>船跟船之間<strong>絕對不能碰在一起</strong> (連斜角都不行)！</span></li>
+              <li class="flex gap-2"><span class="text-blue-500 font-bold">•</span><span>善用「標記水域」來排除不可能有船的地方。</span></li>
             </ul>
           </div>
 
-          <div class="space-y-3">
-            <h3 class="text-center font-bold text-slate-500 mb-2">請選擇難度 (題庫順序固定，可隨時接續)</h3>
-            
-            <button data-action="start" data-diff="PRACTICE" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-1 text-lg flex justify-between items-center">
-              <span>📝 練習 (共 5 題)</span><span class="text-sm font-normal bg-yellow-600 px-3 py-1 rounded-full">4x2</span>
-            </button>
-            <button data-action="start" data-diff="BEGINNER" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-1 text-lg flex justify-between items-center">
-              <span>👶 入門 (共 7 題)</span><span class="text-sm font-normal bg-teal-600 px-3 py-1 rounded-full">4x4</span>
-            </button>
-            <button data-action="start" data-diff="EASY" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-1 text-lg flex justify-between items-center">
-              <span>🌟 簡單 (共 7 題)</span><span class="text-sm font-normal bg-green-600 px-3 py-1 rounded-full">5x5</span>
-            </button>
-            <button data-action="start" data-diff="MEDIUM" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-1 text-lg flex justify-between items-center">
-              <span>⭐ 中等 (共 7 題)</span><span class="text-sm font-normal bg-blue-600 px-3 py-1 rounded-full">6x6</span>
-            </button>
-            <button data-action="start" data-diff="HARD" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-1 text-lg flex justify-between items-center">
-              <span>🔥 困難 (共 5 題)</span><span class="text-sm font-normal bg-purple-600 px-3 py-1 rounded-full">8x8</span>
-            </button>
+          <div class="space-y-2">
+            <h3 class="text-center font-bold text-slate-500 mb-4 text-lg">請選擇難度與題號</h3>
+            <div class="bg-slate-50 p-2 sm:p-4 rounded-xl border border-slate-200">
+              ${renderLevelCards()}
+            </div>
           </div>
         </div>
       </div>
@@ -407,11 +428,11 @@
           <!-- 頂部標題與按鈕 -->
           <div class="w-full flex justify-between items-center mb-4">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2">
+              <h1 class="text-xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2">
                 <div class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600">${ICONS.Ship}</div>
                 ${level.name}
               </h1>
-              <p class="text-blue-600 font-bold mt-1 bg-blue-50 inline-block px-3 py-1 rounded-full text-sm">
+              <p class="text-blue-600 font-bold mt-1 bg-blue-50 inline-block px-3 py-1 rounded-full text-xs sm:text-sm border border-blue-200">
                 目前進度：第 ${state.puzzleNum} / ${level.totalPuzzles} 題
               </p>
             </div>
@@ -419,7 +440,7 @@
               <button data-action="toggle-sound" class="p-2 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 transition" title="音效開關">
                 <div class="w-5 h-5">${state.soundEnabled ? ICONS.Volume2 : ICONS.VolumeX}</div>
               </button>
-              <button data-action="home" class="p-2 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 transition" title="回首頁選難度">
+              <button data-action="home" class="p-2 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 transition" title="回首頁選難度與題號">
                 <div class="w-5 h-5">${ICONS.Home}</div>
               </button>
               <button data-action="reset" class="p-2 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition" title="清除盤面 (重新開始本題)">
@@ -537,7 +558,9 @@
         state.soundEnabled = !state.soundEnabled;
         render();
       } else if (action === 'start') {
-        startNewGame(btn.dataset.diff, 1);
+        const diff = btn.dataset.diff;
+        const num = parseInt(btn.dataset.num) || 1;
+        startNewGame(diff, num);
       } else if (action === 'next-puzzle') {
         startNewGame(state.difficultyKey, state.puzzleNum + 1);
       } else if (action === 'next-level') {
@@ -546,7 +569,6 @@
         state.appState = 'MENU';
         render();
       } else if (action === 'reset') {
-        // 清除盤面 (僅清除玩家畫的，保留鎖定的提示)
         resetCurrentPuzzle();
       } else if (action === 'tool') {
         state.tool = parseInt(btn.dataset.tool);
@@ -556,14 +578,12 @@
         const c = parseInt(btn.dataset.c);
         if (state.lockedCells[r][c] || state.isWon) return;
 
-        // 如果目前選中橡皮擦
         if (state.tool === EMPTY) {
           if (state.userGrid[r][c] !== EMPTY) {
             state.userGrid[r][c] = EMPTY;
             playSound('erase');
           }
         } else {
-          // 如果點擊已畫的同種工具，則清除 (如同橡皮擦效果)
           if (state.userGrid[r][c] === state.tool) {
             state.userGrid[r][c] = EMPTY;
             playSound('erase');
@@ -572,8 +592,8 @@
             playSound(state.tool === SHIP ? 'ship' : 'water');
           }
         }
-        render(); // 立即更新畫面
-        checkWinCondition(); // 檢查是否過關
+        render(); 
+        checkWinCondition(); 
       }
     });
 
