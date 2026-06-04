@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>埃及神殿：搶金幣大對決</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #160a02;
+            background-image: radial-gradient(#3a230d 1px, transparent 1px), radial-gradient(#3a230d 1px, #160a02 1px);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+            overflow: hidden; /* 防止頁面滾動，確保應用程式般的體驗 */
+        }
+
+        .egypt-title {
+            font-family: 'Cinzel', 'Noto Sans TC', serif;
+        }
+
+        /* 羊皮紙卷軸外觀 */
+        .parchment-bg {
+            background: #f4e4bc;
+            background-image: radial-gradient(circle at 50% 50%, #fbf3db 0%, #e2cd98 100%);
+            border: 5px solid #8f6a3b;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 0 30px rgba(139, 90, 43, 0.25);
+        }
+
+        /* 選取金幣時的超醒目黃金發光外框 */
+        .coin-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .coin-btn:hover:not(.disabled) {
+            transform: translate(-50%, -50%) scale(1.15) !important;
+            filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.9));
+        }
+        .coin-selected {
+            transform: translate(-50%, -50%) scale(1.3) !important;
+            animation: pulse-gold 1s infinite alternate, bounce-selected 0.3s ease-out;
+            filter: drop-shadow(0 0 20px #facc15) brightness(1.2) !important;
+            border: 3px solid #facc15 !important;
+            border-radius: 50%;
+            z-index: 50 !important;
+        }
+
+        @keyframes pulse-gold {
+            0% {
+                box-shadow: 0 0 6px #facc15, inset 0 0 6px #facc15;
+            }
+            100% {
+                box-shadow: 0 0 20px #fbbf24, inset 0 0 12px #fbbf24;
+            }
+        }
+
+        @keyframes bounce-selected {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.4); }
+            100% { transform: translate(-50%, -50%) scale(1.3); }
+        }
+
+        /* 收回金幣時的飛入動畫 */
+        .floating-coin {
+            position: absolute;
+            transition: all 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* 畫面滑動切換效果 */
+        .screen-transition {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-amber-100 h-screen max-h-screen flex flex-col justify-between overflow-hidden select-none">
+
+<script>
+    // 使用 Web Audio API 合成音效（不需要任何外部資源檔）
+    const AudioService = {
+        ctx: null,
+        enabled: true,
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        },
+        toggle() {
+            this.enabled = !this.enabled;
+            return this.enabled;
+        },
+        playCoin() {
+            if (!this.enabled) return;
+            this.init();
+            const now = this.ctx.currentTime;
+            
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, now); // D5
+            osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.08); // D6
+            
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        },
+        playSelect() {
+            if (!this.enabled) return;
+            this.init();
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(329.63, now); // E4
+            osc.frequency.exponentialRampToValueAtTime(440, now + 0.1); // A4
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        },
+        playSuccess() {
+            if (!this.enabled) return;
+            this.init();
+            const now = this.ctx.currentTime;
+            const freqs = [523.25, 659.25, 783.99, 1046.50]; // C大調和弦
+            freqs.forEach((f, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(f, now + i * 0.08);
+                gain.gain.setValueAtTime(0.1, now + i * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.4);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + i * 0.08);
+                osc.stop(now + i * 0.08 + 0.45);
+            });
+        },
+        playFail() {
+            if (!this.enabled) return;
+            this.init();
+            const now = this.ctx.currentTime;
+            const freqs = [220, 207.65, 196, 174.61]; // 失敗下降和弦
+            freqs.forEach((f, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(f, now + i * 0.12);
+                gain.gain.setValueAtTime(0.12, now + i * 0.12);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + i * 0.12);
+                osc.stop(now + i * 0.12 + 0.55);
+            });
+        }
+    };
+</script>
+
+<!-- 全域標題列 -->
+<header class="bg-gradient-to-b from-amber-950 to-transparent p-3 flex justify-between items-center border-b border-amber-900/20 z-20 shrink-0">
+    <div class="flex items-center space-x-2">
+        <span class="text-2xl sm:text-3xl">🔱</span>
+        <div>
+            <h1 class="text-lg sm:text-xl font-black egypt-title text-amber-400 tracking-wider leading-none">
+                埃及神殿：搶金幣大決戰
+            </h1>
+            <p class="text-[9px] sm:text-xs text-amber-300/60 mt-0.5">數學思維與空間博弈冒險</p>
+        </div>
+    </div>
+    <button onclick="toggleAudio()" id="audio-btn" class="bg-amber-900/50 hover:bg-amber-800 border border-amber-600/50 text-amber-200 px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 transition">
+        <i class="fas fa-volume-up"></i> <span class="hidden sm:inline">音效: 開</span>
+    </button>
+</header>
+
+<!-- 畫面 1: 探險設定與極簡規則說明 -->
+<main id="setup-screen" class="screen-transition flex-grow flex flex-col md:flex-row items-stretch justify-center p-3 max-w-6xl mx-auto w-full gap-4 overflow-y-auto">
+    
+    <!-- 左側卷軸：專為國小生設計的極簡玩法介紹 -->
+    <section class="w-full md:w-1/2 flex flex-col">
+        <div class="parchment-bg rounded-2xl p-4 text-amber-950 flex flex-col justify-between h-full shadow-lg relative">
+            <div>
+                <div class="text-center mb-3">
+                    <h2 class="text-xl font-black tracking-wide border-b-2 border-amber-800/20 pb-1.5 flex justify-center items-center gap-2">
+                        📜 <span>一分鐘學會玩法！</span>
+                    </h2>
+                </div>
+                
+                <div class="space-y-3">
+                    <!-- 規則 1 -->
+                    <div class="flex gap-2.5 items-start bg-amber-900/5 p-2.5 rounded-xl border border-amber-900/10">
+                        <span class="bg-amber-800 text-amber-100 font-extrabold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">1</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-amber-900 leading-tight">連成直線就能拿</h4>
+                            <p class="text-[11px] text-stone-800 leading-normal">點擊斜線上的金幣，你每次可以拿走<b>最少 1 枚，最多整排連在一起</b>的金幣！</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 規則 2 -->
+                    <div class="flex gap-2.5 items-start bg-amber-900/5 p-2.5 rounded-xl border border-amber-900/10">
+                        <span class="bg-amber-800 text-amber-100 font-extrabold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">2</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-amber-900 leading-tight">不能跳過空格</h4>
+                            <p class="text-[11px] text-stone-800 leading-normal">被拿走的金幣會留下空位。你<b>不能跨越空位</b>去拿同一條線後方的金幣喔！</p>
+                        </div>
+                    </div>
+
+                    <!-- 規則 3 -->
+                    <div class="flex gap-2.5 items-start bg-amber-900/5 p-2.5 rounded-xl border border-amber-900/10">
+                        <span class="bg-amber-800 text-amber-100 font-extrabold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">3</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-amber-900 leading-tight">最後一顆是關鍵</h4>
+                            <p class="text-[11px] text-stone-800 leading-normal">
+                                <span class="text-red-700 font-black">【避開詛咒模式】(推薦)</span>：拿到<b>最後一顆金幣的人就輸了</b>！<br>
+                                <span class="text-emerald-700 font-black">【搶奪寶藏模式】</span>：拿到<b>最後一顆金幣的人就贏了</b>！
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 規則示意圖 -->
+                <div class="mt-3 p-2 bg-amber-950/5 rounded-xl flex justify-around items-center border border-amber-900/10">
+                    <div class="text-center">
+                        <span class="text-emerald-700 font-bold text-[11px] block">✔ 合法連線 (整排拿)</span>
+                        <div class="flex justify-center gap-1 mt-1">
+                            <span class="w-4.5 h-4.5 rounded-full bg-yellow-500 border border-amber-800 flex items-center justify-center text-[9px] text-white">●</span>
+                            <span class="w-4.5 h-4.5 rounded-full bg-yellow-500 border border-amber-800 flex items-center justify-center text-[9px] text-white">●</span>
+                            <span class="w-4.5 h-4.5 rounded-full bg-yellow-500 border border-amber-800 flex items-center justify-center text-[9px] text-white">●</span>
+                        </div>
+                    </div>
+                    <div class="text-center border-l border-amber-800/20 pl-3">
+                        <span class="text-red-700 font-bold text-[11px] block">✘ 不合法 (中間斷開)</span>
+                        <div class="flex justify-center gap-1 mt-1">
+                            <span class="w-4.5 h-4.5 rounded-full bg-yellow-500 border border-amber-800 flex items-center justify-center text-[9px] text-white">●</span>
+                            <span class="w-4.5 h-4.5 rounded-full bg-amber-100/40 border border-dashed border-amber-400 flex items-center justify-center text-[9px] text-stone-400">✕</span>
+                            <span class="w-4.5 h-4.5 rounded-full bg-yellow-500 border border-amber-800 flex items-center justify-center text-[9px] text-white">●</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-[10px] text-center text-amber-800/60 mt-3">
+                ★ 專為國小思維數學設計，培養圖形感知與局勢預測能力。
+            </div>
+        </div>
+    </section>
+
+    <!-- 右側：探險參數設定面板 -->
+    <section class="w-full md:w-1/2 flex flex-col">
+        <div class="parchment-bg rounded-2xl p-4 text-amber-950 flex flex-col justify-between h-full shadow-lg">
+            <div class="flex flex-col gap-3">
+                <h3 class="text-lg font-extrabold border-b-2 border-amber-800/30 pb-1.5 flex items-center gap-2 text-amber-900">
+                    <i class="fas fa-compass"></i> 設定你的探險計畫
+                </h3>
+
+                <!-- 對決模式選擇 -->
+                <div>
+                    <label class="block text-[11px] font-black uppercase tracking-wide text-amber-800 mb-1">🎮 對決模式</label>
+                    <div class="grid grid-cols-2 gap-2 bg-amber-950/15 p-1 rounded-xl">
+                        <button id="mode-vs-ai" onclick="setMode('vs-ai')" class="py-2 rounded-lg text-xs font-black transition-all bg-amber-800 text-white shadow-md">
+                            <i class="fas fa-robot mr-1"></i> 單人挑戰 (AI 法老)
+                        </button>
+                        <button id="mode-pvp" onclick="setMode('pvp')" class="py-2 rounded-lg text-xs font-black transition-all text-amber-900 hover:bg-amber-950/5">
+                            <i class="fas fa-users mr-1"></i> 雙人同屏 PK
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI 難度（在 PVP 模式下會被鎖定/淡化） -->
+                <div id="ai-difficulty-wrapper">
+                    <label class="block text-[11px] font-black uppercase tracking-wide text-amber-800 mb-1">👑 法老王的難度</label>
+                    <div class="grid grid-cols-3 gap-2 bg-amber-950/15 p-1 rounded-xl">
+                        <button id="diff-easy" onclick="setDifficulty('easy')" class="py-1.5 rounded-lg text-xs font-bold transition-all text-amber-900 hover:bg-amber-950/5">新手考古家</button>
+                        <button id="diff-medium" onclick="setDifficulty('medium')" class="py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-800 text-white shadow-md">中階祭司</button>
+                        <button id="diff-hard" onclick="setDifficulty('hard')" class="py-1.5 rounded-lg text-xs font-bold transition-all text-amber-900 hover:bg-amber-950/5">皇家大師</button>
+                    </div>
+                </div>
+
+                <!-- 勝利條件選擇 -->
+                <div>
+                    <label class="block text-[11px] font-black uppercase tracking-wide text-amber-800 mb-1">🏁 勝利條件</label>
+                    <select id="victory-rule" onchange="changeVictoryRule()" class="w-full py-1.5 px-2.5 rounded-xl bg-amber-50 border border-amber-700/30 text-amber-950 text-xs font-black focus:outline-none">
+                        <option value="last-lose">避開詛咒：拿走最後一顆金幣的人「輸」 (推薦)</option>
+                        <option value="last-win">奪取寶藏：拿走最後一顆金幣的人「贏」</option>
+                    </select>
+                </div>
+
+                <!-- 棋盤尺寸選擇 -->
+                <div>
+                    <label class="block text-[11px] font-black uppercase tracking-wide text-amber-800 mb-1">📐 遺跡神殿規格 (地圖大小)</label>
+                    <div class="grid grid-cols-3 gap-2 bg-amber-950/15 p-1 rounded-xl">
+                        <button id="size-4" onclick="changeGridSize(4)" class="py-1.5 rounded-lg text-xs font-bold transition-all">微型 4x4</button>
+                        <button id="size-5" onclick="changeGridSize(5)" class="py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-800 text-white shadow-md">標準 5x5</button>
+                        <button id="size-6" onclick="changeGridSize(6)" class="py-1.5 rounded-lg text-xs font-bold transition-all">皇家 6x6</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 開始大按鈕 -->
+            <button onclick="launchAdventure()" class="w-full mt-4 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-black py-3 rounded-xl text-md shadow-lg hover:shadow-yellow-500/20 transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2">
+                <span>🔮</span> 開始神殿探險之旅！
+            </button>
+        </div>
+    </section>
+</main>
+
+<!-- 畫面 2: 獨立遊戲畫面（完全適配平板無滾動條設計） -->
+<main id="game-screen" class="screen-transition hidden flex-grow flex flex-col justify-between p-2 w-full h-full max-h-[calc(100vh-60px)] overflow-hidden">
+    
+    <!-- 遊戲內的頂部控制列 -->
+    <div class="w-full flex justify-between items-center bg-amber-950/40 p-2 rounded-xl border border-amber-900/20 shrink-0">
+        <div class="flex gap-2">
+            <button onclick="quitGame()" class="bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold px-3 py-1 rounded-lg text-[11px] transition flex items-center gap-1">
+                <i class="fas fa-chevron-left"></i> <span>返回設定</span>
+            </button>
+            <button onclick="resetGame()" class="bg-amber-800 hover:bg-amber-700 text-amber-100 font-bold px-3 py-1 rounded-lg text-[11px] transition flex items-center gap-1">
+                <i class="fas fa-redo"></i> <span>重新開始</span>
+            </button>
+        </div>
+        <div class="text-[10px] sm:text-xs text-amber-400 font-bold tracking-wider flex items-center gap-1.5">
+            <span id="game-mode-banner" class="bg-amber-900/80 text-amber-200 px-1.5 py-0.5 rounded border border-amber-700/30"></span>
+            <span id="game-rule-banner" class="bg-amber-900/80 text-amber-200 px-1.5 py-0.5 rounded border border-amber-700/30"></span>
+        </div>
+    </div>
+
+    <!-- 目前回合提示橫幅 -->
+    <div id="status-banner" class="w-full max-w-2xl mx-auto bg-amber-500 text-amber-950 font-black py-1.5 px-3 rounded-xl text-center shadow border border-amber-600/40 shrink-0 flex items-center justify-center gap-1.5 my-1">
+        <i class="fas fa-compass animate-spin" style="animation-duration: 4s"></i>
+        <span id="status-text" class="text-xs sm:text-sm tracking-wide">探險開始！點選斜線上相鄰的錢幣來回收</span>
+    </div>
+
+    <!-- 遊戲操作主要區域：包含左回收區、中央棋盤與右回收區 -->
+    <div class="w-full flex flex-col md:flex-row items-center justify-center gap-2 flex-grow overflow-hidden my-1">
+        
+        <!-- 左側：探險家 P1 回收區 -->
+        <div class="w-full md:w-40 bg-gradient-to-br from-amber-950/80 to-amber-900/60 border border-amber-700/30 rounded-xl p-2.5 flex md:flex-col justify-between shadow h-16 md:h-[min(55vh,300px)] relative overflow-hidden shrink-0">
+            <div class="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-amber-500/30 pointer-events-none"></div>
+            <div class="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-amber-500/30 pointer-events-none"></div>
+            
+            <div class="flex md:flex-col justify-between items-center md:items-start border-b border-amber-800/20 pb-1 md:pb-1.5 w-1/3 md:w-full">
+                <span class="text-[11px] font-black text-amber-400 flex items-center gap-1">
+                    <i class="fas fa-user"></i> <span id="p1-label">探險家 P1</span>
+                </span>
+                <span id="p1-badge" class="bg-amber-500 text-amber-950 font-black px-1 py-0.5 rounded text-[9px] animate-bounce md:mt-1">
+                    你的回合
+                </span>
+            </div>
+            
+            <div class="flex-grow flex md:flex-col items-center justify-around md:justify-center w-2/3 md:w-full">
+                <div class="text-left md:text-center shrink-0">
+                    <p class="text-[9px] text-amber-300/50">已回收金幣</p>
+                    <p id="p1-score-txt" class="text-lg md:text-2xl font-black text-amber-300">0 枚</p>
+                </div>
+                <div id="p1-bin" class="w-24 h-10 md:w-full md:h-20 mt-1 bg-amber-950/60 border border-amber-800/40 rounded-lg flex flex-wrap content-start p-1 overflow-y-auto shadow-inner gap-0.5 relative">
+                    <span id="p1-bin-label" class="absolute inset-0 flex items-center justify-center text-[9px] text-amber-500/15 font-bold select-none pointer-events-none">P1回收區</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中央：核心棋盤與操作按鈕 -->
+        <div class="flex flex-col items-center justify-center gap-2 flex-grow overflow-hidden">
+            
+            <!-- 精美古埃及神殿棋盤（格線交叉點完美對齊） -->
+            <div class="w-[min(82vw,40vh)] h-[min(82vw,40vh)] bg-stone-950 border-[3px] border-amber-600/60 rounded-2xl p-2.5 shadow-xl relative overflow-hidden flex items-center justify-center shrink-0" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1600577916048-804c9191e36c?auto=format&fit=crop&q=80&w=1000'); background-size: cover; background-position: center;">
+                <!-- 裝飾性古埃及符號 -->
+                <div class="absolute top-1 left-1.5 text-lg opacity-10 pointer-events-none">🏺</div>
+                <div class="absolute top-1 right-1.5 text-lg opacity-10 pointer-events-none">🐈</div>
+                <div class="absolute bottom-1 left-1.5 text-lg opacity-10 pointer-events-none">🦅</div>
+                <div class="absolute bottom-1 right-1.5 text-lg opacity-10 pointer-events-none">👁️</div>
+
+                <!-- 斜線格線繪製層 (SVG) -->
+                <svg id="board-lines" class="absolute inset-0 w-full h-full pointer-events-none z-0"></svg>
+
+                <!-- 棋子定位容器 -->
+                <div id="board-grid" class="relative z-10 w-full h-full">
+                    <!-- 金幣會透過 JS 動態產生並對齊交叉點 -->
+                </div>
+            </div>
+
+            <!-- 快捷操作按鈕：緊鄰棋盤下方，極致方便平板觸控 -->
+            <div class="w-[min(82vw,40vh)] flex gap-1.5 shrink-0 justify-between">
+                <button onclick="clearSelection()" class="w-1/4 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold py-2 rounded-xl text-[10px] sm:text-xs transition flex items-center justify-center gap-1 active:scale-95">
+                    <i class="fas fa-times-circle"></i> <span>清除</span>
+                </button>
+                
+                <button onclick="requestMagicHint()" class="w-1/3 bg-purple-900/60 hover:bg-purple-800 border border-purple-500/50 text-purple-200 font-bold py-2 rounded-xl text-[10px] sm:text-xs transition flex items-center justify-center gap-1 shadow active:scale-95">
+                    <span class="animate-pulse">🔮</span> <span>提示</span>
+                </button>
+                
+                <button id="confirm-btn" onclick="confirmMove()" class="w-5/12 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-amber-950 font-black py-2 rounded-xl text-xs sm:text-sm shadow-md transition transform active:scale-95 flex items-center justify-center gap-1">
+                    <i class="fas fa-hand-holding-usd"></i> <span>確認回收</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 右側：探險家 P2 / AI 回收區 -->
+        <div class="w-full md:w-40 bg-gradient-to-br from-amber-950/80 to-amber-900/60 border border-amber-700/30 rounded-xl p-2.5 flex md:flex-col justify-between shadow h-16 md:h-[min(55vh,300px)] relative overflow-hidden shrink-0">
+            <div class="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-amber-500/30 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-amber-500/30 pointer-events-none"></div>
+            
+            <div class="flex md:flex-col justify-between items-center md:items-start border-b border-amber-800/20 pb-1 md:pb-1.5 w-1/3 md:w-full">
+                <span class="text-[11px] font-black text-amber-400 flex items-center gap-1">
+                    <i id="p2-icon" class="fas fa-robot"></i> <span id="p2-label">法老 AI</span>
+                </span>
+                <span id="p2-badge" class="hidden bg-amber-500 text-amber-950 font-black px-1 py-0.5 rounded text-[9px] animate-bounce md:mt-1">
+                    思考中
+                </span>
+            </div>
+            
+            <div class="flex-grow flex md:flex-col items-center justify-around md:justify-center w-2/3 md:w-full">
+                <div class="text-left md:text-center shrink-0">
+                    <p class="text-[9px] text-amber-300/50">已回收金幣</p>
+                    <p id="p2-score-txt" class="text-lg md:text-2xl font-black text-amber-300">0 枚</p>
+                </div>
+                <div id="p2-bin" class="w-24 h-10 md:w-full md:h-20 mt-1 bg-amber-950/60 border border-amber-800/40 rounded-lg flex flex-wrap content-start p-1 overflow-y-auto shadow-inner gap-0.5 relative">
+                    <span id="p2-bin-label" class="absolute inset-0 flex items-center justify-center text-[9px] text-amber-500/15 font-bold select-none pointer-events-none">AI回收區</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部跑馬燈：極簡省空間戰局歷史播報 -->
+    <div class="w-full max-w-xl mx-auto parchment-bg rounded-lg px-2.5 py-1 text-amber-950 shadow border border-amber-800/20 shrink-0">
+        <div class="flex items-center gap-2 text-[10px] font-bold">
+            <span class="text-[9px] text-amber-900 bg-amber-950/10 px-1 py-0.2 rounded border border-amber-800/10 uppercase shrink-0">🏺 最新戰局</span>
+            <div id="game-history-log" class="flex-grow truncate text-stone-800">
+                ★ 順利踏入遺跡核心，探索大門已開啟！
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 局終結算彈出視窗 (Modal) -->
+<div id="game-over-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="parchment-bg max-w-sm w-full rounded-2xl p-5 text-center text-amber-950 shadow-2xl relative border-4 border-yellow-600">
+        <h2 id="modal-title" class="text-2xl font-black tracking-widest egypt-title mb-1 text-yellow-800">神殿凱旋！</h2>
+        <div id="modal-icon" class="text-5xl my-2">👑</div>
+        <p id="modal-desc" class="text-[11px] sm:text-xs font-bold my-2 px-3 text-amber-900 leading-relaxed">
+            恭喜你！成功解開了金字塔的數學謎題，擊敗了法老王的古老挑戰！
+        </p>
+        <div class="bg-amber-950/10 rounded-lg p-2.5 my-2">
+            <p class="text-[10px] font-bold text-amber-900 mb-1">最終戰況統計</p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-amber-100/60 p-1.5 rounded-lg">
+                    <span class="text-[9px] block text-stone-600">探險家 P1</span>
+                    <span id="stat-p1" class="text-sm font-black">0 枚</span>
+                </div>
+                <div class="bg-amber-100/60 p-1.5 rounded-lg">
+                    <span id="stat-p2-label" class="text-[9px] block text-stone-600">法老 AI</span>
+                    <span id="stat-p2" class="text-sm font-black">0 枚</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="closeGameOverModal()" class="w-1/3 bg-stone-300 hover:bg-stone-400 text-stone-800 font-bold py-2 rounded-xl text-xs transition">
+                檢視棋盤
+            </button>
+            <button onclick="resetGame(); closeGameOverModal();" class="w-2/3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-black py-2 rounded-xl text-xs shadow transition">
+                重啟戰局
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-amber-950 text-amber-300/40 text-[9px] text-center py-1 border-t border-amber-900/40 z-20 shrink-0">
+    埃及神殿搶金幣遊戲 © 2026. 專為國小探險學童打造，結合幾何對齊與智慧思維。
+</footer>
+
+<script>
+    // 精緻 3D 質感金幣 SVG 圖庫（完美還原並精緻化上傳圖檔中的實體旗子元素）
+    const COIN_TYPES = [
+        {
+            name: '黃金聖甲蟲',
+            color: 'gold',
+            svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                <circle cx="50" cy="50" r="46" fill="#facc15" stroke="#ca8a04" stroke-width="4" />
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#eab308" stroke-width="2" stroke-dasharray="3,3" />
+                <path d="M50 20 C42 20 38 28 38 40 C38 52 42 68 50 80 C58 68 62 52 62 40 C62 28 58 20 50 20 Z" fill="#b45309" opacity="0.8"/>
+                <circle cx="50" cy="28" r="4" fill="#fef08a" />
+                <path d="M38 40 L30 35 M38 50 L28 50 M38 60 L30 65 M62 40 L70 35 M62 50 L72 50 M62 60 L70 65" stroke="#78350f" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="50" cy="50" r="10" fill="#fbbf24" stroke="#854d0e" stroke-width="2" />
+            </svg>`
+        },
+        {
+            name: '白銀荷魯斯之眼',
+            color: 'silver',
+            svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                <circle cx="50" cy="50" r="46" fill="#e2e8f0" stroke="#94a3b8" stroke-width="4" />
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,2" />
+                <path d="M28 48 C36 34 64 34 72 48 C64 62 36 62 28 48 Z" fill="none" stroke="#334155" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="50" cy="48" r="9" fill="#1e293b" />
+                <path d="M48 48 C48 58 40 64 35 68 M55 48 L65 72" stroke="#334155" stroke-width="4" stroke-linecap="round" />
+                <path d="M35 32 C45 35 55 35 65 32" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+            </svg>`
+        },
+        {
+            name: '古銅生命之鑰',
+            color: 'bronze',
+            svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                <circle cx="50" cy="50" r="46" fill="#d97706" stroke="#92400e" stroke-width="4" />
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#b45309" stroke-width="2" />
+                <path d="M50 35 C44 35 44 20 50 20 C56 20 56 35 50 35 Z" fill="none" stroke="#fef3c7" stroke-width="5" />
+                <path d="M35 38 L65 38 M50 38 L50 80" stroke="#fef3c7" stroke-width="5" stroke-linecap="round" />
+                <circle cx="50" cy="38" r="3" fill="#78350f" />
+            </svg>`
+        },
+        {
+            name: '紅寶石法老',
+            color: 'ruby',
+            svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                <circle cx="50" cy="50" r="46" fill="#dc2626" stroke="#991b1b" stroke-width="4" />
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="6,3" />
+                <path d="M30 35 C30 25 70 25 70 35 L65 60 L50 78 L35 60 Z" fill="#7f1d1d" opacity="0.7" />
+                <path d="M30 35 L38 55 M70 35 L62 55" stroke="#fca5a5" stroke-width="3" />
+                <path d="M42 24 L50 14 L58 24 Z" fill="#facc15" />
+                <circle cx="50" cy="45" r="5" fill="#fca5a5" />
+            </svg>`
+        },
+        {
+            name: '綠翡翠神貓',
+            color: 'emerald',
+            svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                <circle cx="50" cy="50" r="46" fill="#059669" stroke="#065f46" stroke-width="4" />
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#34d399" stroke-width="2" />
+                <path d="M50 22 L44 34 L47 38 C47 38 41 50 41 64 L59 64 C59 50 53 38 53 38 L56 34 Z" fill="#022c22" />
+                <ellipse cx="50" cy="72" rx="14" ry="6" fill="#022c22" />
+                <circle cx="47" cy="45" r="2.5" fill="#fbbf24" />
+                <circle cx="53" cy="45" r="2.5" fill="#fbbf24" />
+            </svg>`
+        }
+    ];
+</script>
+
+<script>
+    // 遊戲全域狀態與變數
+    let boardSize = 5; // 棋盤大小規格
+    let coins = []; // 棋盤上金幣狀態的 2D 矩陣
+    let gameMode = 'vs-ai'; // 'vs-ai' (單人AI) 或 'pvp' (雙人同屏)
+    let aiDifficulty = 'medium'; // AI 難度：'easy', 'medium', 'hard'
+    let victoryRule = 'last-lose'; // 'last-lose' (最後一死，避開詛咒) 或 'last-win' (最後獲勝，奪取寶藏)
+    let currentTurn = 1; // 目前回合：1 = P1, 2 = P2/AI
+    let selectedCoins = []; // 目前玩家已點選的連續金幣坐標
+    let scores = { p1: 0, p2: 0 };
+    let isAITyping = false; // 邏輯鎖：AI 在思考動畫中時禁止玩家操作
+    let hasLaunched = false; // 畫面切換標記
+
+    // 定時器追蹤變數，用於重啟時澈底清除殘留任務
+    let aiTimeoutId = null;
+    let alertTimeoutId = null;
+
+    // 初始化設定頁面
+    window.onload = function() {
+        showScreen('setup');
+        updateSettingsVisuals();
+    };
+
+    // 畫面顯示切換控制
+    function showScreen(screenType) {
+        const setupSc = document.getElementById('setup-screen');
+        const gameSc = document.getElementById('game-screen');
+        if (screenType === 'setup') {
+            setupSc.classList.remove('hidden', 'opacity-0');
+            setupSc.classList.add('opacity-100');
+            gameSc.classList.add('hidden', 'opacity-0');
+            hasLaunched = false;
+        } else {
+            setupSc.classList.add('hidden', 'opacity-0');
+            gameSc.classList.remove('hidden', 'opacity-0');
+            gameSc.classList.add('opacity-100');
+            hasLaunched = true;
+        }
+    }
+
+    // 開始遊戲按鈕觸發
+    function launchAdventure() {
+        AudioService.playSuccess();
+        showScreen('game');
+        initGame();
+    }
+
+    // 放棄戰局返回主畫面
+    function quitGame() {
+        AudioService.playSelect();
+        if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+        if (alertTimeoutId) { clearTimeout(alertTimeoutId); alertTimeoutId = null; }
+        showScreen('setup');
+    }
+
+    // 音效開關切換
+    function toggleAudio() {
+        const active = AudioService.toggle();
+        const btn = document.getElementById('audio-btn');
+        if (active) {
+            btn.innerHTML = `<i class="fas fa-volume-up"></i> <span class="hidden sm:inline">音效: 開</span>`;
+            btn.classList.remove('bg-red-950/40', 'border-red-600/30');
+            btn.classList.add('bg-amber-900/50', 'border-amber-600/50');
+        } else {
+            btn.innerHTML = `<i class="fas fa-volume-mute"></i> <span class="hidden sm:inline">音效: 關</span>`;
+            btn.classList.remove('bg-amber-900/50', 'border-amber-600/50');
+            btn.classList.add('bg-red-950/40', 'border-red-600/30');
+        }
+    }
+
+    // 幾何傾斜對齊演算法：計算交叉點在 SVG 中的百分比位置
+    function getCoords(r, c, size) {
+        const padding = 12; // 邊緣安全內距百分比
+        const span = 100 - (padding * 2);
+
+        // 將 row/col 轉換為旋轉 45 度的菱形網格坐標
+        const u = r / (size - 1);
+        const v = c / (size - 1);
+
+        const x = padding + span * (0.5 + (u - v) * 0.5);
+        const y = padding + span * ((u + v) * 0.5);
+
+        return { x, y };
+    }
+
+    // 設定參數修改
+    function setMode(mode) {
+        AudioService.playSelect();
+        gameMode = mode;
+        updateSettingsVisuals();
+    }
+
+    function setDifficulty(diff) {
+        AudioService.playSelect();
+        aiDifficulty = diff;
+        updateSettingsVisuals();
+    }
+
+    function changeGridSize(size) {
+        AudioService.playSelect();
+        boardSize = size;
+        updateSettingsVisuals();
+    }
+
+    function changeVictoryRule() {
+        AudioService.playSelect();
+        victoryRule = document.getElementById('victory-rule').value;
+    }
+
+    // 更新設定介面的按鈕高亮狀態
+    function updateSettingsVisuals() {
+        const btnAI = document.getElementById('mode-vs-ai');
+        const btnPvP = document.getElementById('mode-pvp');
+        const aiWrapper = document.getElementById('ai-difficulty-wrapper');
+
+        if (gameMode === 'vs-ai') {
+            btnAI.className = "py-2.5 rounded-lg text-xs font-black transition-all bg-amber-800 text-white shadow-md";
+            btnPvP.className = "py-2.5 rounded-lg text-xs font-black transition-all text-amber-900 hover:bg-amber-950/5";
+            aiWrapper.classList.remove('opacity-40', 'pointer-events-none');
+        } else {
+            btnPvP.className = "py-2.5 rounded-lg text-xs font-black transition-all bg-amber-800 text-white shadow-md";
+            btnAI.className = "py-2.5 rounded-lg text-xs font-black transition-all text-amber-900 hover:bg-amber-950/5";
+            aiWrapper.classList.add('opacity-40', 'pointer-events-none');
+        }
+
+        ['easy', 'medium', 'hard'].forEach(d => {
+            const el = document.getElementById(`diff-${d}`);
+            if (d === aiDifficulty) {
+                el.className = "py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-800 text-white shadow-md";
+            } else {
+                el.className = "py-1.5 rounded-lg text-xs font-bold transition-all text-amber-900 hover:bg-amber-950/5";
+            }
+        });
+
+        [4, 5, 6].forEach(s => {
+            const el = document.getElementById(`size-${s}`);
+            if (s === boardSize) {
+                el.className = "py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-800 text-white shadow-md";
+            } else {
+                el.className = "py-1.5 rounded-lg text-xs font-bold transition-all text-amber-900 hover:bg-amber-950/5";
+            }
+        });
+    }
+
+    // 簡潔的戰況跑馬燈更新
+    function addLog(msg, colorClass = 'text-amber-800') {
+        const logBox = document.getElementById('game-history-log');
+        if (logBox) {
+            logBox.className = `flex-grow truncate ${colorClass}`;
+            logBox.innerHTML = msg;
+        }
+    }
+</script>
+
+<script>
+    // 初始化遊戲盤面狀態
+    function initGame() {
+        if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+        if (alertTimeoutId) { clearTimeout(alertTimeoutId); alertTimeoutId = null; }
+
+        isAITyping = false;
+        currentTurn = 1;
+        selectedCoins = [];
+        scores = { p1: 0, p2: 0 };
+
+        document.getElementById('game-mode-banner').innerText = gameMode === 'vs-ai' ? `挑戰：法老 AI (${aiDifficulty === 'easy' ? '新手' : aiDifficulty === 'medium' ? '中階' : '皇家'})` : '模式：雙人同屏';
+        document.getElementById('game-rule-banner').innerText = victoryRule === 'last-lose' ? '避開最後一顆(輸)' : '爭奪最後一顆(贏)';
+
+        const p2Label = document.getElementById('p2-label');
+        const p2Icon = document.getElementById('p2-icon');
+        if (gameMode === 'vs-ai') {
+            p2Label.innerText = "法老 AI";
+            p2Icon.className = "fas fa-robot text-amber-500";
+        } else {
+            p2Label.innerText = "探險家 P2";
+            p2Icon.className = "fas fa-user-friends text-amber-500";
+        }
+
+        document.getElementById('p1-score-txt').innerText = "0 枚";
+        document.getElementById('p2-score-txt').innerText = "0 枚";
+        document.getElementById('p1-bin').innerHTML = `<span id="p1-bin-label" class="absolute inset-0 flex items-center justify-center text-[9px] text-amber-500/15 font-bold select-none pointer-events-none">P1回收區</span>`;
+        document.getElementById('p2-bin').innerHTML = `<span id="p2-bin-label" class="absolute inset-0 flex items-center justify-center text-[9px] text-amber-500/15 font-bold select-none pointer-events-none">${gameMode === 'vs-ai' ? 'AI' : 'P2'}回收區</span>`;
+
+        addLog('🌅 順利踏入遺跡核心，探索大門已開啟！', 'text-amber-950 font-bold');
+
+        // 生成金幣隨機花色
+        coins = [];
+        for (let r = 0; r < boardSize; r++) {
+            coins[r] = [];
+            for (let c = 0; c < boardSize; c++) {
+                const randType = COIN_TYPES[Math.floor(Math.random() * COIN_TYPES.length)];
+                coins[r][c] = {
+                    id: `coin-${r}-${c}`,
+                    r: r,
+                    c: c,
+                    active: true,
+                    type: randType
+                };
+            }
+        }
+
+        updateTurnDisplay();
+        renderBoard();
+    }
+
+    function resetGame() {
+        AudioService.playSuccess();
+        initGame();
+    }
+
+    // 繪製與渲染棋子及背景連接線
+    function renderBoard() {
+        const gridContainer = document.getElementById('board-grid');
+        gridContainer.innerHTML = '';
+
+        // 根據尺寸調整金幣佔據的寬高比例，確保極致對齊與美觀
+        const coinPercentWidth = boardSize === 4 ? 12 : (boardSize === 5 ? 10.5 : 9.5);
+
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                const pt = getCoords(r, c, boardSize);
+                const coinData = coins[r][c];
+
+                const nodeWrapper = document.createElement('div');
+                nodeWrapper.id = coinData.id;
+                nodeWrapper.style.left = `${pt.x}%`;
+                nodeWrapper.style.top = `${pt.y}%`;
+                nodeWrapper.style.width = `${coinPercentWidth}%`;
+                nodeWrapper.style.height = `${coinPercentWidth}%`;
+                nodeWrapper.style.transform = `translate(-50%, -50%)`;
+                nodeWrapper.className = `absolute cursor-pointer coin-btn rounded-full z-20 flex items-center justify-center`;
+
+                if (coinData.active) {
+                    nodeWrapper.innerHTML = coinData.type.svg;
+                    nodeWrapper.addEventListener('click', () => handleCoinClick(r, c));
+                } else {
+                    nodeWrapper.innerHTML = `<svg viewBox="0 0 100 100" class="w-full h-full opacity-35 select-none">
+                        <circle cx="50" cy="50" r="14" fill="#150d06" stroke="#ca8a04" stroke-width="1.5" />
+                    </svg>`;
+                    nodeWrapper.classList.add('pointer-events-none', 'disabled');
+                }
+
+                gridContainer.appendChild(nodeWrapper);
+            }
+        }
+
+        // 重新繪製背景連結網格線
+        const svgElement = document.getElementById('board-lines');
+        svgElement.innerHTML = '';
+
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                const current = getCoords(r, c, boardSize);
+
+                if (r + 1 < boardSize) {
+                    const nextRight = getCoords(r + 1, c, boardSize);
+                    drawSVGLine(svgElement, current.x, current.y, nextRight.x, nextRight.y);
+                }
+
+                if (c + 1 < boardSize) {
+                    const nextLeft = getCoords(r, c + 1, boardSize);
+                    drawSVGLine(svgElement, current.x, current.y, nextLeft.x, nextLeft.y);
+                }
+            }
+        }
+    }
+
+    function drawSVGLine(svg, x1, y1, x2, y2) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', `${x1}%`);
+        line.setAttribute('y1', `${y1}%`);
+        line.setAttribute('x2', `${x2}%`);
+        line.setAttribute('y2', `${y2}%`);
+        line.setAttribute('stroke', '#78350f'); 
+        line.setAttribute('stroke-width', '3.5');
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('opacity', '0.75');
+        svg.appendChild(line);
+
+        const innerLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        innerLine.setAttribute('x1', `${x1}%`);
+        innerLine.setAttribute('y1', `${y1}%`);
+        innerLine.setAttribute('x2', `${x2}%`);
+        innerLine.setAttribute('y2', `${y2}%`);
+        innerLine.setAttribute('stroke', '#ca8a04'); 
+        innerLine.setAttribute('stroke-width', '1.2');
+        innerLine.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(innerLine);
+    }
+</script>
+
+<script>
+    // 點擊金幣選取邏輯
+    function handleCoinClick(r, c) {
+        if (isAITyping) return;
+
+        AudioService.playSelect();
+
+        if (!coins[r][c].active) return;
+
+        if (selectedCoins.length === 0) {
+            applySingleSelection(r, c);
+            return;
+        }
+
+        const anchor = selectedCoins[0];
+
+        if (selectedCoins.length === 1 && anchor.r === r && anchor.c === c) {
+            clearSelection();
+            return;
+        }
+
+        // 點選同列或同行的相鄰金幣連線檢查
+        if (anchor.r === r) {
+            const cMin = Math.min(anchor.c, c);
+            const cMax = Math.max(anchor.c, c);
+
+            let pathClear = true;
+            const tempSelection = [];
+            for (let col = cMin; col <= cMax; col++) {
+                if (!coins[r][col].active) {
+                    pathClear = false;
+                    break;
+                }
+                tempSelection.push({ r: r, c: col });
+            }
+
+            if (pathClear) {
+                applySelection(tempSelection);
+            } else {
+                applySingleSelection(r, c);
+            }
+        } else if (anchor.c === c) {
+            const rMin = Math.min(anchor.r, r);
+            const rMax = Math.max(anchor.r, r);
+
+            let pathClear = true;
+            const tempSelection = [];
+            for (let row = rMin; row <= rMax; row++) {
+                if (!coins[row][c].active) {
+                    pathClear = false;
+                    break;
+                }
+                tempSelection.push({ r: row, c: c });
+            }
+
+            if (pathClear) {
+                applySelection(tempSelection);
+            } else {
+                applySingleSelection(r, c);
+            }
+        } else {
+            applySingleSelection(r, c);
+        }
+    }
+
+    function applySingleSelection(r, c) {
+        applySelection([{ r: r, c: c }]);
+    }
+
+    function applySelection(coords) {
+        clearVisualSelection();
+        selectedCoins = coords;
+
+        selectedCoins.forEach(node => {
+            const el = document.getElementById(`coin-${node.r}-${node.c}`);
+            if (el) {
+                el.classList.add('coin-selected');
+            }
+        });
+
+        const names = selectedCoins.map(n => coins[n.r][n.c].type.name).join(', ');
+        document.getElementById('status-text').innerHTML = `💡 選取了 <span class="text-sky-950 font-black">${selectedCoins.length} 枚金幣</span> (${names})！點「確認回收」。`;
+        document.getElementById('status-banner').className = "w-full max-w-2xl mx-auto bg-sky-400 text-slate-900 font-black py-1.5 px-3 rounded-xl text-center shadow flex items-center justify-center gap-1.5 my-1";
+    }
+
+    function clearVisualSelection() {
+        selectedCoins.forEach(node => {
+            const el = document.getElementById(`coin-${node.r}-${node.c}`);
+            if (el) {
+                el.classList.remove('coin-selected');
+            }
+        });
+    }
+
+    function clearSelection() {
+        if (isAITyping) return;
+        clearVisualSelection();
+        selectedCoins = [];
+        updateTurnDisplay();
+    }
+</script>
+
+<script>
+    function confirmMove() {
+        if (isAITyping) return;
+        if (selectedCoins.length === 0) {
+            alertMsg("請先點選棋盤格線上的金幣再確認回收！");
+            return;
+        }
+        executeMove(selectedCoins);
+    }
+
+    // 執行金幣收回，並啟動向回收桶飛入的 3D 動態效果
+    function executeMove(moveList) {
+        const playerString = currentTurn === 1 ? '探險家 P1' : (gameMode === 'vs-ai' ? '法老 AI' : '探險家 P2');
+        const colorClass = currentTurn === 1 ? 'text-amber-800' : 'text-purple-800';
+
+        const binId = currentTurn === 1 ? 'p1-bin' : 'p2-bin';
+        const binRect = document.getElementById(binId).getBoundingClientRect();
+
+        moveList.forEach(coords => {
+            const coinSvg = coins[coords.r][coords.c].type.svg;
+            coins[coords.r][coords.c].active = false;
+
+            const coinEl = document.getElementById(`coin-${coords.r}-${coords.c}`);
+            if (coinEl) {
+                const coinRect = coinEl.getBoundingClientRect();
+
+                // 產生滑行浮動特效
+                const flyer = document.createElement('div');
+                flyer.className = 'floating-coin w-9 h-9 rounded-full';
+                flyer.innerHTML = coinSvg;
+                flyer.style.top = `${window.scrollY + coinRect.top}px`;
+                flyer.style.left = `${window.scrollX + coinRect.left}px`;
+                document.body.appendChild(flyer);
+
+                flyer.getBoundingClientRect();
+
+                const targetX = window.scrollX + binRect.left + (binRect.width / 2) - 18;
+                const targetY = window.scrollY + binRect.top + (binRect.height / 2) - 18;
+
+                flyer.style.top = `${targetY}px`;
+                flyer.style.left = `${targetX}px`;
+                flyer.style.transform = 'scale(0.25) rotate(360deg)';
+                flyer.style.opacity = '0';
+
+                setTimeout(() => {
+                    flyer.remove();
+                    // 放置縮小版金幣在回收區堆疊
+                    const token = document.createElement('span');
+                    token.className = 'w-3.5 h-3.5 rounded-full border border-yellow-700/20 overflow-hidden inline-block animate-pulse scale-90';
+                    token.innerHTML = coinSvg;
+                    
+                    const targetBin = document.getElementById(binId);
+                    if (targetBin) {
+                        targetBin.appendChild(token);
+                    }
+                }, 700);
+            }
+        });
+
+        scores[currentTurn === 1 ? 'p1' : 'p2'] += moveList.length;
+        document.getElementById('p1-score-txt').innerText = `${scores.p1} 枚`;
+        document.getElementById('p2-score-txt').innerText = `${scores.p2} 枚`;
+
+        AudioService.playCoin();
+        addLog(`📜 【${playerString}】回收了 ${moveList.length} 枚金幣！`, colorClass);
+
+        selectedCoins = [];
+        renderBoard();
+
+        // 檢查遊戲結束
+        if (getRemainingCoinsCount() === 0) {
+            handleGameOver();
+            return;
+        }
+
+        // 交換回合
+        currentTurn = currentTurn === 1 ? 2 : 1;
+        updateTurnDisplay();
+
+        // 單人模式 AI 動作觸發
+        if (gameMode === 'vs-ai' && currentTurn === 2) {
+            triggerAIMove();
+        }
+    }
+
+    function getRemainingCoinsCount() {
+        let count = 0;
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (coins[r][c].active) count++;
+            }
+        }
+        return count;
+    }
+
+    function updateTurnDisplay() {
+        const p1Badge = document.getElementById('p1-badge');
+        const p2Badge = document.getElementById('p2-badge');
+        const statusText = document.getElementById('status-text');
+        const statusBanner = document.getElementById('status-banner');
+
+        if (currentTurn === 1) {
+            if (p1Badge) p1Badge.classList.remove('hidden');
+            if (p2Badge) p2Badge.classList.add('hidden');
+            
+            statusBanner.className = "w-full max-w-2xl mx-auto bg-amber-500 text-amber-950 font-black py-1.5 px-3 rounded-xl text-center shadow border border-amber-600/40 shrink-0 flex items-center justify-center gap-1.5 my-1";
+            statusText.innerHTML = `輪到 <span class="text-red-950 underline font-black">探險家 P1</span> 的回合！請點選斜線上金幣`;
+        } else {
+            if (p1Badge) p1Badge.classList.add('hidden');
+            if (p2Badge) p2Badge.classList.remove('hidden');
+
+            if (gameMode === 'vs-ai') {
+                if (p2Badge) p2Badge.innerText = "法老思考中";
+                statusBanner.className = "w-full max-w-2xl mx-auto bg-purple-900 text-purple-100 font-bold py-1.5 px-3 rounded-xl text-center shadow border border-purple-700/40 shrink-0 flex items-center justify-center gap-1.5 my-1";
+                statusText.innerHTML = `<span class="animate-pulse">🔮 古埃及法老正在默默推演最佳路徑...</span>`;
+            } else {
+                if (p2Badge) p2Badge.innerText = "你的回合";
+                statusBanner.className = "w-full max-w-2xl mx-auto bg-emerald-600 text-emerald-950 font-black py-1.5 px-3 rounded-xl text-center shadow border border-emerald-700/40 shrink-0 flex items-center justify-center gap-1.5 my-1";
+                statusText.innerHTML = `輪到 <span class="text-emerald-950 underline font-black">探險家 P2</span> 的回合！請點選斜線上金幣`;
+            }
+        }
+    }
+
+    function alertMsg(msg) {
+        AudioService.playFail();
+        const banner = document.getElementById('status-banner');
+        const text = document.getElementById('status-text');
+        
+        banner.className = "w-full max-w-2xl mx-auto bg-red-800 text-red-50 font-black py-1.5 px-3 rounded-xl text-center shadow border border-red-600/40 shrink-0 flex items-center justify-center gap-1.5 my-1 animate-bounce";
+        text.innerHTML = `⚠️ ${msg}`;
+        
+        if (alertTimeoutId) clearTimeout(alertTimeoutId);
+        alertTimeoutId = setTimeout(() => {
+            updateTurnDisplay();
+            alertTimeoutId = null;
+        }, 2500);
+    }
+</script>
+
+<script>
+    // 法老 AI 決策核心邏輯
+    function triggerAIMove() {
+        isAITyping = true;
+        const speed = aiDifficulty === 'easy' ? 800 : (aiDifficulty === 'medium' ? 1200 : 1800);
+
+        if (aiTimeoutId) clearTimeout(aiTimeoutId);
+        aiTimeoutId = setTimeout(() => {
+            if (getRemainingCoinsCount() === 0) return;
+
+            const bestMove = calculateBestMove();
+            if (bestMove && bestMove.length > 0) {
+                executeMove(bestMove);
+            } else {
+                const legal = getLegalMoves();
+                if (legal.length > 0) executeMove(legal[0]);
+            }
+            isAITyping = false;
+            aiTimeoutId = null;
+        }, speed);
+    }
+
+    // 取得當前所有合法的連續拿取路徑
+    function getLegalMoves() {
+        const legal = [];
+
+        // 水平方向連續線 (Row 方向)
+        for (let r = 0; r < boardSize; r++) {
+            for (let startC = 0; startC < boardSize; startC++) {
+                if (!coins[r][startC].active) continue;
+                for (let endC = startC; endC < boardSize; endC++) {
+                    let pathClear = true;
+                    const path = [];
+                    for (let c = startC; c <= endC; c++) {
+                        if (!coins[r][c].active) {
+                            pathClear = false;
+                            break;
+                        }
+                        path.push({ r: r, c: c });
+                    }
+                    if (pathClear) {
+                        legal.push(path);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 垂直方向連續線 (Col 方向)
+        for (let c = 0; c < boardSize; c++) {
+            for (let startR = 0; startR < boardSize; startR++) {
+                if (!coins[startR][c].active) continue;
+                for (let endR = startR; endR < boardSize; endR++) {
+                    let pathClear = true;
+                    const path = [];
+                    for (let r = startR; r <= endR; r++) {
+                        if (!coins[r][c].active) {
+                            pathClear = false;
+                            break;
+                        }
+                        path.push({ r: r, c: c });
+                    }
+                    if (pathClear) {
+                        legal.push(path);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return legal;
+    }
+
+    function calculateBestMove() {
+        const allMoves = getLegalMoves();
+        if (allMoves.length === 0) return null;
+
+        const count = getRemainingCoinsCount();
+
+        // 1. 新手模式：完全隨機亂抓
+        if (aiDifficulty === 'easy') {
+            return allMoves[Math.floor(Math.random() * allMoves.length)];
+        }
+
+        // 2. 中階模式：20% 機率不看策略亂抓，其餘採取中局戰略
+        if (aiDifficulty === 'medium' && Math.random() < 0.2) {
+            return allMoves[Math.floor(Math.random() * allMoves.length)];
+        }
+
+        // 3. 局末完美博弈 Minimax 解析 (剩餘 10 顆金幣內解鎖皇家無懈可擊算力)
+        if (count <= 10) {
+            let bestEval = -Infinity;
+            let chosenMove = allMoves[0];
+
+            for (let i = 0; i < allMoves.length; i++) {
+                const move = allMoves[i];
+                toggleMoveInMatrix(move, false);
+                const score = minimax(getRemainingCoinsCount(), false, -10000, 10000);
+                toggleMoveInMatrix(move, true);
+
+                if (score > bestEval) {
+                    bestEval = score;
+                    chosenMove = move;
+                }
+            }
+            return chosenMove;
+        }
+
+        // 4. 中期局勢啟發式估值 (Heuristics)
+        let bestHeuristicScore = -Infinity;
+        let selectedHeuristicMove = allMoves[0];
+        allMoves.sort(() => Math.random() - 0.5); // 洗牌以增加遊戲局勢的多變性
+
+        for (let i = 0; i < allMoves.length; i++) {
+            const move = allMoves[i];
+            toggleMoveInMatrix(move, false);
+            const score = evaluateHeuristics();
+            toggleMoveInMatrix(move, true);
+
+            if (score > bestHeuristicScore) {
+                bestHeuristicScore = score;
+                selectedHeuristicMove = move;
+            }
+        }
+
+        return selectedHeuristicMove;
+    }
+
+    function toggleMoveInMatrix(coordsArray, activateState) {
+        coordsArray.forEach(pt => {
+            coins[pt.r][pt.c].active = activateState;
+        });
+    }
+
+    function minimax(remCount, isMaxPlayer, alpha, beta) {
+        if (remCount === 0) {
+            if (victoryRule === 'last-lose') {
+                // 拿走最後一顆的人輸：代表剛才做出最後一步的人（對手）贏了
+                return isMaxPlayer ? 1000 : -1000;
+            } else {
+                // 拿走最後一顆的人贏：代表剛才做出最後一步的人（對手）輸了
+                return isMaxPlayer ? -1000 : 1000;
+            }
+        }
+
+        const moves = getLegalMoves();
+
+        if (isMaxPlayer) {
+            let maxVal = -Infinity;
+            for (let i = 0; i < moves.length; i++) {
+                toggleMoveInMatrix(moves[i], false);
+                const score = minimax(getRemainingCoinsCount(), false, alpha, beta);
+                toggleMoveInMatrix(moves[i], true);
+                
+                maxVal = Math.max(maxVal, score);
+                alpha = Math.max(alpha, score);
+                if (beta <= alpha) break;
+            }
+            return maxVal;
+        } else {
+            let minVal = Infinity;
+            for (let i = 0; i < moves.length; i++) {
+                toggleMoveInMatrix(moves[i], false);
+                const score = minimax(getRemainingCoinsCount(), true, alpha, beta);
+                toggleMoveInMatrix(moves[i], true);
+
+                minVal = Math.min(minVal, score);
+                beta = Math.min(beta, score);
+                if (beta <= alpha) break;
+            }
+            return minVal;
+        }
+    }
+
+    function evaluateHeuristics() {
+        const remCount = getRemainingCoinsCount();
+        let val = 0;
+
+        if (victoryRule === 'last-lose') {
+            if (remCount === 0) return -10000; // 絕對不要主動拿完所有金幣自爆！
+            if (remCount === 1) return 5000;   // 留下一顆給對手，對手必輸，這是完美必勝局！
+            if (remCount === 2) return -3000;   // 留下兩顆很危險，對手會拿走一顆逼我們輸
+        } else {
+            if (remCount === 0) return 10000;  // 拿到最後一顆，爽快獲勝！
+            if (remCount === 1) return -5000;  // 剩下一顆很愚蠢，對手直接拿走就贏了
+        }
+
+        // 對角線與棋盤格局線條稀疏度加分（傾向對對手進行孤立封鎖）
+        const distribution = getLinesCount();
+        val -= distribution.rows * 15;
+        val -= distribution.cols * 15;
+
+        return val;
+    }
+
+    function getLinesCount() {
+        let rows = 0;
+        let cols = 0;
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) { // 修正處：將原本錯誤的 r++ 修正為 c++，解決了無限迴圈與超出 undefined 索引的 Crash 錯誤
+                if (coins[r][c].active) {
+                    rows++;
+                    break;
+                }
+            }
+        }
+        for (let c = 0; c < boardSize; c++) {
+            for (let r = 0; r < boardSize; r++) {
+                if (coins[r][c].active) {
+                    cols++;
+                    break;
+                }
+            }
+        }
+        return { rows, cols };
+    }
+
+    // 阿努比斯的智慧暗示系統 (點擊後使用極限皇家算力幫學生推導當前局面最優步法)
+    function requestMagicHint() {
+        if (isAITyping) return;
+
+        const savedDiff = aiDifficulty;
+        aiDifficulty = 'hard';
+        const bestMove = calculateBestMove();
+        aiDifficulty = savedDiff;
+
+        if (!bestMove || bestMove.length === 0) return;
+
+        AudioService.playSuccess();
+
+        bestMove.forEach(coords => {
+            const el = document.getElementById(`coin-${coords.r}-${coords.c}`);
+            if (el) {
+                el.classList.add('coin-selected');
+                el.style.filter = 'drop-shadow(0 0 20px rgba(168, 85, 247, 1)) brightness(1.3)';
+            }
+        });
+
+        const listString = bestMove.map(pt => `[第 ${pt.r+1} 行, 第 ${pt.c+1} 列]`).join(', ');
+        addLog(`🔮 <b>阿努比斯的暗示：</b> 推薦選取金幣 ${listString}。`, 'text-purple-950 font-bold');
+
+        selectedCoins = bestMove;
+    }
+</script>
+
+<script>
+    // 結算與遊戲結束邏輯
+    function handleGameOver() {
+        isAITyping = false;
+        
+        const modal = document.getElementById('game-over-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalDesc = document.getElementById('modal-desc');
+        const statP1 = document.getElementById('stat-p1');
+        const statP2 = document.getElementById('stat-p2');
+        const statP2Label = document.getElementById('stat-p2-label');
+
+        statP1.innerText = `${scores.p1} 枚`;
+        statP2.innerText = `${scores.p2} 枚`;
+        statP2Label.innerText = gameMode === 'vs-ai' ? '法老 AI' : '探險家 P2';
+
+        let winnerNum = 1;
+        if (victoryRule === 'last-lose') {
+            winnerNum = currentTurn === 1 ? 2 : 1;
+        } else {
+            winnerNum = currentTurn;
+        }
+
+        if (winnerNum === 1) {
+            AudioService.playSuccess();
+            modalTitle.innerText = "探險勝利！";
+            modalTitle.className = "text-2xl font-black tracking-widest egypt-title mb-1 text-emerald-700";
+            modalIcon.innerText = "🏆";
+            if (gameMode === 'vs-ai') {
+                modalDesc.innerText = "非常聰明！你成功避開了法老的詛咒，成功獲得了神殿的古代智慧！";
+            } else {
+                modalDesc.innerText = "比賽結束！【探險家 P1】智商超群，在最後一刻完美做出了精準勝步！";
+            }
+        } else {
+            if (gameMode === 'vs-ai') {
+                AudioService.playFail();
+                modalTitle.innerText = "法老的古老詛咒！";
+                modalTitle.className = "text-2xl font-black tracking-widest egypt-title mb-1 text-red-800";
+                modalIcon.innerText = "💀";
+                modalDesc.innerText = "好可惜！法老王不愧是千年的數學大師，你觸發了最後的機關。不要灰心，再挑戰一次吧！";
+            } else {
+                AudioService.playSuccess();
+                modalTitle.innerText = "P2 探險家勝出！";
+                modalTitle.className = "text-2xl font-black tracking-widest egypt-title mb-1 text-emerald-700";
+                modalIcon.innerText = "👑";
+                modalDesc.innerText = "精采絕倫！【探險家 P2】成功在這場刺激的金幣博弈戰中破解了機關，獲得勝利！";
+            }
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeGameOverModal() {
+        document.getElementById('game-over-modal').classList.add('hidden');
+    }
+</script>
+
+</body>
+</html>
