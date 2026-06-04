@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古文明冒險：吃金幣遊戲</title>
+    <style>
+        :root {
+            --color-gold: #FFD700;
+            --color-bronze: #E25822;
+            --color-silver: #B0C4DE;
+            --color-green: #2E8B57;
+            --bg-sand: #F5EBD6;
+            --bg-wood: #8B4513;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Microsoft JhengHei', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-sand);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(#dfc79b 15%, transparent 16%), radial-gradient(#dfc79b 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: #FFFDF9;
+            border: 8px solid #D2B48C;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: #5C4033;
+            font-size: 2.5rem;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0px #EEDC82;
+        }
+
+        .subtitle {
+            color: #8B5A2B;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        /* 模式選擇畫面 */
+        #setup-screen {
+            display: block;
+            padding: 30px;
+        }
+
+        .mode-section {
+            background: #FDF5E6;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px dashed #CD853F;
+        }
+
+        label {
+            font-size: 1.3rem;
+            color: #5C4033;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        select, button {
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #CD853F;
+            background-color: white;
+            color: #5C4033;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        select:hover, button:hover {
+            background-color: #FFE4B5;
+            transform: scale(1.05);
+        }
+
+        .start-btn {
+            background-color: #FF8C00;
+            color: white;
+            border: none;
+            font-size: 1.6rem;
+            padding: 15px 40px;
+            box-shadow: 0 5px 15px rgba(255, 140, 0, 0.4);
+            margin-top: 10px;
+        }
+
+        .start-btn:hover {
+            background-color: #FF7F50;
+            box-shadow: 0 7px 20px rgba(255, 140, 0, 0.6);
+        }
+
+        /* 遊戲主畫面 */
+        #game-screen {
+            display: none;
+        }
+
+        .game-layout {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        /* 側邊計分板 */
+        .side-panel {
+            flex: 1;
+            min-width: 200px;
+            max-width: 240px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .player-card {
+            background: #FFF;
+            border: 4px solid #DDD;
+            border-radius: 15px;
+            padding: 12px;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .player-card.active {
+            border-color: #FF4500;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(255, 69, 0, 0.2);
+            background-color: #FFFACD;
+        }
+
+        .player-card.active::after {
+            content: '⭐ 輪到你';
+            position: absolute;
+            top: -12px;
+            right: 10px;
+            background: #FF4500;
+            color: white;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .player-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .color-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-block;
+            border: 2px solid rgba(0,0,0,0.2);
+        }
+
+        .score-display {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .obstacle-status {
+            font-size: 0.9rem;
+            background: #F0F0F0;
+            padding: 5px;
+            border-radius: 5px;
+            text-align: center;
+            color: #666;
+            border: 1px solid #DDD;
+        }
+
+        .obstacle-btn {
+            width: 100%;
+            font-size: 0.95rem;
+            padding: 6px;
+            margin-top: 5px;
+            background-color: #DEB887;
+            border: 1px solid #8B4513;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .obstacle-btn:disabled {
+            background-color: #E0E0E0;
+            color: #A0A0A0;
+            border-color: #CCC;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 棋盤區域 */
+        .board-wrapper {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #EEDC82;
+            border: 6px solid #CD853F;
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: inset 0 0 20px rgba(139,69,19,0.2);
+        }
+
+        #game-board {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            aspect-ratio: 1 / 1;
+        }
+
+        .status-bar {
+            width: 100%;
+            background: #5C4033;
+            color: #FFF8DC;
+            padding: 12px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* 彈出說明視窗 */
+        .rules-popup {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .rules-content {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: left;
+            border: 5px solid #FF8C00;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .rules-content h2 {
+            text-align: center;
+            color: #FF8C00;
+            margin-top: 0;
+        }
+
+        .rules-content ol {
+            padding-left: 20px;
+            line-height: 1.6;
+            font-size: 1.05rem;
+            color: #333;
+        }
+
+        .close-rules-btn {
+            display: block;
+            margin: 20px auto 0;
+            background: #FF8C00;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            font-size: 1.1rem;
+        }
+
+        /* 結算畫面 */
+        #victory-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .victory-content {
+            background: #FFFDF0;
+            border: 8px solid #FFD700;
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .winner-title {
+            font-size: 2.2rem;
+            color: #FF4500;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .rank-list {
+            text-align: left;
+            margin: 20px auto;
+            max-width: 300px;
+            font-size: 1.2rem;
+            line-height: 2;
+        }
+
+        /* SVG 元素樣式 */
+        .board-line {
+            stroke: #8B5A2B;
+            stroke-width: 4;
+            stroke-linecap: round;
+        }
+
+        .board-node-bg {
+            fill: #FFF8DC;
+            stroke: #CD853F;
+            stroke-width: 2;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .board-node-bg:hover {
+            fill: #FFEB99;
+        }
+
+        .board-node-bg.highlight-move {
+            fill: #98FB98;
+            stroke: #32CD32;
+            stroke-width: 4;
+            animation: pulse 1.5s infinite;
+        }
+
+        .board-node-bg.highlight-obstacle {
+            fill: #FFB6C1;
+            stroke: #FF1493;
+            stroke-width: 3;
+        }
+
+        @keyframes pulse {
+            0% { r: 16; }
+            50% { r: 20; }
+            100% { r: 16; }
+        }
+
+        .coin {
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.3s;
+        }
+
+        .coin.selected {
+            stroke: #FF4500;
+            stroke-width: 4;
+            transform: scale(1.15);
+        }
+
+        .obstacle-piece {
+            stroke: #333;
+            stroke-width: 2;
+        }
+
+        .bottom-controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>吃金幣遊戲 🪙</h1>
+    <div class="subtitle">國小互動益智網頁版</div>
+
+    <!-- 遊戲設定畫面 -->
+    <div id="setup-screen">
+        <div class="mode-section">
+            <label for="player-count">遊戲人數：</label>
+            <select id="player-count">
+                <option value="2">2 人遊戲</option>
+                <option value="3">3 人遊戲</option>
+                <option value="4">4 人遊戲</option>
+            </select>
+        </div>
+
+        <div class="mode-section">
+            <label for="game-mode">對戰模式：</label>
+            <select id="game-mode">
+                <option value="ai">單人跟電腦 PK (其餘為電腦)</option>
+                <option value="local">多人同螢幕對戰 (Pass & Play)</option>
+            </select>
+        </div>
+
+        <button class="start-btn" onclick="startGame()">開啟古文明冒險！</button>
+    </div>
+
+    <!-- 遊戲進行畫面 -->
+    <div id="game-screen">
+        <div class="status-bar" id="game-status">準備開始...</div>
+
+        <div class="game-layout">
+            <!-- 左側玩家資訊 (玩家 1 & 3) -->
+            <div class="side-panel" id="left-panel"></div>
+
+            <!-- 中間棋盤 -->
+            <div class="board-wrapper">
+                <svg id="game-board" viewBox="0 0 500 500">
+                    <!-- 動態由 JS 產生連線與節點 -->
+                </svg>
+            </div>
+
+            <!-- 右側玩家資訊 (玩家 2 & 4) -->
+            <div class="side-panel" id="right-panel"></div>
+        </div>
+
+        <div class="bottom-controls">
+            <button onclick="showRules()">查看規則</button>
+            <button onclick="resetToMenu()" style="background-color: #CD5C5C; color: white; border-color: #8B0000;">返回主選單</button>
+        </div>
+    </div>
+</div>
+
+<!-- 遊戲規則彈出視窗 -->
+<div id="rules-popup" class="rules-popup" style="display: none;">
+    <div class="rules-content">
+        <h2>📜 遊戲規則說明</h2>
+        <ol>
+            <li><strong>選擇陣營：</strong>每位玩家控制一種顏色的錢幣。</li>
+            <li><strong>跳躍吃幣：</strong>輪到你時，選擇你的錢幣，<strong>跳過相鄰的任何錢幣</strong>落到後方的空位，即可將被跳過的錢幣「吃掉」並獲得 1 分！</li>
+            <li><strong>移動限制：</strong>只能沿著棋盤上的黑線移動。</li>
+            <li><strong>召喚守護獸（進階障礙棋）：</strong>每場遊戲每人有<strong>一次機會</strong>點擊「放置障礙棋」，將你的專屬守護獸放到任意空格阻擋對手。注意：放障礙棋回合不能移動錢幣。</li>
+            <li><strong>獲勝條件：</strong>當畫面上沒有任何可以跳躍吃幣的合法步法時，遊戲結束，最高分者獲勝！</li>
+        </ol>
+        <button class="close-rules-btn" onclick="hideRules()">我知道了</button>
+    </div>
+</div>
+
+<!-- 結算畫面 -->
+<div id="victory-screen">
+    <div class="victory-content">
+        <div class="winner-title" id="winner-text">👑 恭喜獲勝！</div>
+        <div class="rank-list" id="rank-list"></div>
+        <button class="start-btn" onclick="resetToMenu()">再玩一局</button>
+    </div>
+</div>
+
+<script>
+    // 遊戲常數與配置
+    const GRID_SIZE = 5; // 5x5 的方格網，旋轉45度
+    const BOARD_CENTER = 250;
+    const NODE_SPACING = 55; // 節點間距
+
+    // 玩家配置 (顏色與守護獸名稱)
+    const PLAYER_CONFIGS = [
+        { id: 0, name: "金色玩家 (蛇髮妖)", color: "#FFD700", stroke: "#B8860B", monster: "🐍 蛇髮妖" },
+        { id: 1, name: "古銅玩家 (獨眼巨)", color: "#E25822", stroke: "#8B0000", monster: "👁️ 獨眼巨" },
+        { id: 2, name: "古銀玩家 (木乃伊)", color: "#9370DB", stroke: "#4B0082", monster: "🧻 木乃伊" },
+        { id: 3, name: "古金玩家 (深海章)", color: "#2E8B57", stroke: "#004D26", monster: "🐙 深海章" }
+    ];
+
+    // 遊戲狀態變數
+    let playerCount = 2;
+    let gameMode = 'ai'; // 'ai' 或 'local'
+    let currentPlayerIndex = 0;
+    let board = []; // 5x5 矩陣
+    let scores = [0, 0, 0, 0];
+    let obstacleUsed = [false, false, false, false];
+    let selectedNode = null; // 當前選中的 {r, c}
+    let isPlacingObstacle = false;
+    let isGameOver = false;
+
+    // 初始化與畫面切換
+    function showRules() { document.getElementById('rules-popup').style.display = 'flex'; }
+    function hideRules() { document.getElementById('rules-popup').style.display = 'none'; }
+    function resetToMenu() {
+        document.getElementById('setup-screen').style.display = 'block';
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('victory-screen').style.display = 'none';
+        isGameOver = false;
+    }
+
+    // 開始遊戲
+    function startGame() {
+        playerCount = parseInt(document.getElementById('player-count').value);
+        gameMode = document.getElementById('game-mode').value;
+        
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+
+        initGameData();
+        renderScoreboards();
+        buildBoardSVG();
+        updateStatusBar();
+
+        // 如果是AI模式且目前輪到AI（雖然玩家1永遠是真人，先防範未然）
+        if (gameMode === 'ai' && currentPlayerIndex > 0) {
+            setTimeout(executeAIMove, 800);
+        }
+    }
+
+    // 初始化資料：擺放24個錢幣，中央留空
+    function initGameData() {
+        currentPlayerIndex = 0;
+        scores = [0, 0, 0, 0];
+        obstacleUsed = [false, false, false, false];
+        selectedNode = null;
+        isPlacingObstacle = false;
+        isGameOver = false;
+
+        // 產生24個錢幣的顏色池，確保各顏色數量儘量平均
+        let coinPool = [];
+        for (let i = 0; i < 24; i++) {
+            coinPool.push(i % 4); // 0, 1, 2, 3 循環分發，每種顏色剛好6個
+        }
+        // 洗牌算法讓地圖隨機化
+        for (let i = coinPool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [coinPool[i], coinPool[j]] = [coinPool[j], coinPool[i]];
+        }
+
+        // 填入 5x5 棋盤
+        board = [];
+        let poolIndex = 0;
+        for (let r = 0; r < GRID_SIZE; r++) {
+            board[r] = [];
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (r === 2 && c === 2) {
+                    board[r][c] = null; // 中央留空
+                } else {
+                    board[r][c] = {
+                        type: 'coin',
+                        color: coinPool[poolIndex++]
+                    };
+                }
+            }
+        }
+    }
+
+    // 將 5x5 矩陣座標轉換成畫面上旋轉45度的 SVG 坐標
+    function getXY(r, c) {
+        // 以中心點 250, 250 來做菱形展開
+        const x = BOARD_CENTER + (c - r) * NODE_SPACING;
+        const y = BOARD_CENTER + (c + r - (GRID_SIZE - 1)) * (NODE_SPACING * 0.75);
+        return { x, y };
+    }
+
+    // 建立棋盤 SVG 畫面
+    function buildBoardSVG() {
+        const svg = document.getElementById('game-board');
+        svg.innerHTML = ''; // 清空舊畫面
+
+        // 1. 繪製棋盤連線
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const current = getXY(r, c);
+                // 向右連線 (r, c) 到 (r, c+1)
+                if (c + 1 < GRID_SIZE) {
+                    const right = getXY(r, c + 1);
+                    drawLine(svg, current.x, current.y, right.x, right.y);
+                }
+                // 向下連線 (r, c) 到 (r+1, c)
+                if (r + 1 < GRID_SIZE) {
+                    const down = getXY(r + 1, c);
+                    drawLine(svg, current.x, current.y, down.x, down.y);
+                }
+            }
+        }
+
+        // 2. 繪製底層點擊感應圓圈 (底色與高亮顯示)
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const pos = getXY(r, c);
+                const nodeBg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                nodeBg.setAttribute("cx", pos.x);
+                nodeBg.setAttribute("cy", pos.y);
+                nodeBg.setAttribute("r", 18);
+                nodeBg.setAttribute("class", "board-node-bg");
+                nodeBg.setAttribute("id", `node-bg-${r}-${c}`);
+                
+                // 點擊事件：處理移動目的地選擇或障礙物放置
+                nodeBg.onclick = () => handleNodeClick(r, c);
+                svg.appendChild(nodeBg);
+            }
+        }
+
+        // 3. 繪製上層物體 (錢幣或障礙棋)
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const item = board[r][c];
+                if (!item) continue;
+
+                const pos = getXY(r, c);
+
+                if (item.type === 'coin') {
+                    // 繪製圓滾滾的精美小金幣
+                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    g.setAttribute("class", "coin");
+                    g.setAttribute("id", `coin-${r}-${c}`);
+                    if (selectedNode && selectedNode.r === r && selectedNode.c === c) {
+                        g.classList.add('selected');
+                    }
+
+                    // 金幣主體
+                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", pos.x);
+                    circle.setAttribute("cy", pos.y);
+                    circle.setAttribute("r", 14);
+                    circle.setAttribute("fill", PLAYER_CONFIGS[item.color].color);
+                    circle.setAttribute("stroke", PLAYER_CONFIGS[item.color].stroke);
+                    circle.setAttribute("stroke-width", "2");
+
+                    // 金幣內圈裝飾
+                    const innerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    innerCircle.setAttribute("cx", pos.x);
+                    innerCircle.setAttribute("cy", pos.y);
+                    innerCircle.setAttribute("r", 9);
+                    innerCircle.setAttribute("fill", "none");
+                    innerCircle.setAttribute("stroke", PLAYER_CONFIGS[item.color].stroke);
+                    innerCircle.setAttribute("stroke-width", "1");
+                    innerCircle.setAttribute("stroke-dasharray", "2,2");
+
+                    g.appendChild(circle);
+                    g.appendChild(innerCircle);
+
+                    // 點擊金幣選取
+                    g.onclick = (e) => {
+                        e.stopPropagation(); // 防止觸發底層 nodeBg
+                        handleCoinClick(r, c);
+                    };
+
+                    svg.appendChild(g);
+
+                } else if (item.type === 'obstacle') {
+                    // 繪製古怪別緻的障礙物標誌
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", pos.x);
+                    text.setAttribute("y", pos.y + 6);
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("font-size", "18");
+                    text.setAttribute("class", "obstacle-piece");
+                    // 取守護獸第一個表情符號表情
+                    text.textContent = PLAYER_CONFIGS[item.owner].monster.split(' ')[0];
+                    svg.appendChild(text);
+                }
+            }
+        }
+
+        // 如果目前有選中的錢幣，高亮顯示其可以跳躍的目的地
+        if (selectedNode && !isPlacingObstacle) {
+            const validMoves = getValidMovesForNode(selectedNode.r, selectedNode.c);
+            validMoves.forEach(m => {
+                const el = document.getElementById(`node-bg-${m.targetR}-${m.targetC}`);
+                if (el) el.classList.add('highlight-move');
+            });
+        }
+
+        // 如果是放置障礙棋模式，高亮所有空格
+        if (isPlacingObstacle) {
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (!board[r][c]) {
+                        const el = document.getElementById(`node-bg-${r}-${c}`);
+                        if (el) el.classList.add('highlight-obstacle');
+                    }
+                }
+            }
+        }
+    }
+
+    function drawLine(svg, x1, y1, x2, y2) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+        line.setAttribute("class", "board-line");
+        svg.appendChild(line);
+    }
+
+    // 渲染左右兩側的玩家計分面板
+    function renderScoreboards() {
+        const leftPanel = document.getElementById('left-panel');
+        const rightPanel = document.getElementById('right-panel');
+        leftPanel.innerHTML = '';
+        rightPanel.innerHTML = '';
+
+        for (let i = 0; i < playerCount; i++) {
+            const conf = PLAYER_CONFIGS[i];
+            const isAI = (gameMode === 'ai' && i > 0);
+            
+            const card = document.createElement('div');
+            card.className = `player-card ${i === currentPlayerIndex ? 'active' : ''}`;
+            card.id = `player-card-${i}`;
+
+            const title = document.createElement('div');
+            title.className = 'player-title';
+            title.innerHTML = `<span class="color-dot" style="background-color: ${conf.color};"></span> ${conf.name} ${isAI ? '(電腦)' : ''}`;
+            
+            const score = document.createElement('div');
+            score.className = 'score-display';
+            score.id = `score-${i}`;
+            score.textContent = `得分：${scores[i]} 分`;
+
+            card.appendChild(title);
+            card.appendChild(score);
+
+            // 障礙物按鈕區
+            if (!obstacleUsed[i]) {
+                if (isAI) {
+                    const statusText = document.createElement('div');
+                    statusText.className = 'obstacle-status';
+                    statusText.textContent = `⚡ 守護獸在陣中`;
+                    card.appendChild(statusText);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.className = 'obstacle-btn';
+                    btn.textContent = `召唤 ${conf.monster.split(' ')[1]}`;
+                    btn.disabled = (i !== currentPlayerIndex || isPlacingObstacle);
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        startObstaclePlacement();
+                    };
+                    card.appendChild(btn);
+                }
+            } else {
+                const statusText = document.createElement('div');
+                statusText.className = 'obstacle-status';
+                statusText.style.textDecoration = 'line-through';
+                statusText.style.color = '#B22222';
+                statusText.textContent = `❌ 已召唤守護獸`;
+                card.appendChild(statusText);
+            }
+
+            // 奇數放左邊，偶數放右邊
+            if (i % 2 === 0) {
+                leftPanel.appendChild(card);
+            } else {
+                rightPanel.appendChild(card);
+            }
+        }
+    }
+
+    // 頂部橫幅文字提示
+    function updateStatusBar() {
+        const bar = document.getElementById('game-status');
+        if (isGameOver) return;
+
+        const currentConf = PLAYER_CONFIGS[currentPlayerIndex];
+        const isAI = (gameMode === 'ai' && currentPlayerIndex > 0);
+        
+        if (isPlacingObstacle) {
+            bar.textContent = `🎯 請點擊棋盤上的【粉色空格】放置你的防禦守護獸！`;
+            bar.style.backgroundColor = '#FF69B4';
+        } else if (isAI) {
+            bar.textContent = `🤖 電腦 (${currentConf.name}) 正在深思熟慮中...`;
+            bar.style.backgroundColor = '#708090';
+        } else {
+            bar.textContent = `👉 輪到你了！【${currentConf.name}】，請選擇金幣進行跳躍吃幣。`;
+            bar.style.backgroundColor = '#5C4033';
+        }
+    }
+
+    // 點擊金幣事件
+    function handleCoinClick(r, c) {
+        if (isGameOver || isPlacingObstacle) return;
+        // 電腦回合不允許真人點擊操作
+        if (gameMode === 'ai' && currentPlayerIndex > 0) return;
+
+        const item = board[r][c];
+        // 玩家只能點選屬於自己顏色的金幣！
+        if (item && item.type === 'coin' && item.color === currentPlayerIndex) {
+            if (selectedNode && selectedNode.r === r && selectedNode.c === c) {
+                selectedNode = null; // 重複點擊取消選取
+            } else {
+                selectedNode = { r, c };
+            }
+            buildBoardSVG();
+        }
+    }
+
+    // 點擊棋盤網格節點事件
+    function handleNodeClick(r, c) {
+        if (isGameOver) return;
+        if (gameMode === 'ai' && currentPlayerIndex > 0) return;
+
+        // 情況 A：正在放置障礙棋
+        if (isPlacingObstacle) {
+            if (!board[r][c]) { // 必須是空格
+                board[r][c] = { type: 'obstacle', owner: currentPlayerIndex };
+                obstacleUsed[currentPlayerIndex] = true;
+                isPlacingObstacle = false;
+                endTurn();
+            }
+            return;
+        }
+
+        // 情況 B：點擊高亮空格進行跳躍移動
+        if (selectedNode) {
+            const validMoves = getValidMovesForNode(selectedNode.r, selectedNode.c);
+            const move = validMoves.find(m => m.targetR === r && m.targetC === c);
+            
+            if (move) {
+                executeMove(selectedNode.r, selectedNode.c, move.middleR, move.middleC, r, c);
+            } else {
+                selectedNode = null; // 點擊無效區域取消選取
+                buildBoardSVG();
+            }
+        }
+    }
+
+    // 開始放置障礙物模式
+    function startObstaclePlacement() {
+        isPlacingObstacle = true;
+        selectedNode = null;
+        buildBoardSVG();
+        updateStatusBar();
+    }
+
+    // 核心邏輯：計算某個節點上金幣的合法跳躍動作
+    function getValidMovesForNode(r, c) {
+        const moves = [];
+        const item = board[r][c];
+        if (!item || item.type !== 'coin') return moves;
+
+        // 四個交叉直線方向，間距為 2 的跳躍
+        const directions = [
+            { dr: -2, dc: 0 }, // 向上跳
+            { dr: 2, dc: 0 },  // 向下跳
+            { dr: 0, dc: -2 }, // 向左跳
+            { dr: 0, dc: 2 }   // 向右跳
+        ];
+
+        directions.forEach(d => {
+            const targetR = r + d.dr;
+            const targetC = c + d.dc;
+            const middleR = r + d.dr / 2;
+            const middleC = c + d.dc / 2;
+
+            // 確保目標與中間格子都在 5x5 地圖範圍內
+            if (targetR >= 0 && targetR < GRID_SIZE && targetC >= 0 && targetC < GRID_SIZE) {
+                const targetCell = board[targetR][targetC];
+                const middleCell = board[middleR][middleC];
+
+                // 規則：目標格必須是空格，中間格必須有別人的金幣(非自色)
+                if (!targetCell && middleCell && middleCell.type === 'coin' && middleCell.color !== item.color) {
+                    moves.push({ targetR, targetC, middleR, middleC });
+                }
+            }
+        });
+
+        return moves;
+    }
+
+    // 檢查整張地圖上，某個特定玩家是否還有任何合法跳躍步法
+    function hasAnyValidMoves(playerIdx) {
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const item = board[r][c];
+                if (item && item.type === 'coin' && item.color === playerIdx) {
+                    if (getValidMovesForNode(r, c).length > 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // 全局檢查是否所有人都無法再跳躍了 (遊戲結束標準)
+    function checkGlobalGameOver() {
+        for (let i = 0; i < playerCount; i++) {
+            if (hasAnyValidMoves(i)) return false;
+        }
+        return true;
+    }
+
+    // 執行跳躍移動與吃幣
+    function executeMove(fromR, fromC, midR, midC, toR, toC) {
+        // 移動金幣
+        board[toR][toC] = board[fromR][fromC];
+        board[fromR][fromC] = null;
+        
+        // 吃掉對手金幣
+        board[midR][midC] = null;
+        
+        // 當前玩家得分增加
+        scores[currentPlayerIndex]++;
+        
+        selectedNode = null;
+        endTurn();
+    }
+
+    // 結束當前回合，切換至下一個玩家
+    function endTurn() {
+        if (checkGlobalGameOver()) {
+            handleGameOver();
+            return;
+        }
+
+        // 尋找下一個還有步法或者還有障礙棋可以放的玩家
+        let nextPlayer = currentPlayerIndex;
+        let loopCount = 0;
+        
+        while (loopCount < playerCount) {
+            nextPlayer = (nextPlayer + 1) % playerCount;
+            // 只要玩家還能移動，或者他還沒放過障礙物，都可以輪到他
+            if (hasAnyValidMoves(nextPlayer) || !obstacleUsed[nextPlayer]) {
+                currentPlayerIndex = nextPlayer;
+                break;
+            }
+            loopCount++;
+        }
+
+        // 全面重新整理渲染
+        selectedNode = null;
+        isPlacingObstacle = false;
+        renderScoreboards();
+        buildBoardSVG();
+        updateStatusBar();
+
+        // 處理自動電腦 AI 回合
+        if (gameMode === 'ai' && currentPlayerIndex > 0 && !isGameOver) {
+            setTimeout(executeAIMove, 800);
+        }
+    }
+
+    // 簡易智慧電腦 AI 決策邏輯
+    function executeAIMove() {
+        if (isGameOver) return;
+
+        // 1. 優先尋找是否有可以吃幣的跳躍走法
+        let allPossibleMoves = [];
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const item = board[r][c];
+                if (item && item.type === 'coin' && item.color === currentPlayerIndex) {
+                    const validMoves = getValidMovesForNode(r, c);
+                    validMoves.forEach(m => {
+                        allPossibleMoves.push({ fromR: r, fromC: c, ...m });
+                    });
+                }
+            }
+        }
+
+        if (allPossibleMoves.length > 0) {
+            // 如果有多個走法，AI 隨機挑選一個執行
+            const randomMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
+            executeMove(randomMove.fromR, randomMove.fromC, randomMove.middleR, randomMove.middleC, randomMove.targetR, randomMove.targetC);
+            return;
+        }
+
+        // 2. 如果不能跳躍吃幣，且還沒放過障礙物，AI 就找空格隨機放下守護獸干擾真人
+        if (!obstacleUsed[currentPlayerIndex]) {
+            let emptyCells = [];
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (!board[r][c]) emptyCells.push({ r, c });
+                }
+            }
+            if (emptyCells.length > 0) {
+                // 偏好挑選靠近玩家 0 (真人) 的位置來堵人
+                let bestCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                
+                board[bestCell.r][bestCell.c] = { type: 'obstacle', owner: currentPlayerIndex };
+                obstacleUsed[currentPlayerIndex] = true;
+                endTurn();
+                return;
+            }
+        }
+
+        // 3. 如果既不能走也無法放障礙物，只能無奈 pass 跳過
+        endTurn();
+    }
+
+    // 處理遊戲結束結算
+    function handleGameOver() {
+        isGameOver = true;
+        
+        // 依得分高低進行排序
+        let ranks = [];
+        for (let i = 0; i < playerCount; i++) {
+            ranks.push({ id: i, name: PLAYER_CONFIGS[i].name, score: scores[i] });
+        }
+        ranks.sort((a, b) => b.score - a.score);
+
+        // 判定最高分獲勝者
+        const winnerText = document.getElementById('winner-text');
+        if (ranks[0].score === ranks[1]?.score) {
+            winnerText.textContent = `🤝 難分軒輊！平手對局`;
+        } else {
+            winnerText.textContent = `👑 恭喜 ${ranks[0].name} 贏得勝利！`;
+        }
+
+        // 產生結算排行榜 HTML
+        const rankListEl = document.getElementById('rank-list');
+        rankListEl.innerHTML = '';
+        ranks.forEach((r, idx) => {
+            const div = document.createElement('div');
+            div.innerHTML = `<strong>第 ${idx + 1} 名：</strong> ${r.name} — ${r.score} 分`;
+            rankListEl.appendChild(div);
+        });
+
+        document.getElementById('victory-screen').style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>
