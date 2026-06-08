@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>古文明冒險：吃金幣遊戲</title>
+    <title>古文明冒險：吃金幣遊戲 🪙</title>
     <style>
         :root {
             --color-gold: #FFD700;
             --color-bronze: #E25822;
-            --color-silver: #9370DB;
+            --color-silver: #A393BF;
             --color-green: #2E8B57;
-            --bg-sand: #F4E7CE;
-            --bg-parchment: #FFFDF4;
-            --text-dark: #4A3319;
+            --bg-sand: #D9B48F;
+            --text-dark: #3D2205;
+            --stone-light: #EADCB9;
+            --bronze-dark: #6E3E15;
         }
 
         * {
@@ -24,98 +25,108 @@
         body {
             background-color: var(--bg-sand);
             margin: 0;
-            padding: 15px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            background-image: radial-gradient(#dbcaa4 15%, transparent 16%), radial-gradient(#dbcaa4 15%, transparent 16%);
-            background-size: 40px 40px;
-            background-position: 0 0, 20px 20px;
+            /* 模擬沙漠羊皮紙古地圖的細緻紋理與暗角 */
+            background: 
+                radial-gradient(circle at center, transparent 30%, rgba(61, 34, 5, 0.4) 100%),
+                radial-gradient(#c59b73 15%, transparent 16%), 
+                radial-gradient(#c59b73 15%, transparent 16%),
+                linear-gradient(135deg, #F4E2C7 0%, #D2B48C 50%, #B58A55 100%);
+            background-size: 100% 100%, 40px 40px, 40px 40px, 100% 100%;
+            background-position: 0 0, 0 0, 20px 20px, 0 0;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             width: 100%;
-            background: var(--bg-parchment);
-            border: 6px solid #C4A482;
-            border-radius: 24px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.18);
-            padding: 25px;
+            /* 仿古埃及捲軸邊框 */
+            background: #FFFDF4;
+            background-image: linear-gradient(to right, rgba(210,180,140,0.2) 0%, transparent 10%, transparent 90%, rgba(210,180,140,0.2) 100%);
+            border: 10px double #8B5A2B;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4), inset 0 0 40px #F5DEB3;
+            padding: 30px;
             text-align: center;
-            min-height: 85vh;
+            min-height: 88vh;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
             align-items: center;
+            position: relative;
         }
 
-        /* 頁面切換控制 */
+        /* 頁面切換 */
         .page {
             display: none;
             width: 100%;
-            animation: fadeIn 0.4s ease-in-out;
+            animation: pagePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .page.active {
             display: block;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes pagePop {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         h1 {
             color: var(--text-dark);
-            font-size: 2.8rem;
+            font-size: 3.2rem;
             margin: 10px 0;
-            text-shadow: 3px 3px 0px #F5DEB3;
-            letter-spacing: 2px;
+            text-shadow: 3px 3px 0px #FFD700, 5px 5px 15px rgba(0,0,0,0.3);
+            letter-spacing: 4px;
         }
 
         .subtitle {
-            color: #8B5A2B;
-            font-size: 1.2rem;
-            margin-bottom: 30px;
+            color: #6E3E15;
+            font-size: 1.3rem;
+            margin-bottom: 35px;
             font-weight: bold;
+            letter-spacing: 1px;
         }
 
-        /* 通用按鈕樣式 */
+        /* 高級金屬木紋按鈕 */
         .btn {
-            font-size: 1.3rem;
-            padding: 12px 35px;
+            font-size: 1.4rem;
+            padding: 14px 40px;
             border-radius: 50px;
-            border: 3px solid #8B5A2B;
-            background-color: #FFA500;
-            color: white;
+            border: 3px solid #FFD700;
+            background: linear-gradient(#8B4513 0%, #5C2E0B 100%);
+            color: #FFE6A3;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 6px 0px #8B5A2B;
+            box-shadow: 0 6px 0px #3E1F07, 0 10px 20px rgba(0,0,0,0.4);
             transition: all 0.1s ease;
             margin: 15px;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            text-shadow: 1px 1px 2px black;
         }
         .btn:hover {
-            background-color: #FFB52E;
+            background: linear-gradient(#A0522D 0%, #6E3E15 100%);
             transform: translateY(2px);
-            box-shadow: 0 4px 0px #8B5A2B;
+            box-shadow: 0 4px 0px #3E1F07, 0 6px 15px rgba(0,0,0,0.4);
         }
         .btn:active {
             transform: translateY(6px);
-            box-shadow: 0 0px 0px #8B5A2B;
+            box-shadow: 0 0px 0px #3E1F07;
         }
 
-        /* 第一頁：遊戲標題畫面 */
+        /* 第一頁：選單樣式 */
         #page-title .menu-box {
-            background: #FDF5E6;
-            border: 3px dashed #CD853F;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            margin: 40px auto;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+            background: linear-gradient(135deg, #FFF8DC, #F5DEB3);
+            border: 4px ridge #CD853F;
+            border-radius: 24px;
+            padding: 35px;
+            max-width: 550px;
+            margin: 30px auto;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1), inset 0 0 20px rgba(0,0,0,0.05);
         }
         .option-group {
             margin-bottom: 25px;
@@ -123,169 +134,214 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 15px;
         }
         .option-group label {
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             color: var(--text-dark);
             font-weight: bold;
         }
         .option-group select {
             font-size: 1.2rem;
-            padding: 8px 15px;
-            border-radius: 10px;
-            border: 2px solid #CD853F;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 3px solid #8B5A2B;
+            background-color: white;
             color: var(--text-dark);
             font-weight: bold;
-            outline: none;
-            width: 220px;
+            width: 240px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* 第二頁：遊戲規則極簡排版 */
+        /* 第二頁：極簡玩法步驟 */
         .rules-list-container {
-            max-width: 650px;
+            max-width: 700px;
             margin: 30px auto;
             text-align: left;
         }
         .rule-item-box {
-            background: white;
-            border: 3px solid #D2B48C;
-            border-radius: 20px;
-            padding: 18px 25px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            background: linear-gradient(to right, #FFFFFF, #FFFBF0);
+            border: 3px solid #CD853F;
+            border-left: 10px solid #FFA500;
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 18px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 22px;
         }
         .rule-num {
-            font-size: 2.2rem;
+            font-size: 2.4rem;
             font-weight: bold;
-            color: #D2691E;
-            min-width: 50px;
-            height: 50px;
-            background: #FFF3E0;
+            color: #8B4513;
+            min-width: 55px;
+            height: 55px;
+            background: linear-gradient(#FFD700, #FFA500);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #FFA500;
+            border: 2px solid #8B5A2B;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         .rule-text {
-            font-size: 1.25rem;
-            line-height: 1.5;
+            font-size: 1.3rem;
+            line-height: 1.6;
             color: var(--text-dark);
         }
         .rule-text strong {
-            color: #FF4500;
-            background-color: #FFFFCC;
-            padding: 2px 6px;
-            border-radius: 4px;
+            color: #D2691E;
+            background-color: #FFF2CC;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px dashed #FFA500;
         }
 
-        /* 第三頁：遊戲畫面 */
+        /* 第三頁：戰場主框架 */
         .game-layout {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             align-items: stretch;
-            gap: 20px;
+            gap: 25px;
             margin-top: 10px;
             width: 100%;
         }
+        
         .side-panel {
             flex: 1;
-            min-width: 220px;
+            min-width: 230px;
             max-width: 260px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
+
+        /* 仿古埃及黃金石板板塊（左側） */
+        .left-side .player-card {
+            background: linear-gradient(135deg, #F5E6CC 0%, #D6C29E 100%);
+            border: 4px solid #B8860B;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2), inset 0 0 15px rgba(255,255,255,0.6);
+        }
+        /* 仿古文明鍛造紅銅板塊（右側） */
+        .right-side .player-card {
+            background: linear-gradient(135deg, #A0522D 0%, #6E3E15 100%);
+            border: 4px solid #3E1F07;
+            border-radius: 20px;
+            color: #FFE3C2;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2), inset 0 0 15px rgba(0,0,0,0.3);
+        }
+
         .player-card {
-            background: white;
-            border: 4px solid #E0D0C0;
-            border-radius: 18px;
-            padding: 15px;
+            padding: 18px;
             text-align: left;
             position: relative;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.04);
-            transition: all 0.2s;
+            transition: all 0.25s ease;
         }
+        
+        /* 輪到特定玩家時的大理石發光特效 */
         .player-card.active {
-            border-color: #FF4500;
-            background-color: #FFFCEB;
-            transform: scale(1.02);
-            box-shadow: 0 6px 15px rgba(255, 69, 0, 0.15);
+            transform: translateY(-5px) scale(1.03);
+            border-color: #FF4500 !important;
+            box-shadow: 0 12px 25px rgba(255, 69, 0, 0.4), inset 0 0 20px rgba(255, 69, 0, 0.2) !important;
         }
         .player-card.active::after {
             content: '⭐ 輪到你';
             position: absolute;
-            top: -12px;
-            right: 12px;
-            background: #FF4500;
+            top: -14px;
+            right: 14px;
+            background: linear-gradient(#FF6347, #FF4500);
             color: white;
-            font-size: 0.8rem;
-            padding: 2px 10px;
+            font-size: 0.85rem;
+            padding: 3px 12px;
             border-radius: 20px;
             font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: 1px solid #FFF;
         }
+
         .player-title {
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            color: var(--text-dark);
-        }
-        .color-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid rgba(0,0,0,0.15);
-        }
-        .score-display {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #222;
+            gap: 10px;
             margin-bottom: 10px;
         }
+        .color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .score-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        .right-side .score-display {
+            color: #FFF;
+            text-shadow: 1px 1px 4px black;
+        }
+
+        /* 召喚按鈕優化 */
         .obstacle-btn {
             width: 100%;
-            font-size: 0.95rem;
-            padding: 8px;
-            background-color: #E6D5C3;
+            font-size: 1rem;
+            padding: 10px;
+            background: linear-gradient(#FFF, #DDD);
             border: 2px solid #8B5A2B;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
             color: var(--text-dark);
+            box-shadow: 0 3px 0px #8B5A2B;
+        }
+        .obstacle-btn:hover:not(:disabled) {
+            background: linear-gradient(#FFF, #C5B49E);
+        }
+        .obstacle-btn:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 0px 0px #8B5A2B;
         }
         .obstacle-btn:disabled {
-            background-color: #EAEAEA;
+            background: #EAEAEA;
             color: #A0A0A0;
             border-color: #CCC;
+            box-shadow: none;
             cursor: not-allowed;
         }
         .obstacle-status {
-            font-size: 0.9rem;
-            background: #F3F3F3;
-            padding: 6px;
-            border-radius: 6px;
+            font-size: 0.95rem;
+            background: rgba(0,0,0,0.06);
+            padding: 8px;
+            border-radius: 8px;
             text-align: center;
-            color: #777;
-            border: 1px solid #DDD;
+            color: #555;
+            border: 1px dashed #BC9B70;
+        }
+        .right-side .obstacle-status {
+            background: rgba(0,0,0,0.2);
+            color: #FFD2A6;
+            border-color: #A0522D;
         }
 
-        /* 棋盤完美對齊配置 */
+        /* 核心棋盤：美化為出土神秘神廟石陣 */
         .board-wrapper {
             flex: 2;
-            min-width: 320px;
-            max-width: 480px;
-            background: #FCEFCE;
-            border: 6px solid #CD853F;
-            border-radius: 24px;
-            padding: 10px;
-            box-shadow: inset 0 0 20px rgba(139,69,19,0.15);
+            min-width: 350px;
+            max-width: 500px;
+            background: #F2E3C6;
+            background-image: radial-gradient(rgba(139,69,19,0.15) 1px, transparent 0);
+            background-size: 20px 20px;
+            border: 8px solid #6E3E15;
+            border-radius: 28px;
+            padding: 15px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.3), 0 15px 30px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -295,93 +351,107 @@
             height: auto;
             aspect-ratio: 1 / 1;
         }
+
+        /* 古埃及神廟頂部石碑橫幅 */
         .status-bar {
             width: 100%;
-            background: var(--text-dark);
-            color: #FFF8DC;
-            padding: 14px;
-            font-size: 1.3rem;
+            background: linear-gradient(#3D2205 0%, #1A0E02 100%);
+            color: #FFE6A3;
+            border: 3px solid #FFD700;
+            padding: 16px;
+            font-size: 1.4rem;
             font-weight: bold;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 3px black;
         }
 
-        /* SVG 棋盤樣式定義 */
+        /* SVG 核心樣式（確保完美對齊線段與硬幣） */
         .board-line {
-            stroke: #8B5A2B;
-            stroke-width: 5;
+            stroke: #5C3A21;
+            stroke-width: 6;
             stroke-linecap: round;
+            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.2));
         }
         .board-node-bg {
             fill: #FFFDF4;
-            stroke: #CD853F;
+            stroke: #A0522D;
             stroke-width: 3;
             cursor: pointer;
-            transition: fill 0.2s;
+            transition: all 0.2s;
         }
         .board-node-bg:hover {
             fill: #FFEAA7;
         }
-        /* 移動高亮：綠色閃爍 */
+        /* 移動高亮提示（閃爍綠） */
         .board-node-bg.highlight-move {
-            fill: #A2FF86;
-            stroke: #1A5F1A;
-            stroke-width: 4;
-            animation: pulse 1.4s infinite;
+            fill: #7BF76B;
+            stroke: #0F5207;
+            stroke-width: 5;
+            animation: pulseGreen 1.2s infinite ease-in-out;
         }
-        /* 障礙高亮：粉色 */
+        /* 障礙物放置提示（閃爍粉） */
         .board-node-bg.highlight-obstacle {
-            fill: #FFB3D1;
-            stroke: #D01C6A;
-            stroke-width: 3;
+            fill: #FF94C2;
+            stroke: #9C0E4B;
+            stroke-width: 4;
+            animation: pulsePink 1.2s infinite ease-in-out;
         }
-        @keyframes pulse {
-            0% { opacity: 0.7; }
-            50% { opacity: 1; }
-            100% { opacity: 0.7; }
+        @keyframes pulseGreen {
+            0% { fill: #7BF76B; opacity: 0.8; }
+            50% { fill: #B6FFA6; opacity: 1; }
+            100% { fill: #7BF76B; opacity: 0.8; }
         }
+        @keyframes pulsePink {
+            0% { fill: #FF94C2; opacity: 0.8; }
+            50% { fill: #FFD1E6; opacity: 1; }
+            100% { fill: #FF94C2; opacity: 0.8; }
+        }
+
         .coin-group {
             cursor: pointer;
+            filter: drop-shadow(0px 4px 5px rgba(0,0,0,0.35));
         }
+        /* 選中時套用黃金環形發光外圈 */
         .coin-group.selected circle {
             stroke: #FF3333 !important;
             stroke-width: 5px !important;
-            filter: drop-shadow(0px 0px 5px rgba(255,0,0,0.6));
         }
 
-        /* 結算大畫面 */
+        /* 結算大圓滿視窗 */
         #victory-screen {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.75);
+            background: rgba(0,0,0,0.8);
             justify-content: center;
             align-items: center;
             z-index: 2000;
         }
         .victory-content {
             background: #FFFDF4;
-            border: 8px solid #FFD700;
+            border: 8px gold ridge;
             border-radius: 30px;
             padding: 40px;
-            max-width: 480px;
+            max-width: 500px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
         .winner-title {
-            font-size: 2.3rem;
+            font-size: 2.5rem;
             color: #FF4500;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
         .rank-list {
             text-align: left;
             margin: 20px auto;
-            max-width: 280px;
-            font-size: 1.25rem;
-            line-height: 2.2;
+            max-width: 300px;
+            font-size: 1.35rem;
+            line-height: 2.4;
             color: var(--text-dark);
         }
     </style>
@@ -397,9 +467,9 @@
             <div class="option-group">
                 <label for="player-count">選擇遊玩人數：</label>
                 <select id="player-count">
-                    <option value="2">2 人遊戲 (金、銅)</option>
-                    <option value="3">3 人遊戲 (金、銅、銀)</option>
-                    <option value="4">4 人遊戲 (金、銅、銀、綠)</option>
+                    <option value="2">2 人對戰 (金色、古銅)</option>
+                    <option value="3">3 人對戰 (金色、古銅、古銀)</option>
+                    <option value="4">4 人對戰 (金、銅、銀、古金)</option>
                 </select>
             </div>
             <div class="option-group">
@@ -421,7 +491,7 @@
         <div class="rules-list-container">
             <div class="rule-item-box">
                 <div class="rule-num">1</div>
-                <div class="rule-text">輪到你時，選自己的金幣，<strong>沿著黑線「跳過」</strong>相鄰的硬幣落到空格。</div>
+                <div class="rule-text">輪到你時，點選自色金幣，<strong>沿著黑線「跳過」</strong>旁邊的硬幣落到空格。</div>
             </div>
             <div class="rule-item-box">
                 <div class="rule-num">2</div>
@@ -433,7 +503,7 @@
             </div>
             <div class="rule-item-box">
                 <div class="rule-num">4</div>
-                <div class="rule-text">當全場金幣都<strong>沒路可跳時</strong>遊戲結束，累計<strong>分數最高的人獲勝</strong>！</div>
+                <div class="rule-text">當全場硬幣都<strong>沒路可跳時</strong>遊戲結束，累計<strong>分數最高的人獲勝</strong>！</div>
             </div>
         </div>
         
@@ -447,19 +517,19 @@
         <div class="status-bar" id="game-status">準備進入戰場...</div>
 
         <div class="game-layout">
-            <div class="side-panel" id="left-panel"></div>
+            <div class="side-panel left-side" id="left-panel"></div>
 
             <div class="board-wrapper">
                 <svg id="game-board" viewBox="0 0 500 500">
                     </svg>
             </div>
 
-            <div class="side-panel" id="right-panel"></div>
+            <div class="side-panel right-side" id="right-panel"></div>
         </div>
 
         <div style="margin-top: 25px;">
-            <button class="btn" onclick="showRulesPopupFromGame()" style="background-color: #DEB887; color: #4A3319; box-shadow: 0 6px 0px #8B5A2B;">💡 再次查看規則</button>
-            <button class="btn" onclick="backToMenuFromGame()" style="background-color: #CD5C5C; box-shadow: 0 6px 0px #8B2525;">🏳️ 放棄並回主選單</button>
+            <button class="btn" onclick="showRulesPopupFromGame()" style="background-color: #DEB887; color: #4A3319; box-shadow: 0 6px 0px #8B5A2B; border-color: #8B5A2B;">💡 再次查看規則</button>
+            <button class="btn" onclick="backToMenuFromGame()" style="background-color: #CD5C5C; box-shadow: 0 6px 0px #8B2525; border-color: #8B2525;">🏳️ 放棄並回主選單</button>
         </div>
     </div>
 </div>
@@ -473,7 +543,7 @@
 </div>
 
 <script>
-    // ================= 瀏覽器免外部檔案 Web Audio 音效引擎 =================
+    // ================= 免外部檔案原生音效振盪引擎 =================
     const SoundEngine = {
         ctx: null,
         init() {
@@ -486,8 +556,8 @@
             let osc = this.ctx.createOscillator();
             let gain = this.ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(550, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(750, this.ctx.currentTime + 0.08);
+            osc.frequency.setValueAtTime(580, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
             gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
             gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.08);
             osc.connect(gain); gain.connect(this.ctx.destination);
@@ -501,7 +571,7 @@
                 let gain = this.ctx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, t + idx * 0.06);
-                gain.gain.setValueAtTime(0.15, t + idx * 0.06);
+                gain.gain.setValueAtTime(0.12, t + idx * 0.06);
                 gain.gain.linearRampToValueAtTime(0, t + idx * 0.06 + 0.18);
                 osc.connect(gain); gain.connect(this.ctx.destination);
                 osc.start(t + idx * 0.06); osc.stop(t + idx * 0.06 + 0.18);
@@ -512,12 +582,12 @@
             let osc = this.ctx.createOscillator();
             let gain = this.ctx.createGain();
             osc.type = 'triangle'; 
-            osc.frequency.setValueAtTime(160, this.ctx.currentTime);
-            osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.2);
-            gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+            osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.25);
             osc.connect(gain); gain.connect(this.ctx.destination);
-            osc.start(); osc.stop(this.ctx.currentTime + 0.2);
+            osc.start(); osc.stop(this.ctx.currentTime + 0.25);
         },
         playVictory() {
             this.init();
@@ -529,22 +599,22 @@
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, t + idx * 0.1);
                 gain.gain.setValueAtTime(0.15, t + idx * 0.1);
-                gain.gain.linearRampToValueAtTime(0, t + idx * 0.1 + 0.35);
+                gain.gain.linearRampToValueAtTime(0, t + idx * 0.1 + 0.4);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(t + idx * 0.1); osc.stop(t + idx * 0.1 + 0.35);
+                osc.start(t + idx * 0.1); osc.stop(t + idx * 0.1 + 0.4);
             });
         }
     };
 
-    // ================= 遊戲核心組態設定 =================
+    // ================= 核心數學組態配置 =================
     const GRID_SIZE = 5; 
     const BOARD_CENTER = 250;
-    const NODE_SPACING = 52; 
+    const NODE_SPACING = 52; // 完美的對其縮放係數
 
     const PLAYER_CONFIGS = [
         { id: 0, name: "金色玩家", color: "#FFD700", stroke: "#B8860B", monster: "🐍 蛇髮妖" },
         { id: 1, name: "古銅玩家", color: "#E25822", stroke: "#8B0000", monster: "👁️ 獨眼巨" },
-        { id: 2, name: "古銀玩家", color: "#9370DB", stroke: "#4B0082", monster: "🧻 木乃伊" },
+        { id: 2, name: "古銀玩家", color: "#D1C4E9", stroke: "#5E35B1", monster: "🧻 木乃伊" },
         { id: 3, name: "古金玩家", color: "#2E8B57", stroke: "#004D26", monster: "🐙 深海章" }
     ];
 
@@ -558,7 +628,7 @@
     let isPlacingObstacle = false;
     let isGameOver = false;
 
-    // ================= 狀態與頁面切換機制 =================
+    // ================= 分頁切換常規控制 =================
     function switchPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(pageId).classList.add('active');
@@ -577,7 +647,7 @@
 
     function showRulesPopupFromGame() {
         SoundEngine.playSelect();
-        alert("💡 快速規則備忘：\n1. 點擊自色金幣，沿線跳過旁邊任何硬幣落到空格就能吃幣得分。\n2. 每人可召喚一次守護獸阻擋格子，這回合不能走棋。");
+        alert("💡 快速規則備忘：\n1. 點擊自己的金幣，跳過旁邊任何硬幣落到空格就能吃幣。 \n2. 每場能召喚一次守護獸阻擋空格（當回合不能移幣）。");
     }
 
     function backToMenuFromGame() {
@@ -587,8 +657,9 @@
         switchPage('page-title');
     }
 
-    // ================= 棋盤對齊公式運算 =================
+    // ================= 線段與物體共享的幾何中心點運算 =================
     function getXY(r, c) {
+        // 45度無失真旋轉矩陣變換
         const x = BOARD_CENTER + (c - r) * NODE_SPACING;
         const y = BOARD_CENTER + (c + r - (GRID_SIZE - 1)) * NODE_SPACING;
         return { x, y };
@@ -615,6 +686,7 @@
         isPlacingObstacle = false;
         isGameOver = false;
 
+        // 題目硬幣位置隨機打散生成（Fisher-Yates 洗牌算法）
         let coinPool = [];
         for (let i = 0; i < 24; i++) {
             coinPool.push(i % playerCount); 
@@ -630,7 +702,7 @@
             board[r] = [];
             for (let c = 0; c < GRID_SIZE; c++) {
                 if (r === 2 && c === 2) {
-                    board[r][c] = null; 
+                    board[r][c] = null; // 中央按規必為空格
                 } else {
                     board[r][c] = { type: 'coin', color: coinPool[poolIndex++] };
                 }
@@ -638,11 +710,12 @@
         }
     }
 
-    // ================= 網格 SVG 繪製 =================
+    // ================= 完美對齊的網格渲染引擎 =================
     function buildBoardSVG() {
         const svg = document.getElementById('game-board');
         svg.innerHTML = ''; 
 
+        // 1. 繪製路徑交叉連線
         for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE; c++) {
                 const current = getXY(r, c);
@@ -657,13 +730,14 @@
             }
         }
 
+        // 2. 繪製底部感應格
         for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE; c++) {
                 const pos = getXY(r, c);
                 const nodeBg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 nodeBg.setAttribute("cx", pos.x);
                 nodeBg.setAttribute("cy", pos.y);
-                nodeBg.setAttribute("r", 20); 
+                nodeBg.setAttribute("r", 19); 
                 nodeBg.setAttribute("class", "board-node-bg");
                 nodeBg.setAttribute("id", `node-bg-${r}-${c}`);
                 nodeBg.onclick = () => handleNodeClick(r, c);
@@ -671,6 +745,7 @@
             }
         }
 
+        // 3. 繪製前景覆蓋物（硬幣與怪獸共用中心座標）
         for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE; c++) {
                 const item = board[r][c];
@@ -686,14 +761,16 @@
                         g.classList.add('selected');
                     }
 
+                    // 金幣外形
                     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", pos.x);
                     circle.setAttribute("cy", pos.y);
                     circle.setAttribute("r", 15);
                     circle.setAttribute("fill", PLAYER_CONFIGS[item.color].color);
                     circle.setAttribute("stroke", PLAYER_CONFIGS[item.color].stroke);
-                    circle.setAttribute("stroke-width", "2");
+                    circle.setAttribute("stroke-width", "2.5");
 
+                    // 金幣內圈花紋
                     const innerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     innerCircle.setAttribute("cx", pos.x);
                     innerCircle.setAttribute("cy", pos.y);
@@ -717,14 +794,16 @@
                     text.setAttribute("x", pos.x);
                     text.setAttribute("y", pos.y + 7);
                     text.setAttribute("text-anchor", "middle");
-                    text.setAttribute("font-size", "20");
+                    text.setAttribute("font-size", "22");
                     text.style.cursor = "not-allowed";
+                    text.style.filter = "drop-shadow(0px 3px 2px rgba(0,0,0,0.3))";
                     text.textContent = PLAYER_CONFIGS[item.owner].monster.split(' ')[0];
                     svg.appendChild(text);
                 }
             }
         }
 
+        // 渲染移動提示高亮
         if (selectedNode && !isPlacingObstacle) {
             const validMoves = getValidMovesForNode(selectedNode.r, selectedNode.c);
             validMoves.forEach(m => {
@@ -733,6 +812,7 @@
             });
         }
 
+        // 渲染怪獸召喚高亮
         if (isPlacingObstacle) {
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
@@ -753,7 +833,7 @@
         svg.appendChild(line);
     }
 
-    // ================= 互動控制常規控制處理 =================
+    // ================= 玩家互動常規邏輯運算 =================
     function handleCoinClick(r, c) {
         if (isGameOver || isPlacingObstacle) return;
         if (gameMode === 'ai' && currentPlayerIndex > 0) return; 
@@ -825,6 +905,7 @@
                 const targetCell = board[targetR][targetC];
                 const middleCell = board[middleR][middleC];
 
+                // 規則：跳過任何相鄰棋子且目的地為空格
                 if (!targetCell && middleCell && middleCell.type === 'coin') {
                     moves.push({ targetR, targetC, middleR, middleC });
                 }
@@ -888,7 +969,7 @@
         }
     }
 
-    // ================= 電腦 AI 決策邏輯 =================
+    // ================= 電腦 AI 代打運算 =================
     function executeAIMove() {
         if (isGameOver) return;
 
@@ -931,7 +1012,7 @@
         endTurn();
     }
 
-    // ================= 資訊看板更新與結算 =================
+    // ================= 資訊外觀控制與結算 =================
     function renderScoreboards() {
         const leftPanel = document.getElementById('left-panel');
         const rightPanel = document.getElementById('right-panel');
@@ -977,6 +1058,7 @@
                 card.appendChild(statusText);
             }
 
+            // 0,2 放左側（黃金石板），1,3 放右側（紅銅板）
             if (i % 2 === 0) leftPanel.appendChild(card);
             else rightPanel.appendChild(card);
         }
@@ -991,13 +1073,16 @@
         
         if (isPlacingObstacle) {
             bar.textContent = `🎯 請點選棋盤任意【粉色空格】召喚守護獸防禦！`;
-            bar.style.backgroundColor = '#D01C6A';
+            bar.style.backgroundColor = '#B81454';
+            bar.style.borderColor = '#FF94C2';
         } else if (isAI) {
             bar.textContent = `🤖 電腦小朋友 (${currentConf.name}) 正在思考怎麼跳...`;
-            bar.style.backgroundColor = '#5A6B7C';
+            bar.style.backgroundColor = '#4A5866';
+            bar.style.borderColor = '#9EAEC0';
         } else {
             bar.textContent = `👉 輪到【${currentConf.name}】了！請選金幣沿黑線跳躍吃幣！`;
-            bar.style.backgroundColor = 'var(--text-dark)';
+            bar.style.backgroundColor = '#3D2205';
+            bar.style.borderColor = '#FFD700';
         }
     }
 
