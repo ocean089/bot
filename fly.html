@@ -113,7 +113,7 @@
         <div class="flex items-center gap-2 flex-wrap text-xs">
             <!-- 學生登錄狀態顯示 -->
             <div id="userBadge" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1 font-bold flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
                 <span id="userBadgeText" class="text-slate-300">正在確認身分...</span>
             </div>
 
@@ -123,6 +123,12 @@
                     <!-- 關卡選單由 JS 自動動態生成 -->
                 </select>
             </div>
+
+            <!-- 換太空船按鈕 (遊戲中隨時可以更換) -->
+            <button onclick="openShipModal()" class="bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-cyan-500/20 hover:border-cyan-400/50 font-bold px-2.5 py-1.5 rounded-xl transition text-xs flex items-center gap-1" title="更換探險太空船">
+                <i class="fa-solid fa-shuttle-space"></i>
+                <span>換太空船</span>
+            </button>
             
             <!-- 教師設定按鈕 -->
             <button onclick="openTeacherModal()" class="bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 hover:border-amber-400/50 font-bold px-2.5 py-1.5 rounded-xl transition text-xs flex items-center gap-1" title="教師雲端試算表設定">
@@ -286,62 +292,165 @@
             <div class="absolute -top-10 -left-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl"></div>
             <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
 
-            <div class="text-center mb-6">
-                <div class="bg-indigo-600 text-white w-14 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 shadow-lg shadow-indigo-500/30 animate-pulse">
+            <div class="text-center mb-4">
+                <div class="bg-indigo-600 text-white w-14 h-14 rounded-full mx-auto flex items-center justify-center text-2xl mb-2 shadow-lg shadow-indigo-500/30 animate-pulse">
                     <i class="fa-solid fa-user-astronaut"></i>
                 </div>
-                <h2 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-purple-400 tracking-widest mb-1">康樂航空站</h2>
-                <p class="text-slate-400 text-xs">星際編程大冒險・請選擇登錄模式</p>
+                <h2 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-purple-400 tracking-widest mb-0.5">康樂航空站</h2>
+                <p class="text-slate-400 text-xs">星際編程大冒險・請選擇太空艇與模式</p>
+            </div>
+
+            <!-- 1. 新增：太空船座艙自選區 (首頁大圖示) -->
+            <div class="mb-5 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800">
+                <h4 class="text-xs font-bold text-cyan-400 mb-2.5 flex items-center gap-1.5">
+                    <i class="fa-solid fa-shuttle-space"></i> 🚀 選擇你的探險太空船：
+                </h4>
+                <div class="grid grid-cols-3 gap-3">
+                    <div id="shipSelect-classic" onclick="setShipStyle('classic')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all">
+                        <div class="w-12 h-12 flex items-center justify-center">
+                            <!-- 藍色經典 -->
+                            <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
+                                <polygon class="engine-wake" points="44,95 50,115 56,95" fill="#f43f5e" />
+                                <path d="M 50,10 C 75,40 70,85 62,95 L 38,95 C 30,85 25,40 50,10 Z" fill="#1e1b4b" stroke="#818cf8" stroke-width="5" />
+                                <path d="M 30,60 L 15,75 L 32,80 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="2" />
+                                <path d="M 70,60 L 85,75 L 68,80 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="2" />
+                                <path d="M 50,20 L 62,45 L 50,38 L 38,45 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" />
+                            </svg>
+                        </div>
+                        <span class="text-[10px] font-bold block mt-1">經典蔚藍</span>
+                    </div>
+
+                    <div id="shipSelect-blitz" onclick="setShipStyle('blitz')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all">
+                        <div class="w-12 h-12 flex items-center justify-center">
+                            <!-- 烈焰橘光 -->
+                            <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
+                                <polygon class="engine-wake" points="40,95 50,120 60,95" fill="#eab308" />
+                                <path d="M 50,5 L 75,65 L 60,95 L 40,95 L 25,65 Z" fill="#3f3f46" stroke="#f97316" stroke-width="5" />
+                                <path d="M 32,60 L 5,85 L 32,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
+                                <path d="M 68,60 L 95,85 L 68,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
+                                <polygon points="50,15 58,40 50,34 42,40" fill="#f59e0b" />
+                            </svg>
+                        </div>
+                        <span class="text-[10px] font-bold block mt-1">烈焰橘光</span>
+                    </div>
+
+                    <div id="shipSelect-miracle" onclick="setShipStyle('miracle')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all">
+                        <div class="w-12 h-12 flex items-center justify-center">
+                            <!-- 星河奇蹟 -->
+                            <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
+                                <polygon class="engine-wake" points="45,95 50,115 55,95" fill="#a855f7" />
+                                <ellipse cx="50" cy="55" rx="20" ry="40" fill="#064e3b" stroke="#10b981" stroke-width="5" />
+                                <ellipse cx="50" cy="65" rx="35" ry="10" fill="none" stroke="#22d3ee" stroke-width="3" stroke-dasharray="5,3" />
+                                <circle cx="50" cy="30" r="8" fill="#22d3ee" />
+                            </svg>
+                        </div>
+                        <span class="text-[10px] font-bold block mt-1">星河奇蹟</span>
+                    </div>
+                </div>
             </div>
 
             <!-- 兩大核心模式選擇區 -->
-            <div class="grid grid-cols-1 gap-4 mb-6">
-                <!-- 模式一：自由太空探索 -->
-                <button onclick="selectPlayMode('free')" class="w-full text-left p-4 rounded-2xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition-all group">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+            <div class="grid grid-cols-1 gap-3 mb-4">
+                <button onclick="selectPlayMode('free')" class="w-full text-left p-3.5 rounded-2xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-lg group-hover:scale-110 transition">
                             <i class="fa-solid fa-satellite"></i>
                         </div>
                         <div>
-                            <span class="block font-black text-slate-100 text-base">🛸 自由探索模式</span>
-                            <span class="block text-xs text-slate-400 mt-0.5">不需登錄即可挑戰 24 大關卡，適合自由練習！</span>
+                            <span class="block font-black text-slate-100 text-sm">🛸 自由探索模式</span>
+                            <span class="block text-[11px] text-slate-400 mt-0.5">不需登錄即可挑戰 24 大關卡，適合自由練習！</span>
                         </div>
                     </div>
                 </button>
 
-                <!-- 模式二：課堂進度任務登錄 -->
-                <button onclick="toggleLoginForm()" class="w-full text-left p-4 rounded-2xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 transition-all group">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                <button onclick="toggleLoginForm()" class="w-full text-left p-3.5 rounded-2xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg group-hover:scale-110 transition">
                             <i class="fa-solid fa-graduation-cap"></i>
                         </div>
                         <div>
-                            <span class="block font-black text-slate-100 text-base">🚀 任務登錄模式</span>
-                            <span class="block text-xs text-slate-400 mt-0.5">登錄身分，作答成果與關卡進度會上傳給老師喔！</span>
+                            <span class="block font-black text-slate-100 text-sm">🚀 任務登錄模式</span>
+                            <span class="block text-[11px] text-slate-400 mt-0.5">登錄身分，作答成果與關卡進度會上傳給老師喔！</span>
                         </div>
                     </div>
                 </button>
             </div>
 
-            <!-- 任務登錄表單 (班級提示改為如21) -->
-            <div id="loginForm" class="hidden border-t border-slate-800 pt-5 space-y-4">
-                <h4 class="text-sm font-black text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-address-card"></i> 請輸入您的乘組員登錄資訊：</h4>
+            <!-- 任務登錄表單 -->
+            <div id="loginForm" class="hidden border-t border-slate-800 pt-4 space-y-4">
+                <h4 class="text-xs font-black text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-address-card"></i> 請輸入您的乘組員登錄資訊：</h4>
                 <div class="grid grid-cols-12 gap-3">
                     <div class="col-span-4">
-                        <label class="block text-xs text-slate-400 mb-1">班級 (如21)</label>
-                        <input type="text" id="classInput" placeholder="班級" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                        <label class="block text-[10px] text-slate-400 mb-1">班級 (如21)</label>
+                        <input type="text" id="classInput" placeholder="班級" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
                     </div>
                     <div class="col-span-4">
-                        <label class="block text-xs text-slate-400 mb-1">座號 (如08)</label>
-                        <input type="number" id="seatInput" placeholder="座號" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                        <label class="block text-[10px] text-slate-400 mb-1">座號 (如08)</label>
+                        <input type="number" id="seatInput" placeholder="座號" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
                     </div>
                     <div class="col-span-4">
-                        <label class="block text-xs text-slate-400 mb-1">姓名</label>
-                        <input type="text" id="nameInput" placeholder="姓名" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                        <label class="block text-[10px] text-slate-400 mb-1">姓名</label>
+                        <input type="text" id="nameInput" placeholder="姓名" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
                     </div>
                 </div>
-                <button onclick="submitMissionLogin()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-sm rounded-xl transition shadow-lg">
+                <button onclick="submitMissionLogin()" class="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl transition shadow-lg">
                     確認登入・開始任務
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- 新增：太空船更換 Modal (點擊頂端「換太空船」開啟) --- -->
+    <div id="shipModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-b from-slate-900 to-indigo-950 border border-cyan-500/30 rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden">
+            <h2 class="text-lg font-black text-cyan-400 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-shuttle-space"></i> 更換你的探險太空船
+            </h2>
+            <p class="text-slate-400 text-xs mb-4">隨時更換外觀，並同步更新在星際地圖上！</p>
+            
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div id="modalShip-classic" onclick="setShipStyle('classic')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-3 text-center flex flex-col items-center justify-center transition-all">
+                    <div class="w-12 h-12 flex items-center justify-center">
+                        <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
+                            <polygon class="engine-wake" points="44,95 50,115 56,95" fill="#f43f5e" />
+                            <path d="M 50,10 C 75,40 70,85 62,95 L 38,95 C 30,85 25,40 50,10 Z" fill="#1e1b4b" stroke="#818cf8" stroke-width="5" />
+                            <path d="M 30,60 L 15,75 L 32,80 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="2" />
+                            <path d="M 70,60 L 85,75 L 68,80 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="2" />
+                            <path d="M 50,20 L 62,45 L 50,38 L 38,45 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" />
+                        </svg>
+                    </div>
+                    <span class="text-[10px] font-bold block mt-1.5">經典蔚藍</span>
+                </div>
+
+                <div id="modalShip-blitz" onclick="setShipStyle('blitz')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-3 text-center flex flex-col items-center justify-center transition-all">
+                    <div class="w-12 h-12 flex items-center justify-center">
+                        <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
+                            <polygon class="engine-wake" points="40,95 50,120 60,95" fill="#eab308" />
+                            <path d="M 50,5 L 75,65 L 60,95 L 40,95 L 25,65 Z" fill="#3f3f46" stroke="#f97316" stroke-width="5" />
+                            <path d="M 32,60 L 5,85 L 32,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
+                            <path d="M 68,60 L 95,85 L 68,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
+                            <polygon points="50,15 58,40 50,34 42,40" fill="#f59e0b" />
+                        </svg>
+                    </div>
+                    <span class="text-[10px] font-bold block mt-1.5">烈焰橘光</span>
+                </div>
+
+                <div id="modalShip-miracle" onclick="setShipStyle('miracle')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-3 text-center flex flex-col items-center justify-center transition-all">
+                    <div class="w-12 h-12 flex items-center justify-center">
+                        <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
+                            <polygon class="engine-wake" points="45,95 50,115 55,95" fill="#a855f7" />
+                            <ellipse cx="50" cy="55" rx="20" ry="40" fill="#064e3b" stroke="#10b981" stroke-width="5" />
+                            <ellipse cx="50" cy="65" rx="35" ry="10" fill="none" stroke="#22d3ee" stroke-width="3" stroke-dasharray="5,3" />
+                            <circle cx="50" cy="30" r="8" fill="#22d3ee" />
+                        </svg>
+                    </div>
+                    <span class="text-[10px] font-bold block mt-1.5">星河奇蹟</span>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="closeShipModal()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-xl text-xs transition">
+                    確認選取
                 </button>
             </div>
         </div>
@@ -446,7 +555,7 @@ function doGet(e) {
                 <button onclick="closeWinModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-xl transition">
                     留在本關
                 </button>
-                <button id="nextLevelBtn" onclick="goToNextLevel()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition">
+                <button id="nextLevelBtn" onclick="goToNextLevel()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition">
                     下一關卡
                 </button>
             </div>
@@ -601,8 +710,8 @@ function doGet(e) {
                 limits: {
                     forward: 0,
                     backward: -1,
-                    left: 0,
-                    right: 0,
+                    left: 0, 
+                    right: 0, 
                     shoot: -1,
                     wait: -1,
                     repeat_2: -1,
@@ -1319,7 +1428,7 @@ function doGet(e) {
             }
         ];
 
-        // --- 1. 音效合成器 (Web Audio API) ---
+        // --- 1. 新一代高科技太空探險音效合成器 (Web Audio API) ---
         class SoundSynth {
             constructor() {
                 this.ctx = null;
@@ -1328,115 +1437,204 @@ function doGet(e) {
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
             }
+            // 科幻推進尾火聲
             playMove() {
                 this.init();
+                const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                const filter = this.ctx.createBiquadFilter();
+                
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.15);
+                osc.frequency.setValueAtTime(80, now);
+                osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(250, now);
+                filter.frequency.exponentialRampToValueAtTime(100, now + 0.35);
+                filter.Q.setValueAtTime(5, now);
+
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.35);
             }
+            // 陀螺姿態迴轉音
             playTurn() {
                 this.init();
-                const osc = this.ctx.createOscillator();
+                const now = this.ctx.currentTime;
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                osc.connect(gain);
+                const filter = this.ctx.createBiquadFilter();
+
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(780, now);
+                osc1.frequency.exponentialRampToValueAtTime(950, now + 0.2);
+
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(390, now);
+                osc2.frequency.exponentialRampToValueAtTime(475, now + 0.2);
+
+                filter.type = 'peaking';
+                filter.frequency.setValueAtTime(800, now);
+                filter.Q.setValueAtTime(12, now);
+
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(gain);
                 gain.connect(this.ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-                osc.frequency.setValueAtTime(554, this.ctx.currentTime + 0.05);
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.1);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 0.2);
+                osc2.stop(now + 0.2);
             }
+            // 黑洞引力爆裂與重力撞擊聲
             playExplosion() {
                 this.init();
-                const bufferSize = this.ctx.sampleRate * 0.4;
+                const now = this.ctx.currentTime;
+                const dur = 0.5;
+                const bufferSize = this.ctx.sampleRate * dur;
                 const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) {
                     data[i] = Math.random() * 2 - 1;
                 }
+
                 const noise = this.ctx.createBufferSource();
                 noise.buffer = buffer;
+
                 const filter = this.ctx.createBiquadFilter();
                 filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(800, this.ctx.currentTime);
-                filter.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.4);
+                filter.frequency.setValueAtTime(600, now);
+                filter.frequency.exponentialRampToValueAtTime(20, now + dur);
+
+                const hum = this.ctx.createOscillator();
+                hum.type = 'sawtooth';
+                hum.frequency.setValueAtTime(95, now);
+                hum.frequency.linearRampToValueAtTime(25, now + dur);
+
                 const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.7, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
                 noise.connect(filter);
+                hum.connect(filter);
                 filter.connect(gain);
                 gain.connect(this.ctx.destination);
-                noise.start();
-                noise.stop(this.ctx.currentTime + 0.4);
+
+                noise.start(now);
+                hum.start(now);
+                noise.stop(now + dur);
+                hum.stop(now + dur);
             }
+            // 能量水晶解鎖和弦
             playKey() {
                 this.init();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1760, this.ctx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.2);
+                const now = this.ctx.currentTime;
+                const notes = [659.25, 880, 1174.66, 1318.51]; // Mi, A, D, Mi
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + idx * 0.05 + 0.35);
+
+                    gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now + idx * 0.05);
+                    osc.stop(now + idx * 0.05 + 0.35);
+                });
             }
+            // 高能電漿離子雷射
             playShoot() {
                 this.init();
+                const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(1400, now);
+                osc.frequency.exponentialRampToValueAtTime(65, now + 0.25);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.25);
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.25);
+
+                osc.start(now);
+                osc.stop(now + 0.25);
             }
+            // 蟲洞瞬間移動量子波
             playTeleport() {
                 this.init();
+                const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
+                const fm = this.ctx.createOscillator();
+                const fmGain = this.ctx.createGain();
                 const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(250, now);
+                osc.frequency.exponentialRampToValueAtTime(3200, now + 0.35);
+
+                fm.type = 'sine';
+                fm.frequency.setValueAtTime(15, now); // 震盪頻率 LFO
+                fmGain.gain.setValueAtTime(100, now);
+
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+                fm.connect(fmGain);
+                fmGain.connect(osc.frequency);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(3000, this.ctx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.3);
+
+                fm.start(now);
+                osc.start(now);
+                fm.stop(now + 0.35);
+                osc.stop(now + 0.35);
             }
+            // 太空歌劇凱旋交響長音 (九和弦科技感)
             playWin() {
                 this.init();
                 const now = this.ctx.currentTime;
-                const notes = [523.25, 659.25, 783.99, 1046.50]; 
-                notes.forEach((freq, index) => {
+                const freqs = [261.63, 392, 523.25, 659.25, 783.99, 1174.66]; // C9 和弦
+                freqs.forEach((freq, idx) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    osc.frequency.linearRampToValueAtTime(freq * 1.05, now + 1.2);
+
+                    gain.gain.setValueAtTime(0.12, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + index * 0.12);
-                    gain.gain.setValueAtTime(0.2, now + index * 0.12);
-                    gain.gain.linearRampToValueAtTime(0.01, now + index * 0.12 + 0.4);
-                    osc.start(now + index * 0.12);
-                    osc.stop(now + index * 0.12 + 0.4);
+
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + 1.2);
                 });
             }
         }
@@ -1448,6 +1646,7 @@ function doGet(e) {
         let currentMode = 'free'; 
         let studentInfo = { className: '', seatNo: '', studentName: '' };
         let levelHasFailed = false; // 控制左下角思維秘笈「做錯一次才解鎖」
+        let currentShipStyle = 'classic'; // 太空船樣式：'classic', 'blitz', 'miracle'
 
         let shipState = {
             x: 0,
@@ -1468,10 +1667,11 @@ function doGet(e) {
         window.addEventListener('DOMContentLoaded', () => {
             initLevelSelect();
             checkSavedConfig();
+            setShipStyle('classic'); // 預設經典太空船
             showLoginOverlay();
         });
 
-        // 讀取本地儲存的 Apps Script Web App URL
+        // 讀取本地儲存的 Web App URL
         function checkSavedConfig() {
             const savedUrl = localStorage.getItem('kangle_gas_url');
             if (savedUrl) {
@@ -1479,7 +1679,7 @@ function doGet(e) {
             }
         }
 
-        // 動態生成關卡下拉選單
+        // 動態生成關卡選單
         function initLevelSelect() {
             const select = document.getElementById('levelSelect');
             select.innerHTML = '';
@@ -1489,6 +1689,46 @@ function doGet(e) {
                 opt.textContent = lvl.name;
                 select.appendChild(opt);
             });
+        }
+
+        // 設定太空船造型
+        function setShipStyle(style) {
+            currentShipStyle = style;
+            
+            // 移除舊的歡迎畫面選取邊框
+            ['classic', 'blitz', 'miracle'].forEach(s => {
+                const elWelcome = document.getElementById(`shipSelect-${s}`);
+                const elModal = document.getElementById(`modalShip-${s}`);
+                if (elWelcome) {
+                    elWelcome.className = "cursor-pointer border-2 border-slate-800 bg-slate-900/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all";
+                }
+                if (elModal) {
+                    elModal.className = "cursor-pointer border-2 border-slate-800 bg-slate-900/60 rounded-xl p-3 text-center flex flex-col items-center justify-center transition-all";
+                }
+            });
+
+            // 加入霓虹發光選取邊框
+            const activeWelcome = document.getElementById(`shipSelect-${style}`);
+            const activeModal = document.getElementById(`modalShip-${style}`);
+            if (activeWelcome) {
+                activeWelcome.className = "cursor-pointer border-2 border-cyan-500 bg-cyan-950/40 rounded-xl p-2.5 text-center flex flex-col items-center justify-center scale-105 transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)]";
+            }
+            if (activeModal) {
+                activeModal.className = "cursor-pointer border-2 border-cyan-500 bg-cyan-950/40 rounded-xl p-3 text-center flex flex-col items-center justify-center scale-105 transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)]";
+            }
+
+            renderMap(); // 即時重繪地圖上的太空船外觀
+        }
+
+        // 換太空船 Modal 顯示
+        function openShipModal() {
+            document.getElementById('shipModal').classList.remove('hidden');
+            setShipStyle(currentShipStyle); // 確保選取邊框即時渲染
+        }
+
+        function closeShipModal() {
+            document.getElementById('shipModal').classList.add('hidden');
+            sfx.playTurn();
         }
 
         // 顯示登入畫面 (回首頁)
@@ -1649,18 +1889,20 @@ function doGet(e) {
                 container.appendChild(prologue);
             }
 
-            // 新增角色對話泡泡
+            // 新增角色對話泡泡 (二年級交替角色登場)
+            const resolvedCaptainName = (currentLevelIndex % 2 === 0) ? "康康 (🧑‍🚀)" : "樂樂 (🧑‍🚀)";
+
             activeLevel.story.dialogue.forEach(chat => {
                 const box = document.createElement('div');
                 box.className = "flex flex-col gap-0.5 text-xs text-slate-300";
                 
                 const name = document.createElement('span');
                 name.className = `font-extrabold text-[10px] tracking-wider ${chat.role === 'navigator' ? 'text-cyan-400' : 'text-amber-400'}`;
-                name.textContent = chat.name;
+                name.textContent = chat.role === 'captain' ? resolvedCaptainName : chat.name;
                 
                 const bubble = document.createElement('div');
                 bubble.className = "bg-slate-900/50 border border-slate-850 px-2.5 py-1.5 rounded-xl rounded-tl-none leading-relaxed";
-                bubble.textContent = chat.text;
+                bubble.textContent = chat.text.replace("康康艦長", resolvedCaptainName.split(" ")[0]).replace("樂樂艦長", resolvedCaptainName.split(" ")[0]);
                 
                 box.appendChild(name);
                 box.appendChild(bubble);
@@ -1821,7 +2063,7 @@ function doGet(e) {
                         tile.appendChild(sharkEl);
                     }
 
-                    // 10. 太空探險船「編程之星號」⛵ (搭載朝向指示燈)
+                    // 10. 自選太空探險船「編程之星號」⛵ (搭載自選外觀渲染與探航探照燈)
                     if (shipState.x === x && shipState.y === y) {
                         const shipContainer = document.createElement('div');
                         shipContainer.className = "absolute flex items-center justify-center z-30 transition-transform duration-300 ease-out pointer-events-none";
@@ -1831,23 +2073,67 @@ function doGet(e) {
                         const rotationDegrees = shipState.dir * 90;
                         shipContainer.style.transform = `rotate(${rotationDegrees}deg)`;
 
-                        shipContainer.innerHTML = `
-                            <svg class="w-16 h-16 overflow-visible" viewBox="0 0 100 100">
-                                <defs>
-                                    <linearGradient id="headlight-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
-                                        <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.6" />
-                                        <stop offset="100%" stop-color="#22d3ee" stop-opacity="0" />
-                                    </linearGradient>
-                                </defs>
-                                <polygon points="50,15 -10,-105 110,-105" fill="url(#headlight-gradient)" />
-                                <line x1="50" y1="15" x2="50" y2="-90" stroke="#22d3ee" stroke-width="3" stroke-dasharray="6,4" opacity="0.8" />
-                                <polygon class="engine-wake" points="44,95 50,120 56,95" fill="#f43f5e" />
-                                <path d="M 50,10 C 75,40 70,85 62,95 L 38,95 C 30,85 25,40 50,10 Z" fill="#1e1b4b" stroke="#818cf8" stroke-width="5" />
-                                <path d="M 30,60 L 15,75 L 32,80 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="2" />
-                                <path d="M 70,60 L 85,75 L 68,80 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="2" />
-                                <path d="M 50,20 L 62,45 L 50,38 L 38,45 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" />
-                            </svg>
-                        `;
+                        // 依學生自選的 `currentShipStyle` 渲染不同外觀
+                        let shipSvgContent = '';
+                        if (currentShipStyle === 'blitz') {
+                            // 烈焰橘光號 (速度型)
+                            shipSvgContent = `
+                                <svg class="w-16 h-16 overflow-visible" viewBox="0 0 100 100">
+                                    <defs>
+                                        <linearGradient id="headlight-blitz" x1="0%" y1="100%" x2="0%" y2="0%">
+                                            <stop offset="0%" stop-color="#f97316" stop-opacity="0.65" />
+                                            <stop offset="100%" stop-color="#f97316" stop-opacity="0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <polygon points="50,15 -10,-105 110,-105" fill="url(#headlight-blitz)" />
+                                    <line x1="50" y1="15" x2="50" y2="-90" stroke="#f97316" stroke-width="3.5" stroke-dasharray="6,4" opacity="0.9" />
+                                    <polygon class="engine-wake" points="40,95 50,125 60,95" fill="#eab308" />
+                                    <path d="M 50,5 L 75,65 L 60,95 L 40,95 L 25,65 Z" fill="#3f3f46" stroke="#f97316" stroke-width="5" />
+                                    <path d="M 32,60 L 5,85 L 32,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
+                                    <path d="M 68,60 L 95,85 L 68,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
+                                    <polygon points="50,15 58,40 50,34 42,40" fill="#fbbf24" />
+                                </svg>
+                            `;
+                        } else if (currentShipStyle === 'miracle') {
+                            // 星河奇蹟號 (幽浮探索型)
+                            shipSvgContent = `
+                                <svg class="w-16 h-16 overflow-visible" viewBox="0 0 100 100">
+                                    <defs>
+                                        <linearGradient id="headlight-miracle" x1="0%" y1="100%" x2="0%" y2="0%">
+                                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.65" />
+                                            <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <polygon points="50,15 -10,-105 110,-105" fill="url(#headlight-miracle)" />
+                                    <line x1="50" y1="15" x2="50" y2="-90" stroke="#10b981" stroke-width="3.5" stroke-dasharray="6,4" opacity="0.9" />
+                                    <polygon class="engine-wake" points="45,95 50,118 55,95" fill="#a855f7" />
+                                    <ellipse cx="50" cy="55" rx="20" ry="40" fill="#064e3b" stroke="#10b981" stroke-width="5" />
+                                    <ellipse cx="50" cy="65" rx="36" ry="11" fill="none" stroke="#22d3ee" stroke-width="3" stroke-dasharray="5,3" />
+                                    <circle cx="50" cy="30" r="8" fill="#22d3ee" />
+                                </svg>
+                            `;
+                        } else {
+                            // 經典蔚藍號
+                            shipSvgContent = `
+                                <svg class="w-16 h-16 overflow-visible" viewBox="0 0 100 100">
+                                    <defs>
+                                        <linearGradient id="headlight-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                                            <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.6" />
+                                            <stop offset="100%" stop-color="#22d3ee" stop-opacity="0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <polygon points="50,15 -10,-105 110,-105" fill="url(#headlight-gradient)" />
+                                    <line x1="50" y1="15" x2="50" y2="-90" stroke="#22d3ee" stroke-width="3" stroke-dasharray="6,4" opacity="0.8" />
+                                    <polygon class="engine-wake" points="44,95 50,120 56,95" fill="#f43f5e" />
+                                    <path d="M 50,10 C 75,40 70,85 62,95 L 38,95 C 30,85 25,40 50,10 Z" fill="#1e1b4b" stroke="#818cf8" stroke-width="5" />
+                                    <path d="M 30,60 L 15,75 L 32,80 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="2" />
+                                    <path d="M 70,60 L 85,75 L 68,80 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="2" />
+                                    <path d="M 50,20 L 62,45 L 50,38 L 38,45 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" />
+                                </svg>
+                            `;
+                        }
+
+                        shipContainer.innerHTML = shipSvgContent;
 
                         const helperRing = document.createElement('div');
                         helperRing.className = "absolute w-12 h-12 rounded-full border border-dashed border-indigo-500/20 pointer-events-none z-10 animate-spin";
@@ -2494,6 +2780,15 @@ function doGet(e) {
 
         function closeTeacherModal() {
             document.getElementById('teacherModal').classList.add('hidden');
+        }
+
+        // 學生自選太空船 Modal 控制
+        function openShipModal() {
+            document.getElementById('shipModal').classList.remove('hidden');
+        }
+
+        function closeShipModal() {
+            document.getElementById('shipModal').classList.add('hidden');
         }
 
         function saveTeacherSettings() {
