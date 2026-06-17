@@ -132,7 +132,7 @@ const LEVELS = [
   {
     id: 1,
     name: "關卡 1：超簡單正方形 (4 步挑戰)",
-    desc: "最適合入門！解開 4 個最直觀的坐標，在點點板連出一個可愛的小正方形吧！",
+    desc: "最適合入門！解開 4 個最直觀的坐報，在點點板連出一個可愛的小正方形吧！",
     startDot: { x: 1, y: 1 }, // 起點在 B, 2 (1, 1)
     starLabel: "B 欄（第二欄）第 2 列",
     path: [
@@ -294,7 +294,7 @@ const ArrowIcon = ({ dir, className = "w-6 h-6", color = "currentColor" }) => {
 // ==========================================
 export default function App() {
   const [levelIndex, setLevelIndex] = useState(0);
-  const currentLevel = LEVELS[levelIndex];
+  const currentLevel = LEVELS[levelIndex] || LEVELS[0];
 
   // 解密進度狀態：記錄當前關卡各個卡片是否已被解開
   const [decodedList, setDecodedList] = useState(new Array(currentLevel.path.length).fill(false));
@@ -321,11 +321,6 @@ export default function App() {
   const [particles, setParticles] = useState([]);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  // 重置關卡與狀態
-  useEffect(() => {
-    handleResetLevel(levelIndex);
-  }, [levelIndex]);
-
   // 當前正要畫的方向箭頭
   const nextRequiredArrow = useMemo(() => {
     const currentDrawStep = drawingPath.length - 1;
@@ -337,7 +332,7 @@ export default function App() {
 
   // 重置關卡狀態
   const handleResetLevel = (idx = levelIndex) => {
-    const lvl = LEVELS[idx];
+    const lvl = LEVELS[idx] || LEVELS[0];
     setDecodedList(new Array(lvl.path.length).fill(false));
     setActiveCardIndex(0);
     setWrongAttempts(0);
@@ -349,10 +344,11 @@ export default function App() {
     setIsCompleted(false);
   };
 
-  // 切換關卡
+  // 【修復重構】切換關卡：同步更新關卡內的所有狀態，防止 React 18 非同步生命週期產生的 out-of-bounds 錯誤
   const handleSelectLevel = (idx) => {
     playSound('click');
     setLevelIndex(idx);
+    handleResetLevel(idx); // 同步呼叫以在同一 Render 批次中更新所有狀態
   };
 
   // 當手動選擇某一卡片進行解密
@@ -366,7 +362,10 @@ export default function App() {
   // 點選左側 9x9 網格格子進行解密配對
   const handleGridCellClick = (x, y) => {
     const clickedCoord = `${x},${y}`;
-    const targetCoord = currentLevel.path[activeCardIndex].coord;
+    const targetCard = currentLevel.path[activeCardIndex];
+    if (!targetCard) return; // 安全防禦阻斷
+
+    const targetCoord = targetCard.coord;
 
     if (clickedCoord === targetCoord) {
       playSound('success');
@@ -595,7 +594,7 @@ export default function App() {
               ✕
             </button>
             <h3 className="text-lg font-bold text-amber-800 mb-2 flex items-center gap-1.5">
-              <span>📖</span> 坐標解密與連線規則：
+              <span>📖</span> 坐報解密與連線規則：
             </h3>
             <ul className="text-sm md:text-base text-amber-900 space-y-2 list-disc pl-5">
               <li><strong>第一步（解鎖坐標）</strong>：座標格式為 <strong>(英文字母, 數字)</strong>。例如尋找 <strong>(C, 6)</strong>，先在最底橫軸找到 <strong>C</strong>，再往上對齊數字 <strong>6</strong>。點擊格子解鎖秘密箭頭！</li>
@@ -675,8 +674,8 @@ export default function App() {
                         const cellKey = `${xVal},${yVal}`;
                         const cellData = ARROWS_DATA[cellKey];
                         
-                        // 當開啟提示且該卡片點錯達 2 次，才亮起黃格
-                        const isTargetCoord = showHints && (wrongAttempts >= 2) && (currentLevel.path[activeCardIndex].coord === cellKey);
+                        // 當開啟提示且該卡片點錯達 2 次，才亮起黃格 (修復加安全防禦鏈)
+                        const isTargetCoord = showHints && (wrongAttempts >= 2) && (currentLevel.path[activeCardIndex]?.coord === cellKey);
                         const isHoverCross = hoveredCoord && (hoveredCoord.x === xVal || hoveredCoord.y === yVal);
                         
                         return (
@@ -734,7 +733,8 @@ export default function App() {
                   第 {activeCardIndex + 1} 步
                 </span>
                 <span className="text-base font-black text-indigo-700">
-                  坐標：({formatCoordStr(currentLevel.path[activeCardIndex].coord)})
+                  {/* 修復防護：加入安全條件渲染以防止 out-of-bounds 讀取 crash */}
+                  坐標：({currentLevel.path[activeCardIndex] ? formatCoordStr(currentLevel.path[activeCardIndex].coord) : ""})
                 </span>
                 
                 {showHints && (
@@ -945,7 +945,7 @@ export default function App() {
                               onClick={() => handleDotClick(dotX, dotY)}
                             />
 
-                            {/* 【重構優化】背景圓點：起點未被造訪時顯示為搶眼的鮮紅色，被造訪後會變成路徑綠色，普通未造訪點為灰藍色 */}
+                            {/* 背景圓點：起點未被造訪時顯示為搶眼的鮮紅色，被造訪後會變成路徑綠色，普通未造訪點為灰藍色 */}
                             <circle
                               cx={svgX}
                               cy={svgY}
@@ -954,7 +954,7 @@ export default function App() {
                               className="pointer-events-none transition-all duration-300"
                             />
 
-                            {/* 【全新替代設計】起點呼吸環：起點未造訪前，在紅色圓點外緣加上一圈發光的呼吸圓圈，明確且不易混淆，不使用偏位紅星 */}
+                            {/* 起點呼吸環：起點未造訪前，在紅色圓點外緣加上一圈發光的呼吸圓圈，明確且不易混淆，不使用偏位紅星 */}
                             {isStart && !isVisited && (
                               <circle
                                 cx={svgX}
