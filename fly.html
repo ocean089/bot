@@ -124,7 +124,7 @@
                 </select>
             </div>
 
-            <!-- 換太空船按鈕 (遊戲中隨時可以更換) -->
+            <!-- 換太空船按鈕 -->
             <button onclick="openShipModal()" class="bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-cyan-500/20 hover:border-cyan-400/50 font-bold px-2.5 py-1.5 rounded-xl transition text-xs flex items-center gap-1" title="更換探險太空船">
                 <i class="fa-solid fa-shuttle-space"></i>
                 <span>換太空船</span>
@@ -218,7 +218,7 @@
                 </div>
             </div>
 
-            <!-- 2D 星航地圖網格 (地圖自適應 vh，保證不超出平板視窗) -->
+            <!-- 2D 星航地圖網格 (地圖自適應 vh) -->
             <div class="w-full flex-grow flex items-center justify-center lg:overflow-hidden">
                 <div id="mapWrapper" class="space-bg rounded-2xl p-2 shadow-2xl border-2 border-slate-900 relative w-full aspect-square max-h-[36vh] max-w-[36vh] flex items-center justify-center">
                     <div id="mapGrid" class="grid w-full h-full relative">
@@ -227,7 +227,7 @@
                 </div>
             </div>
             
-            <!-- 運行控制器按鈕 (高度扁平化) -->
+            <!-- 運行控制器按鈕 -->
             <div class="flex gap-2.5 w-full max-w-[450px] shrink-0 pb-1">
                 <button id="runBtn" onclick="runCode()" class="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-white font-black py-2.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5 text-base">
                     <i class="fa-solid fa-shuttle-space"></i> 啟動太空引擎
@@ -300,7 +300,7 @@
                 <p class="text-slate-400 text-xs">星際編程大冒險・請選擇太空艇與模式</p>
             </div>
 
-            <!-- 1. 新增：太空船座艙自選區 (首頁大圖示) -->
+            <!-- 太空船座艙自選區 (首頁大圖示) -->
             <div class="mb-5 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800">
                 <h4 class="text-xs font-bold text-cyan-400 mb-2.5 flex items-center gap-1.5">
                     <i class="fa-solid fa-shuttle-space"></i> 🚀 選擇你的探險太空船：
@@ -328,7 +328,7 @@
                                 <path d="M 50,5 L 75,65 L 60,95 L 40,95 L 25,65 Z" fill="#3f3f46" stroke="#f97316" stroke-width="5" />
                                 <path d="M 32,60 L 5,85 L 32,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
                                 <path d="M 68,60 L 95,85 L 68,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
-                                <polygon points="50,15 58,40 50,34 42,40" fill="#f59e0b" />
+                                <polygon points="50,15 58,40 50,34 42,40" fill="#fbbf24" />
                             </svg>
                         </div>
                         <span class="text-[10px] font-bold block mt-1">烈焰橘光</span>
@@ -400,7 +400,7 @@
         </div>
     </div>
 
-    <!-- --- 新增：太空船更換 Modal (點擊頂端「換太空船」開啟) --- -->
+    <!-- --- 太空船更換 Modal --- -->
     <div id="shipModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
         <div class="bg-gradient-to-b from-slate-900 to-indigo-950 border border-cyan-500/30 rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden">
             <h2 class="text-lg font-black text-cyan-400 mb-2 flex items-center gap-1.5">
@@ -429,7 +429,7 @@
                             <path d="M 50,5 L 75,65 L 60,95 L 40,95 L 25,65 Z" fill="#3f3f46" stroke="#f97316" stroke-width="5" />
                             <path d="M 32,60 L 5,85 L 32,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
                             <path d="M 68,60 L 95,85 L 68,80 Z" fill="#ef4444" stroke="#f97316" stroke-width="2" />
-                            <polygon points="50,15 58,40 50,34 42,40" fill="#f59e0b" />
+                            <polygon points="50,15 58,40 50,34 42,40" fill="#fbbf24" />
                         </svg>
                     </div>
                     <span class="text-[10px] font-bold block mt-1.5">烈焰橘光</span>
@@ -575,8 +575,9 @@ function doGet(e) {
             </p>
 
             <div class="flex gap-3 justify-center">
-                <button onclick="closeLoseModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-xl transition">
-                    修正卡片
+                <!-- 「修正卡片」正式更名為「路線重新規劃」 -->
+                <button onclick="closeLoseModal()" class="bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/30 hover:border-indigo-400 text-white font-black py-3 px-6 rounded-xl transition shadow-md">
+                    路線重新規劃
                 </button>
                 <button onclick="retryLevel()" class="bg-rose-500 hover:bg-rose-400 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition">
                     重新挑戰
@@ -929,57 +930,23 @@ function doGet(e) {
                 }
             },
             {
-                name: "第十一關：殊途同歸",
-                desc: "前進卡只剩 1 張！用重複卡拉長前進，再調轉方向使用倒退卡補完路程！",
-                size: 7,
-                startPos: { x: 3, y: 6 },
-                endPos: { x: 3, y: 0 },
-                obstacles: [],
-                driftwoods: [],
-                trashIslands: [],
-                sharks: [],
-                portals: [],
-                keyPos: null,
-                limits: {
-                    forward: 1,
-                    backward: 3,
-                    left: 2,
-                    right: 2,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
-                showRepeat: true,
-                story: {
-                    title: "拆解目標與等價替換",
-                    concept: "💡 運算思維：問題拆解與資源組合<br>當前進資源不足時（只有 1 張），轉向 180 度利用「倒退卡」來補完剩下的一半路程，靈活調配資源！",
-                    dialogue: [
-                        { role: "captain", name: "康康 (🧑‍🚀)", text: "我們要前進 6 格，但前進卡只有 1 張，怎麼辦？" },
-                        { role: "navigator", name: "導航儀-康樂 (🤖)", text: "試著先用重複卡前進，然後轉向 180 度，利用「太空倒退」補足剩下的步數！" }
-                    ]
-                }
-            },
-            {
-                name: "第十二關：危機四伏：初遇黑洞",
-                desc: "【黑洞機制】地圖中央出現了一個神祕黑洞！太空艇千萬不能飛入黑洞，必須往兩側繞行前進！",
+                name: "第十一關：順序的極限之舞",
+                desc: "推進、倒退與轉彎的大結合！本關不提供重複卡，挑戰在多個小廢棄貨櫃中完成精細的順序軌道規劃。",
                 size: 5,
-                startPos: { x: 2, y: 4 },
-                endPos: { x: 2, y: 0 },
-                obstacles: [],
-                driftwoods: [],
+                startPos: { x: 0, y: 4 },
+                endPos: { x: 4, y: 4 },
+                obstacles: [{ x: 1, y: 3 }, { x: 3, y: 3 }],
+                driftwoods: [{ x: 2, y: 4 }],
                 trashIslands: [],
                 sharks: [],
                 portals: [],
-                blackHoles: [{ x: 2, y: 2 }], 
                 keyPos: null,
                 limits: {
                     forward: 6,
-                    backward: -1,
+                    backward: 2,
                     left: 2,
                     right: 2,
-                    shoot: -1,
+                    shoot: 1,
                     wait: -1,
                     repeat_2: -1,
                     repeat_3: -1,
@@ -987,11 +954,45 @@ function doGet(e) {
                 },
                 showRepeat: false,
                 story: {
-                    title: "星際重力：初遇黑洞",
-                    concept: "💡 運算思維：邊界避障 (Collision Avoidance)<br>黑洞擁有無限的引力！在程式中，有些致命的非法節點是不能踩進去的。我們必須巧妙避開它！",
+                    title: "順序極限之舞：不撞障礙",
+                    concept: "💡 運算思維：精細順序 (Fine Sequential Execution)<br>在沒有迴圈的支援下，將每一個前進、轉向與射擊卡完全按照空間網格依次排列！",
                     dialogue: [
-                        { role: "navigator", name: "導航儀-康樂 (🤖)", text: "警告！前方探測到強大引力異常！是星際黑洞！" },
-                        { role: "captain", name: "樂樂 (🧑‍🚀)", text: "黑洞會把我們吸進去！我必須向左或向右繞過它，絕對不能靠近！" }
+                        { role: "navigator", name: "導航儀-康樂 (🤖)", text: "艦長，這次沒有重複卡可以用，要用推進和射擊小心規劃一步步通過障礙！" },
+                        { role: "captain", name: "康康 (🧑‍🚀)", text: "看我大展身手！一格格算好，發射雷射粉碎貨櫃，再順利著陸！" }
+                    ]
+                }
+            },
+            {
+                name: "第十二關：黑洞迴避與前行",
+                desc: "【重複迴圈避黑洞】在兩顆黑洞包夾的狹窄星系中，有一條唯一的安全之字形折線。挑戰使用重複卡走出精簡步伐！",
+                size: 6,
+                startPos: { x: 1, y: 5 },
+                endPos: { x: 4, y: 1 },
+                obstacles: [],
+                driftwoods: [],
+                trashIslands: [],
+                sharks: [],
+                portals: [],
+                blackHoles: [{ x: 2, y: 4 }, { x: 3, y: 2 }], 
+                keyPos: null,
+                limits: {
+                    forward: 4,
+                    backward: -1,
+                    left: 2,
+                    right: 2,
+                    shoot: -1,
+                    wait: -1,
+                    repeat_2: 1,
+                    repeat_3: -1,
+                    repeat_custom: -1
+                },
+                showRepeat: true,
+                story: {
+                    title: "引力迴避：之字形折線",
+                    concept: "💡 運算思維：模式識別 & 迴圈編程<br>找出重複折線前進的規律，並在重複卡下向右縮排，安全在兩顆重力黑洞縫隙間飛過！",
+                    dialogue: [
+                        { role: "navigator", name: "導航儀-康樂 (🤖)", text: "艦長！兩個危險黑洞正位於我們的對角線！我們必須用重複卡走出完美的蛇形之字折線！" },
+                        { role: "captain", name: "樂樂 (🧑‍🚀)", text: "包在我身上！找出『推進一格、右轉、推進、左轉』的規律，右推縮排，重演它 2 次！" }
                     ]
                 }
             },
@@ -1095,7 +1096,7 @@ function doGet(e) {
                     concept: "💡 運算思維：除錯 (Debugging)<br>寫程式會遇到 Bug 阻礙執行。使用工具（魚叉卡）排除前方垃圾，就像修復 Bug，太空船才能順利飛過！",
                     dialogue: [
                         { role: "captain", name: "康康 (🧑‍🚀)", text: "前面有一個廢棄貨櫃箱，要怎麼過去呢？" },
-                        { role: "navigator", name: "導航儀-康樂 (🤖)", text: "試著用「雷射魚叉（🎯）」在障礙物前方將其打破，這就像修復程式 Bug 一樣！" }
+                        { role: "navigator", name: "導航儀-康樂 (🤖)", text: "試著用「雷射魚叉（🎯）」在障礙物前方將其打破，這像修復程式 Bug 一樣！" }
                     ]
                 }
             },
@@ -1133,7 +1134,40 @@ function doGet(e) {
                 }
             },
             {
-                name: "第十七關：毒氣星球例外",
+                name: "第十七關：迴圈除錯大師",
+                desc: "【迴圈內射擊除錯】連續 2 個廢棄貨櫃堵住去路。前進卡跟射擊卡都被嚴重限制！挑戰編程一個重複 2 次的「先射擊、後推進」巢狀代碼！",
+                size: 5,
+                startPos: { x: 2, y: 4 },
+                endPos: { x: 2, y: 1 },
+                obstacles: [],
+                driftwoods: [{ x: 2, y: 3 }, { x: 2, y: 2 }],
+                trashIslands: [],
+                sharks: [],
+                portals: [],
+                keyPos: null,
+                limits: {
+                    forward: 1,   // 限 1 張！
+                    backward: -1,
+                    left: -1,
+                    right: -1,
+                    shoot: 1,     // 限 1 張！
+                    wait: -1,
+                    repeat_2: 1,  // 必須用重複x2卡包裝
+                    repeat_3: -1,
+                    repeat_custom: -1
+                },
+                showRepeat: true,
+                story: {
+                    title: "代碼封裝：迴圈除錯",
+                    concept: "💡 運算思維：迴圈內封裝 (Encapsulated Loop)<br>當有一連串相同的「除錯、前進、除錯、前進」規律時，不需重寫。將射擊與前進卡一同右推縮排，放進重複x2中一次解決！",
+                    dialogue: [
+                        { role: "navigator", name: "導航儀-康樂 (🤖)", text: "艦長！兩個貨櫃排成一列。推進和魚叉發射卡都被鎖定只剩 1 張了！" },
+                        { role: "captain", name: "康康 (🧑‍🚀)", text: "我知道！把 1 張射擊和 1 張前進，雙雙右推縮排包在重複x2裡面，它就會重複執行打破、前進、再打破、再前進！" }
+                    ]
+                }
+            },
+            {
+                name: "第十八關：毒氣星球例外",
                 desc: "劇毒垃圾星會散發惡臭毒氣！靠近其周圍一格內會引發系統當機，請規避綠色警戒區。",
                 size: 9,
                 startPos: { x: 4, y: 8 },
@@ -1166,7 +1200,7 @@ function doGet(e) {
                 }
             },
             {
-                name: "第十八關：雙重黑洞與秘密金鑰",
+                name: "第十九關：雙重黑洞與秘密金鑰",
                 desc: "【雙重黑洞挑戰】兩顆強大的引力黑洞擋在路中央。你必須完美繞開黑洞重力，先拿到中央的金鑰匙，才能解開終點能量星球！",
                 size: 7,
                 startPos: { x: 3, y: 6 },
@@ -1200,7 +1234,7 @@ function doGet(e) {
                 }
             },
             {
-                name: "第十九關：巡邏幽浮時序",
+                name: "第二十關：巡邏幽浮時序",
                 desc: "巡邏幽浮左右來回飛動，算準幽浮行進的時間差，利用等待指令安全穿越！",
                 size: 9,
                 startPos: { x: 4, y: 8 },
@@ -1236,7 +1270,7 @@ function doGet(e) {
                 }
             },
             {
-                name: "第二十關：幽浮與黑洞的夾擊",
+                name: "第二十一關：幽浮與黑洞的夾擊",
                 desc: "【幽浮與黑洞夾擊】運用原地等待卡，避開幽浮並在黑洞引力邊緣飛往終點！",
                 size: 7,
                 startPos: { x: 3, y: 6 },
@@ -1270,7 +1304,7 @@ function doGet(e) {
                 }
             },
             {
-                name: "第二十一關：極限編程迴圈挑戰",
+                name: "第二十二關：極限編程迴圈挑戰",
                 desc: "【極限限定數量】前進卡、左轉卡、右轉卡通通只有 1 張！挑戰用最精簡的卡片包裝吧！",
                 size: 7,
                 startPos: { x: 0, y: 6 },
@@ -1307,7 +1341,7 @@ function doGet(e) {
                 }
             },
             {
-                name: "第二十二關：雙重幽浮挑戰",
+                name: "第二十三關：雙重幽浮挑戰",
                 desc: "幽浮海域升級！先取金色金鑰，並算準時序避開兩台巡邏幽浮，成功開啟核心。",
                 size: 9,
                 startPos: { x: 4, y: 8 },
@@ -1345,53 +1379,6 @@ function doGet(e) {
                 }
             },
             {
-                name: "第二十三關：運算神殿終極試煉",
-                desc: "終極試煉！集結所有險阻——隕石群、太空廢棄貨櫃、劇毒垃圾星、黑洞引力、雙幽浮巡邏、三色傳送蟲洞與金鑰能量。運用所學征服星域吧！",
-                size: 12,
-                startPos: { x: 0, y: 11 },
-                endPos: { x: 7, y: 8 },
-                obstacles: [
-                    { x: 0, y: 8 }, { x: 3, y: 11 }, { x: 4, y: 10 }, { x: 5, y: 9 }, { x: 6, y: 8 },
-                    { x: 7, y: 7 }, { x: 8, y: 6 }, { x: 9, y: 5 }, { x: 10, y: 4 }, { x: 11, y: 3 },
-                    { x: 1, y: 7 }, { x: 2, y: 6 }, { x: 3, y: 5 }, { x: 4, y: 4 }, { x: 5, y: 3 },
-                    { x: 6, y: 2 }, { x: 7, y: 1 }, { x: 8, y: 0 }
-                ],
-                driftwoods: [{ x: 10, y: 11 }, { x: 9, y: 10 }, { x: 8, y: 9 }],
-                trashIslands: [{ x: 2, y: 1 }, { x: 10, y: 8 }],
-                blackHoles: [{ x: 8, y: 10 }, { x: 1, y: 10 }], 
-                sharks: [
-                    { id: 1780324391778, x1: 9, y1: 11, x2: 4, y2: 11, curX: 9, curY: 11, direction: 1 },
-                    { id: 1780324746241, x1: 5, y1: 8, x2: 1, y2: 8, curX: 5, curY: 8, direction: 1 }
-                ],
-                portals: [
-                    { x: 10, y: 1, color: "green" }, { x: 0, y: 5, color: "green" },
-                    { x: 4, y: 0, color: "purple" }, { x: 0, y: 0, color: "purple" },
-                    { x: 0, y: 4, color: "blue" }, { x: 11, y: 11, color: "blue" }
-                ],
-                keyPos: { x: 4, y: 1 },
-                limits: {
-                    forward: 8,
-                    backward: 4,
-                    left: 5,
-                    right: 5,
-                    shoot: 3,
-                    wait: 3,
-                    repeat_2: 4,
-                    repeat_3: 4,
-                    repeat_custom: 4
-                },
-                showRepeat: true,
-                story: {
-                    title: "綜合試煉：問題大拆解",
-                    concept: "💡 運算思維：問題分解 (Decomposition)<br>真正的程式大師，是把大問題拆成一段段小任務：拿鑰匙、避幽浮、躲黑洞、射擊貨櫃、穿蟲洞，逐一消滅它們！",
-                    dialogue: [
-                        { role: "navigator", name: "導航儀-康樂 (🤖)", text: "最後的終極關卡！隕石、垃圾、兩架幽浮與三色蟲洞全部出現了！" },
-                        { role: "captain", name: "康康 (🧑‍🚀)", text: "深呼吸，我會用全部的智慧，一步一步解開這座運算神殿！" },
-                    ],
-                    epilogue: "恭喜您成功解鎖核心能量！\n\n回顧這趟宇宙航程，小傑從只會「順序執行」的新手，一路學會了轉向（狀態變更）、迴圈、模式識別、等價替換（重複與倒退）、傳送門（函式呼叫）、金鑰（條件判斷）、魚叉雷射（除錯）、繞避毒氣（防禦性編程）、與幽浮的時序同步（併發控制），最後在神殿試煉中將它們全部融會貫通。\n\nAI 導航儀拍著天線說：「艦長，你已經像一位真正的程式設計師一樣思考了！把大問題拆解成小步驟，找出規律、善用工具、預防錯誤、協調時序——這就是『運算思維』的力量。」\n\n恭喜你成為傳奇星際航海家，而真正的程式設計冒險，才正要開始……🌟"
-                }
-            },
-            {
                 name: "第二十四關：終極黑洞迴圈矩陣",
                 desc: "【終極挑戰】通道四周佈滿引力黑洞！射擊打破貨櫃，飛抵神殿最核心！",
                 size: 9,
@@ -1417,7 +1404,7 @@ function doGet(e) {
                 },
                 showRepeat: true,
                 story: {
-                    title: "終極大成：太空迴圈大迷宮",
+                    title: "太空迴圈大迷宮",
                     concept: "💡 運算思維：大問題拆解與極致編程<br>發揮你迄今學到的所有技能。重複迴圈、避開引力黑洞、精確雷射射擊！",
                     dialogue: [
                         { role: "navigator", name: "導航儀-康樂 (🤖)", text: "這裡就是運算神殿的正核心！黑洞引力與貨櫃擋在四周！" },
@@ -1432,6 +1419,11 @@ function doGet(e) {
         class SoundSynth {
             constructor() {
                 this.ctx = null;
+                this.humOsc = null;
+                this.humGain = null;
+                this.noiseSource = null;
+                this.noiseGain = null;
+                this.lfo = null;
             }
             init() {
                 if (!this.ctx) {
@@ -1441,7 +1433,114 @@ function doGet(e) {
                     this.ctx.resume();
                 }
             }
-            // 科幻推進尾火聲
+            // 介面點擊清脆回饋音 (新增)
+            playClick() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(1400, now + 0.05);
+
+                gain.gain.setValueAtTime(0.04, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+            // 開始太空船持續引擎推進音 (新增)
+            startThrusterHum() {
+                this.init();
+                if (this.humOsc) return; // 已經在播放，防重複
+
+                const now = this.ctx.currentTime;
+                
+                // 1. 低頻深空重力引擎轟鳴聲
+                this.humOsc = this.ctx.createOscillator();
+                this.humGain = this.ctx.createGain();
+                const lowpass = this.ctx.createBiquadFilter();
+                
+                this.humOsc.type = 'sawtooth';
+                this.humOsc.frequency.setValueAtTime(45, now); // 45Hz 深沉重低音
+                
+                lowpass.type = 'lowpass';
+                lowpass.frequency.setValueAtTime(110, now);
+                
+                // 動態 LFO 調頻：產生太空引擎點火後的起伏感
+                this.lfo = this.ctx.createOscillator();
+                const lfoGain = this.ctx.createGain();
+                this.lfo.frequency.setValueAtTime(5.5, now); // 5.5Hz 脈動
+                lfoGain.gain.setValueAtTime(0.03, now);
+                
+                this.humGain.gain.setValueAtTime(0.08, now);
+                
+                this.lfo.connect(lfoGain);
+                lfoGain.connect(this.humGain.gain);
+                
+                this.humOsc.connect(lowpass);
+                lowpass.connect(this.humGain);
+                this.humGain.connect(this.ctx.destination);
+                
+                // 2. 白噪音模擬太空推進的氣流噴射聲
+                const bufferSize = this.ctx.sampleRate * 2.0; 
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                this.noiseSource = this.ctx.createBufferSource();
+                this.noiseSource.buffer = buffer;
+                this.noiseSource.loop = true;
+                
+                const noiseFilter = this.ctx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.setValueAtTime(320, now);
+                noiseFilter.Q.setValueAtTime(1.2, now);
+                
+                this.noiseGain = this.ctx.createGain();
+                this.noiseGain.gain.setValueAtTime(0.02, now); // 輕微推進氣流感
+                
+                this.noiseSource.connect(noiseFilter);
+                noiseFilter.connect(this.noiseGain);
+                this.noiseGain.connect(this.ctx.destination);
+                
+                this.humOsc.start(now);
+                this.lfo.start(now);
+                this.noiseSource.start(now);
+            }
+            // 熄滅太空船引擎音 (新增淡出，防爆音)
+            stopThrusterHum() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                
+                // 平滑淡出引擎推進噪聲
+                if (this.humGain) {
+                    this.humGain.gain.cancelScheduledValues(now);
+                    this.humGain.gain.setValueAtTime(this.humGain.gain.value, now);
+                    this.humGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                }
+                if (this.noiseGain) {
+                    this.noiseGain.gain.cancelScheduledValues(now);
+                    this.noiseGain.gain.setValueAtTime(this.noiseGain.gain.value, now);
+                    this.noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                }
+                
+                const self = this;
+                setTimeout(() => {
+                    try {
+                        if (self.humOsc) { self.humOsc.stop(); self.humOsc = null; }
+                        if (self.lfo) { self.lfo.stop(); self.lfo = null; }
+                        if (self.noiseSource) { self.noiseSource.stop(); self.noiseSource = null; }
+                    } catch(e) {}
+                }, 350);
+            }
+            // 單步位置前進噴射聲
             playMove() {
                 this.init();
                 const now = this.ctx.currentTime;
@@ -1450,24 +1549,24 @@ function doGet(e) {
                 const filter = this.ctx.createBiquadFilter();
                 
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(80, now);
-                osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+                osc.frequency.setValueAtTime(95, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
 
                 filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(250, now);
-                filter.frequency.exponentialRampToValueAtTime(100, now + 0.35);
-                filter.Q.setValueAtTime(5, now);
+                filter.frequency.setValueAtTime(300, now);
+                filter.frequency.exponentialRampToValueAtTime(120, now + 0.3);
+                filter.Q.setValueAtTime(4, now);
 
                 gain.gain.setValueAtTime(0.01, now);
-                gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                gain.gain.linearRampToValueAtTime(0.4, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
 
                 osc.connect(filter);
                 filter.connect(gain);
                 gain.connect(this.ctx.destination);
 
                 osc.start(now);
-                osc.stop(now + 0.35);
+                osc.stop(now + 0.3);
             }
             // 陀螺姿態迴轉音
             playTurn() {
@@ -1542,7 +1641,7 @@ function doGet(e) {
                 noise.stop(now + dur);
                 hum.stop(now + dur);
             }
-            // 能量水晶解鎖和弦
+            // 水晶解鎖和弦
             playKey() {
                 this.init();
                 const now = this.ctx.currentTime;
@@ -1564,7 +1663,7 @@ function doGet(e) {
                     osc.stop(now + idx * 0.05 + 0.35);
                 });
             }
-            // 高能電漿離子雷射
+            // 電漿離子雷射
             playShoot() {
                 this.init();
                 const now = this.ctx.currentTime;
@@ -1584,7 +1683,7 @@ function doGet(e) {
                 osc.start(now);
                 osc.stop(now + 0.25);
             }
-            // 蟲洞瞬間移動量子波
+            // 蟲洞量子波
             playTeleport() {
                 this.init();
                 const now = this.ctx.currentTime;
@@ -1598,7 +1697,7 @@ function doGet(e) {
                 osc.frequency.exponentialRampToValueAtTime(3200, now + 0.35);
 
                 fm.type = 'sine';
-                fm.frequency.setValueAtTime(15, now); // 震盪頻率 LFO
+                fm.frequency.setValueAtTime(15, now); // LFO
                 fmGain.gain.setValueAtTime(100, now);
 
                 gain.gain.setValueAtTime(0.25, now);
@@ -1614,7 +1713,7 @@ function doGet(e) {
                 fm.stop(now + 0.35);
                 osc.stop(now + 0.35);
             }
-            // 太空歌劇凱旋交響長音 (九和弦科技感)
+            // 凱旋交響長音
             playWin() {
                 this.init();
                 const now = this.ctx.currentTime;
@@ -1722,13 +1821,14 @@ function doGet(e) {
 
         // 換太空船 Modal 顯示
         function openShipModal() {
+            sfx.playClick();
             document.getElementById('shipModal').classList.remove('hidden');
             setShipStyle(currentShipStyle); // 確保選取邊框即時渲染
         }
 
         function closeShipModal() {
+            sfx.playClick();
             document.getElementById('shipModal').classList.add('hidden');
-            sfx.playTurn();
         }
 
         // 顯示登入畫面 (回首頁)
@@ -1739,22 +1839,25 @@ function doGet(e) {
 
         // 點擊左上角「康樂航空站」或按鈕返回首頁
         function returnToHome() {
+            sfx.playClick();
             stopExecution();
             showLoginOverlay();
         }
 
         // 切換顯示任務登入表單
         function toggleLoginForm() {
+            sfx.playClick();
             document.getElementById('loginForm').classList.toggle('hidden');
         }
 
         // 選擇自由探索
         function selectPlayMode(mode) {
+            sfx.playClick();
             currentMode = mode;
             if (mode === 'free') {
                 studentInfo = { className: '', seatNo: '', studentName: '' };
                 document.getElementById('userBadgeText').innerHTML = '🛸 自由探索模式';
-                document.getElementById('userBadge').className = "bg-slate-900 border border-slate-800 rounded-xl px-4 py-1.5 text-xs font-bold flex items-center gap-2 text-indigo-400";
+                document.getElementById('userBadge').className = "bg-slate-900 border border-slate-800 rounded-xl px-4 py-1.5 text-sm font-bold flex items-center gap-2 text-indigo-400";
                 document.getElementById('loginOverlay').classList.add('hidden');
                 loadLevel(0);
             }
@@ -1762,6 +1865,7 @@ function doGet(e) {
 
         // 任務登錄提交
         function submitMissionLogin() {
+            sfx.playClick();
             const classVal = document.getElementById('classInput').value.trim();
             const seatVal = document.getElementById('seatInput').value.trim();
             const nameVal = document.getElementById('nameInput').value.trim();
@@ -1788,6 +1892,7 @@ function doGet(e) {
 
         // 登出 / 返回首頁
         function logout() {
+            sfx.playClick();
             stopExecution();
             showLoginOverlay();
         }
@@ -1873,6 +1978,7 @@ function doGet(e) {
         }
 
         function changeLevel(index) {
+            sfx.playClick();
             loadLevel(parseInt(index));
         }
 
@@ -2063,7 +2169,7 @@ function doGet(e) {
                         tile.appendChild(sharkEl);
                     }
 
-                    // 10. 自選太空探險船「編程之星號」⛵ (搭載自選外觀渲染與探航探照燈)
+                    // 10. 自選太空探險船「編程之星號」⛵
                     if (shipState.x === x && shipState.y === y) {
                         const shipContainer = document.createElement('div');
                         shipContainer.className = "absolute flex items-center justify-center z-30 transition-transform duration-300 ease-out pointer-events-none";
@@ -2174,14 +2280,14 @@ function doGet(e) {
                 const remaining = limit === 0 ? '∞' : Math.max(0, limit - used);
                 
                 const btn = document.createElement('button');
-                btn.className = `border px-2 py-1.5 rounded-xl flex items-center justify-between transition-all duration-300 font-bold text-[10px] ${card.color} shadow-sm`;
+                btn.className = `border px-2 py-1.5 rounded-xl flex items-center justify-between transition-all duration-350 font-bold text-[10px] ${card.color} shadow-sm`;
                 if (limit > 0 && remaining === 0) {
                     btn.disabled = true;
                     btn.className = "border border-slate-800 bg-slate-800 text-slate-600 px-2 py-1.5 rounded-xl flex items-center justify-between font-bold text-[10px] opacity-50 cursor-not-allowed";
                 }
                 
                 btn.onclick = () => {
-                    sfx.playTurn();
+                    sfx.playClick();
                     addCardToWorkspace(card.type, card.count);
                 };
                 
@@ -2222,6 +2328,7 @@ function doGet(e) {
 
         // 刪除卡片
         function removeCard(id) {
+            sfx.playClick();
             workspaceCode = workspaceCode.filter(c => c.id !== id);
             updateWorkspaceUI();
             renderToolbox();
@@ -2229,6 +2336,7 @@ function doGet(e) {
 
         // 上移
         function moveCardUp(index) {
+            sfx.playClick();
             if (index <= 0) return;
             const temp = workspaceCode[index];
             workspaceCode[index] = workspaceCode[index - 1];
@@ -2238,6 +2346,7 @@ function doGet(e) {
 
         // 下移
         function moveCardDown(index) {
+            sfx.playClick();
             if (index >= workspaceCode.length - 1) return;
             const temp = workspaceCode[index];
             workspaceCode[index] = workspaceCode[index + 1];
@@ -2247,17 +2356,20 @@ function doGet(e) {
 
         // 向右推 (縮排、包入迴圈)
         function indentCard(index) {
+            sfx.playClick();
             workspaceCode[index].isIndented = true;
             updateWorkspaceUI();
         }
 
         // 向左推 (移出迴圈)
         function outdentCard(index) {
+            sfx.playClick();
             workspaceCode[index].isIndented = false;
             updateWorkspaceUI();
         }
 
         function clearWorkspace() {
+            sfx.playClick();
             stopExecution();
             workspaceCode = [];
             updateWorkspaceUI();
@@ -2286,24 +2398,28 @@ function doGet(e) {
                 const item = document.createElement('div');
                 item.id = `workcard-${card.id}`;
                 
-                // 動態響應式縮小設定：卡片多時自動變扁、間距與文字變小
+                // 智慧型自動縮小設定：卡片多時自動變扁、間距與文字與按鈕尺寸變小
                 const blockCount = workspaceCode.length;
                 let paddingClass = "p-2.5";
                 let textClass = "text-xs";
                 let iconSizeClass = "w-7 h-7 text-xs";
+                let btnSizeClass = "h-7 w-7 text-xs";
                 
                 if (blockCount > 15) {
                     paddingClass = "p-1 py-0.5 px-1.5";
                     textClass = "text-[9px]";
                     iconSizeClass = "w-4 h-4 text-[9px]";
+                    btnSizeClass = "h-5 w-5 text-[8px]";
                 } else if (blockCount > 10) {
                     paddingClass = "p-1.5 py-1 px-2";
                     textClass = "text-[10px]";
                     iconSizeClass = "w-5 h-5 text-[10px]";
+                    btnSizeClass = "h-6 w-6 text-[9px]";
                 } else if (blockCount > 6) {
                     paddingClass = "p-2 py-1 px-2";
                     textClass = "text-[11px]";
                     iconSizeClass = "w-6 h-6 text-xs";
+                    btnSizeClass = "h-6.5 w-6.5 text-[10px]";
                 }
 
                 const indentClass = card.isIndented ? 'ml-6 border-l-2 border-amber-500/50 pl-2 bg-slate-900/40' : 'bg-slate-900/20';
@@ -2335,19 +2451,20 @@ function doGet(e) {
                 `;
 
                 const right = document.createElement('div');
-                right.className = "flex items-center gap-1";
+                right.className = "flex items-center gap-1.5"; 
 
+                // 重新設計的高亮度、高對比圓角操作按鈕 (兒童友善大點擊區)
                 if (!card.type.startsWith('repeat')) {
                     if (card.isIndented) {
                         const outdentBtn = document.createElement('button');
-                        outdentBtn.className = "text-slate-500 hover:text-amber-400 p-0.5 text-[10px] transition";
+                        outdentBtn.className = `bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 border border-indigo-500/40 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 shadow-md`;
                         outdentBtn.title = "移出迴圈";
                         outdentBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i>';
                         outdentBtn.onclick = () => outdentCard(index);
                         right.appendChild(outdentBtn);
                     } else {
                         const indentBtn = document.createElement('button');
-                        indentBtn.className = "text-slate-500 hover:text-amber-400 p-0.5 text-[10px] transition";
+                        indentBtn.className = `bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 border border-amber-500/40 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 shadow-md`;
                         indentBtn.title = "包入迴圈";
                         indentBtn.innerHTML = '<i class="fa-solid fa-arrow-right"></i>';
                         indentBtn.onclick = () => indentCard(index);
@@ -2356,19 +2473,19 @@ function doGet(e) {
                 }
 
                 const upBtn = document.createElement('button');
-                upBtn.className = "text-slate-500 hover:text-slate-300 p-0.5 text-[10px] transition disabled:opacity-30";
+                upBtn.className = `bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-750 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 disabled:opacity-20`;
                 upBtn.disabled = index === 0;
                 upBtn.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
                 upBtn.onclick = () => moveCardUp(index);
 
                 const downBtn = document.createElement('button');
-                downBtn.className = "text-slate-500 hover:text-slate-300 p-0.5 text-[10px] transition disabled:opacity-30";
+                downBtn.className = `bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-750 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 disabled:opacity-20`;
                 downBtn.disabled = index === workspaceCode.length - 1;
                 downBtn.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
                 downBtn.onclick = () => moveCardDown(index);
 
                 const delBtn = document.createElement('button');
-                delBtn.className = "text-rose-500 hover:text-rose-400 p-0.5 text-[10px] ml-1 transition";
+                delBtn.className = `bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 border border-rose-500/40 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 shadow-md`;
                 delBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
                 delBtn.onclick = () => removeCard(card.id);
 
@@ -2435,6 +2552,9 @@ function doGet(e) {
             document.getElementById('runBtn').classList.add('hidden');
             document.getElementById('stopBtn').classList.remove('hidden');
 
+            // 啟動實時合成太空探險引擎推进背景音 (新增)
+            sfx.startThrusterHum();
+
             // 確保每次重新運行時，都回歸初始值
             shipState = {
                 x: activeLevel.startPos.x,
@@ -2462,6 +2582,9 @@ function doGet(e) {
         }
 
         function stopExecution() {
+            // 熄滅太空船背景推進音 (新增)
+            sfx.stopThrusterHum();
+
             if (executionTimer) {
                 clearInterval(executionTimer);
                 executionTimer = null;
@@ -2775,23 +2898,28 @@ function doGet(e) {
 
         // 教師設定 modal 控制
         function openTeacherModal() {
+            sfx.playClick();
             document.getElementById('teacherModal').classList.remove('hidden');
         }
 
         function closeTeacherModal() {
+            sfx.playClick();
             document.getElementById('teacherModal').classList.add('hidden');
         }
 
         // 學生自選太空船 Modal 控制
         function openShipModal() {
+            sfx.playClick();
             document.getElementById('shipModal').classList.remove('hidden');
         }
 
         function closeShipModal() {
+            sfx.playClick();
             document.getElementById('shipModal').classList.add('hidden');
         }
 
         function saveTeacherSettings() {
+            sfx.playClick();
             const val = document.getElementById('gasUrlInput').value.trim();
             localStorage.setItem('kangle_gas_url', val);
             showToast("<i class='fa-solid fa-circle-check'></i> 雲端 API 設定成功！", "emerald");
@@ -2799,6 +2927,7 @@ function doGet(e) {
         }
 
         function copyGasCode() {
+            sfx.playClick();
             const text = document.getElementById('gasCode').innerText;
             const el = document.createElement('textarea');
             el.value = text;
@@ -2855,6 +2984,7 @@ function doGet(e) {
         }
 
         function closeWinModal() {
+            sfx.playClick();
             document.getElementById('winModal').classList.add('hidden');
             resetLevel(); // 成功關閉視窗後，自動重置太空艇位置至原始格
         }
@@ -2865,11 +2995,13 @@ function doGet(e) {
         }
 
         function closeLoseModal() {
+            sfx.playClick();
             document.getElementById('loseModal').classList.add('hidden');
             resetLevel(); // 失敗關閉視窗後，太空艇必定瞬移重置回原始起點！
         }
 
         function goToNextLevel() {
+            sfx.playClick();
             closeWinModal();
             if (currentLevelIndex < levels.length - 1) {
                 loadLevel(currentLevelIndex + 1);
