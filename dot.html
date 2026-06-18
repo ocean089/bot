@@ -1,1052 +1,1198 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-
-// ==========================================
-// 1. 全域資料：9x9 箭頭網格數據
-// ==========================================
-const ARROWS_DATA = {
-  // Y = 9
-  "1,9": { dir: "↓", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "2,9": { dir: "→", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "3,9": { dir: "→", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "4,9": { dir: "↓", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "5,9": { dir: "↖", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "6,9": { dir: "↑", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "7,9": { dir: "↖", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "8,9": { dir: "→", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "9,9": { dir: "↓", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  // Y = 8
-  "1,8": { dir: "←", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "2,8": { dir: "↙", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "3,8": { dir: "↑", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "4,8": { dir: "↘", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "5,8": { dir: "↖", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "6,8": { dir: "↙", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "7,8": { dir: "↗", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "8,8": { dir: "↘", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "9,8": { dir: "↑", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  // Y = 7
-  "1,7": { dir: "↗", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "2,7": { dir: "↘", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "3,7": { dir: "←", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "4,7": { dir: "→", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "5,7": { dir: "↙", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "6,7": { dir: "↑", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "7,7": { dir: "→", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "8,7": { dir: "↗", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "9,7": { dir: "↗", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  // Y = 6
-  "1,6": { dir: "↖", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "2,6": { dir: "↓", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "3,6": { dir: "→", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "4,6": { dir: "↖", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "5,6": { dir: "↓", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "6,6": { dir: "←", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "7,6": { dir: "↗", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "8,6": { dir: "←", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "9,6": { dir: "↙", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  // Y = 5
-  "1,5": { dir: "↑", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "2,5": { dir: "←", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "3,5": { dir: "↙", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "4,5": { dir: "↖", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "5,5": { dir: "↑", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "6,5": { dir: "↘", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "7,5": { dir: "↖", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "8,5": { dir: "↘", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "9,5": { dir: "↓", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  // Y = 4
-  "1,4": { dir: "↙", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "2,4": { dir: "↗", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "3,4": { dir: "→", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "4,4": { dir: "↙", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "5,4": { dir: "↗", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "6,4": { dir: "←", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "7,4": { dir: "↓", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "8,4": { dir: "↖", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "9,4": { dir: "←", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  // Y = 3
-  "1,3": { dir: "↙", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "2,3": { dir: "↑", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "3,3": { dir: "↖", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "4,3": { dir: "↓", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "5,3": { dir: "↘", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "6,3": { dir: "→", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "7,3": { dir: "↖", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "8,3": { dir: "↗", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "9,3": { dir: "↙", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  // Y = 2
-  "1,2": { dir: "↘", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "2,2": { dir: "↗", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "3,2": { dir: "↑", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "4,2": { dir: "→", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "5,2": { dir: "←", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "6,2": { dir: "↘", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "7,2": { dir: "↖", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "8,2": { dir: "↑", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "9,2": { dir: "←", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  // Y = 1
-  "1,1": { dir: "↓", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "2,1": { dir: "↗", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "3,1": { dir: "↙", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "4,1": { dir: "↓", color: "#3B82F6", bg: "bg-blue-50", text: "text-blue-500" },
-  "5,1": { dir: "↗", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" },
-  "6,1": { dir: "↑", color: "#A78BFA", bg: "bg-purple-50", text: "text-purple-500" },
-  "7,1": { dir: "↘", color: "#F97316", bg: "bg-orange-50", text: "text-orange-500" },
-  "8,1": { dir: "←", color: "#10B981", bg: "bg-emerald-50", text: "text-emerald-500" },
-  "9,1": { dir: "←", color: "#EF4444", bg: "bg-red-50", text: "text-red-500" }
-};
-
-// 橫軸對照表：1~9 對應 A~I
-const getXLetter = (x) => {
-  const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
-  return letters[x - 1] || x;
-};
-
-// 橫軸對照表：5x5點點板橫軸 1~5 對應 A~E
-const getDotXLetter = (x) => {
-  const letters = ["A", "B", "C", "D", "E"];
-  return letters[x] || x;
-};
-
-// 格式化座標 "3,6" -> "C, 6"
-const formatCoordStr = (coordStr) => {
-  if (!coordStr) return "";
-  const [x, y] = coordStr.split(",");
-  return `${getXLetter(parseInt(x, 10))}, ${y}`;
-};
-
-// 方向與向量
-const DIR_VECTORS = {
-  "↑": { dx: 0, dy: 1 },
-  "↓": { dx: 0, dy: -1 },
-  "←": { dx: -1, dy: 0 },
-  "→": { dx: 1, dy: 0 },
-  "↗": { dx: 1, dy: 1 },
-  "↖": { dx: -1, dy: 1 },
-  "↘": { dx: 1, dy: -1 },
-  "↙": { dx: -1, dy: -1 }
-};
-
-// 漸進式關卡清單
-const LEVELS = [
-  {
-    id: 1,
-    name: "關卡 1：超簡單正方形 (4 步挑戰)",
-    desc: "最適合入門！解開 4 個最直觀的坐標，在點點板連出一個可愛的小正方形吧！",
-    startDot: { x: 1, y: 1 }, // 起點在 B, 2 (1, 1)
-    starLabel: "B 欄（第二欄）第 2 列",
-    path: [
-      { coord: "3,6", dir: "→", color: "text-blue-500" },     // B,2 -> C,2
-      { coord: "5,5", dir: "↑", color: "text-emerald-500" },  // C,2 -> C,3
-      { coord: "9,2", dir: "←", color: "text-blue-500" },     // C,3 -> B,3
-      { coord: "1,1", dir: "↓", color: "text-emerald-500" }   // B,3 -> B,2 (回到起點)
-    ]
-  },
-  {
-    id: 2,
-    name: "關卡 2：溫馨小房子 (6 步挑戰)",
-    desc: "加入好玩的斜角箭頭！解鎖 6 個坐標，為小精靈造一個溫馨的小屋吧！",
-    startDot: { x: 1, y: 1 }, // 起點在 B, 2 (1, 1)
-    starLabel: "B 欄（第二欄）第 2 列",
-    path: [
-      { coord: "3,6", dir: "→", color: "text-blue-500" },     // B,2 -> C,2
-      { coord: "4,2", dir: "→", color: "text-emerald-500" },  // C,2 -> D,2
-      { coord: "5,5", dir: "↑", color: "text-emerald-500" },  // D,2 -> D,3
-      { coord: "5,9", dir: "↖", color: "text-orange-500" },   // D,3 -> C,4 (屋頂尖尖)
-      { coord: "2,8", dir: "↙", color: "text-orange-500" },   // C,4 -> B,3
-      { coord: "1,1", dir: "↓", color: "text-emerald-500" }   // B,3 -> B,2 (回到起點)
-    ]
-  },
-  {
-    id: 3,
-    name: "關卡 3：魔法時空沙漏 (8 步挑戰)",
-    desc: "挑戰更豐富的斜線路徑！看著坐標箭頭交叉，畫出美麗的魔法沙漏！",
-    startDot: { x: 1, y: 3 }, // 起點在 B, 4 (1, 3)
-    starLabel: "B 欄（第二欄）第 4 列",
-    path: [
-      { coord: "3,6", dir: "→", color: "text-blue-500" },     // B,4 -> C,4
-      { coord: "4,2", dir: "→", color: "text-emerald-500" },  // C,4 -> D,4
-      { coord: "2,8", dir: "↙", color: "text-orange-500" },   // D,4 -> C,3
-      { coord: "8,5", dir: "↘", color: "text-orange-500" },   // C,3 -> D,2
-      { coord: "1,8", dir: "←", color: "text-blue-500" },     // D,2 -> C,2
-      { coord: "9,2", dir: "←", color: "text-blue-500" },     // C,2 -> B,2
-      { coord: "2,2", dir: "↗", color: "text-orange-500" },   // B,2 -> C,3
-      { coord: "5,9", dir: "↖", color: "text-orange-500" }    // C,3 -> B,4 (回到起點)
-    ]
-  },
-  {
-    id: 4,
-    name: "關卡 4：經典課本城堡挑戰 (10 步挑戰)",
-    desc: "終極挑戰！完整還原課本插圖十個步驟，解開最酷的幾何城堡！",
-    startDot: { x: 1, y: 2 }, // 起點在 B, 3 (1, 2)
-    starLabel: "B 欄（第二欄）第 3 列",
-    path: [
-      { coord: "1,1", dir: "↓", color: "text-emerald-500" }, // B,3 -> B,2
-      { coord: "2,2", dir: "↗", color: "text-orange-500" },  // B,2 -> C,3
-      { coord: "3,6", dir: "→", color: "text-blue-500" },    // C,3 -> D,3
-      { coord: "8,5", dir: "↘", color: "text-orange-500" },  // D,3 -> E,2
-      { coord: "9,4", dir: "←", color: "text-blue-500" },    // E,2 -> D,2
-      { coord: "5,5", dir: "↑", color: "text-emerald-500" }, // D,2 -> D,3
-      { coord: "3,8", dir: "↑", color: "text-emerald-500" }, // D,3 -> D,4
-      { coord: "1,8", dir: "←", color: "text-blue-500" },    // D,4 -> C,4
-      { coord: "9,2", dir: "←", color: "text-blue-500" },    // C,4 -> B,4
-      { coord: "9,9", dir: "↓", color: "text-emerald-500" }  // B,4 -> B,3 (完美閉合)
-    ]
-  }
-];
-
-// ==========================================
-// 2. 音效生成器 (Web Audio API)
-// ==========================================
-const playSound = (type) => {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    const now = ctx.currentTime;
-
-    if (type === 'success') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(523.25, now); // C5
-      osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-      osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
-      osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-      osc.start(now);
-      osc.stop(now + 0.4);
-    } else if (type === 'click') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, now);
-      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-      osc.start(now);
-      osc.stop(now + 0.1);
-    } else if (type === 'error') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.linearRampToValueAtTime(110, now + 0.2);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-      osc.start(now);
-      osc.stop(now + 0.25);
-    } else if (type === 'victory') {
-      const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
-      notes.forEach((freq, idx) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.connect(g);
-        g.connect(ctx.destination);
-        o.type = 'sine';
-        o.frequency.setValueAtTime(freq, now + idx * 0.08);
-        g.gain.setValueAtTime(0.08, now + idx * 0.08);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
-        o.start(now + idx * 0.08);
-        o.stop(now + idx * 0.08 + 0.35);
-      });
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>幾何坐標解密連連看</title>
+  <!-- 載入 Tailwind CSS (保證排版美觀) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
     }
-  } catch (e) {
-    // 瀏覽器不支援
-  }
-};
-
-// ==========================================
-// 3. 向量箭頭 SVG 圖示組件
-// ==========================================
-const ArrowIcon = ({ dir, className = "w-6 h-6", color = "currentColor" }) => {
-  // 將箭頭方向映射為真實旋轉度數，徹底擺脫 Tailwind 旋轉類名的編譯限制！
-  const rotationMap = {
-    "↑": 0,
-    "↗": 45,
-    "→": 90,
-    "↘": 135,
-    "↓": 180,
-    "↙": 225,
-    "←": 270,
-    "↖": 315
-  };
-  const rotation = rotationMap[dir] ?? 0;
-
-  return (
-    <svg
-      className={`${className} transition-transform duration-300`}
-      style={{ 
-        transform: "rotate(" + rotation + "deg)",
-        transformOrigin: "center"
-      }}
-      fill="none"
-      stroke={color}
-      strokeWidth="3.5"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19V5M12 5l-7 7m7-7l7 7" />
-    </svg>
-  );
-};
-
-// ==========================================
-// 4. 主 React 應用程式
-// ==========================================
-export default function App() {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const currentLevel = LEVELS[levelIndex] || LEVELS[0];
-
-  // 解密進度狀態：記錄當前關卡各個卡片是否已被解開
-  const [decodedList, setDecodedList] = useState(new Array(currentLevel.path.length).fill(false));
-  // 當前正在被點選解密的卡片索引
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
-
-  // 當前找座標卡片的錯誤嘗試次數
-  const [wrongAttempts, setWrongAttempts] = useState(0);
-
-  // 連線（畫點點）時的錯誤嘗試次數，連錯兩次才開啟黃格
-  const [drawWrongAttempts, setDrawWrongAttempts] = useState(0);
-
-  // 點點板上的繪圖路徑
-  const [drawingPath, setDrawingPath] = useState([currentLevel.startDot]);
-  // 是否開啟教學導引提示
-  const [showHints, setShowHints] = useState(true);
-  // 是否開啟座標教室說明
-  const [showClassroom, setShowClassroom] = useState(false);
-  // 錯誤提示訊息
-  const [errorMessage, setErrorMessage] = useState("");
-  // 滑鼠目前懸停在 9x9 網格的坐標
-  const [hoveredCoord, setHoveredCoord] = useState(null);
-  // 通關灑花粒子狀態
-  const [particles, setParticles] = useState([]);
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  // 當前正要畫的方向箭頭
-  const nextRequiredArrow = useMemo(() => {
-    const currentDrawStep = drawingPath.length - 1;
-    if (currentDrawStep < currentLevel.path.length) {
-      return currentLevel.path[currentDrawStep].dir;
+    /* 呼吸發光效果：限定自身中心點縮放，絕不產生位移 */
+    .pulsing-glow {
+      animation: pulseGlow 1.5s infinite ease-in-out;
+      transform-origin: center;
+      transform-box: fill-box;
     }
-    return null;
-  }, [drawingPath, currentLevel]);
-
-  // 重置關卡狀態
-  const handleResetLevel = (idx = levelIndex) => {
-    const lvl = LEVELS[idx] || LEVELS[0];
-    setDecodedList(new Array(lvl.path.length).fill(false));
-    setActiveCardIndex(0);
-    setWrongAttempts(0);
-    setDrawWrongAttempts(0);
-    setDrawingPath([lvl.startDot]);
-    setErrorMessage("");
-    setHoveredCoord(null);
-    setParticles([]);
-    setIsCompleted(false);
-  };
-
-  // 【修復重構】切換關卡：同步更新關卡內的所有狀態，防止 React 18 非同步生命週期產生的 out-of-bounds 錯誤
-  const handleSelectLevel = (idx) => {
-    playSound('click');
-    setLevelIndex(idx);
-    handleResetLevel(idx); // 同步呼叫以在同一 Render 批次中更新所有狀態
-  };
-
-  // 當手動選擇某一卡片進行解密
-  const handleSelectCard = (cardIdx) => {
-    playSound('click');
-    setActiveCardIndex(cardIdx);
-    setWrongAttempts(0);
-    setErrorMessage("");
-  };
-
-  // 點選左側 9x9 網格格子進行解密配對
-  const handleGridCellClick = (x, y) => {
-    const clickedCoord = `${x},${y}`;
-    const targetCard = currentLevel.path[activeCardIndex];
-    if (!targetCard) return; // 安全防禦阻斷
-
-    const targetCoord = targetCard.coord;
-
-    if (clickedCoord === targetCoord) {
-      playSound('success');
-      const newList = [...decodedList];
-      newList[activeCardIndex] = true;
-      setDecodedList(newList);
-      setErrorMessage("");
-      setWrongAttempts(0);
-
-      // 尋找下一個未解密的卡片
-      const nextUnresolved = newList.findIndex((decoded) => !decoded);
-      if (nextUnresolved !== -1) {
-        setActiveCardIndex(nextUnresolved);
-      } else {
-        playSound('victory');
-        setErrorMessage("🎉 太棒了！所有的英數座標指令都解鎖成功！現在快來右下角的點點板，從【紅色起點】開始連線吧！");
-      }
-    } else {
-      playSound('error');
-      const newAttempts = wrongAttempts + 1;
-      setWrongAttempts(newAttempts);
-
-      const clickedStr = "(" + getXLetter(x) + ", " + y + ")";
-      const targetStr = "(" + formatCoordStr(targetCoord) + ")";
-
-      if (newAttempts >= 2) {
-        setErrorMessage("不對哦！你點到的是 " + clickedStr + "。沒關係！小幫手已在 9x9 網格亮起【黃色發光格】，點選它即可解鎖！");
-      } else {
-        setErrorMessage("不對哦！你點到的是 " + clickedStr + "。請在 9x9 網格仔細找找 " + targetStr + " 座標！(再點錯一次會顯示提示格)");
+    /* 連線繪製動畫 */
+    .animate-draw {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: dash 0.3s linear forwards;
+    }
+    @keyframes dash {
+      to {
+        stroke-dashoffset: 0;
       }
     }
-  };
-
-  // 判斷某個點點 (tx, ty) 是否為合法的下一步連線點
-  const isValidNextDot = (tx, ty) => {
-    if (nextRequiredArrow === null) return false;
-    const currentDot = drawingPath[drawingPath.length - 1];
-    const vec = DIR_VECTORS[nextRequiredArrow];
-    return currentDot.x + vec.dx === tx && currentDot.y + vec.dy === ty;
-  };
-
-  // 點選右側 5x5 點點板中的某個點進行連線
-  const handleDotClick = (dotX, dotY) => {
-    const allDecoded = decodedList.every(v => v);
-    if (!allDecoded) {
-      playSound('error');
-      setErrorMessage("⚠️ 請先將第一步的箭頭座標全部解密解鎖，才能開始連線喔！");
-      return;
+    /* 紙花 Canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 999;
     }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-sky-50 to-emerald-50 py-6 px-4 md:px-8 font-sans text-gray-800 select-none relative overflow-x-hidden">
 
-    if (isCompleted) return;
+  <!-- 紙花效果 Canvas -->
+  <canvas id="confetti-canvas"></canvas>
 
-    // 如果點擊的是上一步的點，相當於復原
-    if (drawingPath.length > 1 && drawingPath[drawingPath.length - 2].x === dotX && drawingPath[drawingPath.length - 2].y === dotY) {
-      playSound('click');
-      setDrawingPath(prev => prev.slice(0, -1));
-      setDrawWrongAttempts(0);
-      setErrorMessage("");
-      return;
-    }
-
-    // 檢查點擊是否為正確的下一步
-    if (isValidNextDot(dotX, dotY)) {
-      playSound('click');
-      const newPath = [...drawingPath, { x: dotX, y: dotY }];
-      setDrawingPath(newPath);
-      setDrawWrongAttempts(0);
-      setErrorMessage("");
-
-      // 判斷是否完成所有連線步數
-      if (newPath.length - 1 === currentLevel.path.length) {
-        setIsCompleted(true);
-        playSound('victory');
-        triggerConfetti();
-        setErrorMessage("🏆 太完美了！你成功畫出了幾何圖形！真是太厲害了！");
-      }
-    } else {
-      playSound('error');
-      const newDrawWrong = drawWrongAttempts + 1;
-      setDrawWrongAttempts(newDrawWrong);
-
-      if (newDrawWrong >= 2) {
-        setErrorMessage("連線不對唷！小幫手已在 5x5 點點板亮起【黃色發光圈提示】，請點選光圈連線一格！");
-      } else {
-        const dotName = "(" + getDotXLetter(dotX) + ", " + (dotY + 1) + ")";
-        setErrorMessage("不對唷，點到 " + dotName + " 了。請看下方【下一筆方向】指示，朝箭頭指引的方向連線！(再錯一次會顯示發光提示)");
-      }
-    }
-  };
-
-  // 悔步
-  const handleUndoDraw = () => {
-    if (drawingPath.length > 1) {
-      playSound('click');
-      setDrawingPath(prev => prev.slice(0, -1));
-      setDrawWrongAttempts(0);
-      setIsCompleted(false);
-      setErrorMessage("");
-    }
-  };
-
-  // 自動展示示戰繪圖
-  const handleAutoDemo = () => {
-    const allDecoded = decodedList.every(v => v);
-    if (!allDecoded) {
-      setDecodedList(new Array(currentLevel.path.length).fill(true));
-    }
+  <!-- 主體容器 -->
+  <div class="max-w-7xl mx-auto bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/50 p-6 md:p-8">
     
-    playSound('victory');
-    let demoPath = [currentLevel.startDot];
-    let current = currentLevel.startDot;
-    
-    currentLevel.path.forEach(step => {
-      const vec = DIR_VECTORS[step.dir];
-      current = { x: current.x + vec.dx, y: current.y + vec.dy };
-      demoPath.push(current);
-    });
-
-    setDrawingPath(demoPath);
-    setIsCompleted(true);
-    triggerConfetti();
-    setErrorMessage("✨ 這是自動示範連線的成果！點選【重置連線】自己動手畫看看喔！");
-  };
-
-  // 生成紙花粒子
-  const triggerConfetti = () => {
-    const tempParticles = [];
-    const colors = ['#FFC107', '#FF5722', '#E91E63', '#9C27B0', '#3F51B5', '#00BCD4', '#4CAF50', '#FFEB3B'];
-    for (let i = 0; i < 120; i++) {
-      tempParticles.push({
-        id: i,
-        x: Math.random() * 100,
-        y: -10 - Math.random() * 20,
-        size: Math.random() * 8 + 6,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        delay: Math.random() * 2,
-        duration: Math.random() * 3 + 2,
-        rotation: Math.random() * 360
-      });
-    }
-    setParticles(tempParticles);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-sky-50 to-emerald-50 py-6 px-4 md:px-8 font-sans text-gray-800 select-none relative overflow-x-hidden">
+    <!-- 標頭 Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center border-b-2 border-indigo-100 pb-5 mb-6 gap-4">
+      <div class="text-center md:text-left">
+        <div class="flex items-center justify-center md:justify-start gap-2 mb-1">
+          <span class="text-3xl animate-bounce">🧩</span>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-sky-600">
+            幾何坐標解密連連看
+          </h1>
+        </div>
+        <p class="text-sm md:text-base text-gray-500 font-medium">
+          一年級專屬：橫軸是英文字母 (A~I)，縱軸是數字 (1~9)，挑戰四大漸進關卡！
+        </p>
+      </div>
       
-      {/* 粒子灑花動畫 */}
-      {particles.map(p => (
-        <div
-          key={p.id}
-          className="absolute pointer-events-none rounded-sm"
-          style={{
-            left: p.x + "%",
-            top: p.y + "vh",
-            width: p.size + "px",
-            height: p.size + "px",
-            backgroundColor: p.color,
-            transform: "rotate(" + p.rotation + "deg)",
-            opacity: 0.9,
-            animation: "fall " + p.duration + "s linear " + p.delay + "s infinite",
-          }}
-        />
-      ))}
+      <!-- 功能快捷列 -->
+      <div class="flex flex-wrap items-center gap-3 justify-center">
+        <button
+          onclick="toggleModal(true)"
+          class="px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-full shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-0.5 flex items-center gap-1.5"
+        >
+          <span>🏫</span> 座標與連線小教室
+        </button>
+        <button
+          id="btn-toggle-hint"
+          onclick="toggleHints()"
+          class="px-4 py-2 font-bold rounded-full shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white"
+        >
+          <span>💡</span> 小幫手提示：開啟
+        </button>
+      </div>
+    </header>
 
-      <style>{`
-        @keyframes fall {
-          0% { top: -5vh; transform: translateY(0) rotate(0deg); }
-          100% { top: 105vh; transform: translateY(105vh) rotate(360deg) translateX(50px); }
-        }
-        @keyframes pulseGlow {
-          0%, 100% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.15); opacity: 1; }
-        }
-        /* 確保所有發光提示圈呼吸動畫都精準以自身中心點縮放，絕不漂移 */
-        .pulsing-star { 
-          animation: pulseGlow 1.5s infinite ease-in-out; 
-          transform-origin: center;
-          transform-box: fill-box;
-        }
-      `}</style>
+    <!-- 座標小教室說明視窗 -->
+    <div id="classroom-modal" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-5 mb-6 relative">
+      <button 
+        onclick="toggleModal(false)"
+        class="absolute top-3 right-3 text-amber-600 hover:text-amber-800 font-bold text-xl"
+      >
+        ✕
+      </button>
+      <h3 class="text-lg font-bold text-amber-800 mb-2 flex items-center gap-1.5">
+        <span>📖</span> 座標解密與連線規則：
+      </h3>
+      <ul class="text-sm md:text-base text-amber-900 space-y-2 list-disc pl-5">
+        <li><strong>第一步（解鎖座標）</strong>：座標格式為 <strong>(英文字母, 數字)</strong>。例如尋找 <strong>(C, 6)</strong>，先在最底橫軸找到 <strong>C</strong>，再往上對齊數字 <strong>6</strong>。點擊格子解鎖秘密箭頭！</li>
+        <li><strong>第二步（點點板連線）</strong>：為方便辨識，5x5 點點板也貼心標示了橫軸字母 (A~E) 與縱軸數字 (1~5)。</li>
+        <li>從點點板上的黃邊閃爍<strong>【紅色起點】</strong>出發，看著下方引導，朝解碼出的箭頭方向依序在點點板連線。</li>
+        <li><strong>🌟 教學輔導機制：</strong>一開始為靜音挑戰模式。不論是「解鎖座標」或「畫點點板」，只要<strong>同一格連續點錯 2 次</strong>，發光的黃色光暈提示就會自動現形協助孩子！</li>
+      </ul>
+    </div>
 
-      {/* 主體容器 */}
-      <div className="max-w-7xl mx-auto bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/50 p-6 md:p-8">
+    <!-- 關卡選擇區 -->
+    <div class="flex flex-col gap-1 mb-6 border-b border-gray-100 pb-4">
+      <span class="text-xs font-bold text-gray-400 mb-1">🎮 選擇挑戰難度：</span>
+      <div id="level-tabs" class="flex flex-wrap gap-2">
+        <!-- 這裡會動態產生關卡按鈕 -->
+      </div>
+      <p id="level-desc" class="text-xs text-indigo-600 mt-2 font-medium">說明：</p>
+    </div>
+
+    <!-- 提示與錯誤警示框 -->
+    <div id="message-box" class="hidden p-4 rounded-xl mb-6 text-sm md:text-base font-semibold flex items-center gap-2">
+      <span>📢</span>
+      <p id="message-text" class="flex-1"></p>
+    </div>
+
+    <!-- 核心互動區 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- 左欄：9x9 互動箭頭網格 (佔 5 欄) -->
+      <div class="lg:col-span-5 flex flex-col items-center">
+        <div class="w-full max-w-md bg-sky-100 p-4 rounded-3xl shadow-xl border-4 border-sky-200 relative">
+          <div class="text-center mb-2 font-black text-sky-800 text-sm md:text-base tracking-wide flex justify-between px-2">
+            <span>📍 互動箭頭解密網格 (9 x 9)</span>
+            <span id="hover-coord-text" class="text-indigo-600 font-extrabold bg-white px-2 py-0.5 rounded-full text-[11px] hidden">
+              目前：(A, 1)
+            </span>
+          </div>
+          
+          <!-- 網格容器 -->
+          <div id="grid-9x9" class="grid grid-cols-10 gap-1 bg-sky-200 p-2 rounded-2xl relative">
+            <!-- 由 JavaScript 動態填入格子與標籤 -->
+          </div>
+        </div>
+
+        <!-- 目前目標提示卡 -->
+        <div class="w-full max-w-md bg-indigo-50/50 rounded-2xl p-4 mt-4 border border-indigo-100 text-xs sm:text-sm text-indigo-900">
+          <span class="font-bold block mb-1">🎯 當前尋找目標座標卡：</span>
+          <div class="flex items-center gap-2 bg-white p-2.5 rounded-xl shadow-sm border border-indigo-100">
+            <span id="current-step-badge" class="bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-full font-bold">
+              第 1 步
+            </span>
+            <span id="current-step-coord" class="text-base font-black text-indigo-700">
+              座標：(C, 6)
+            </span>
+            <span id="current-step-hint-status" class="text-xs text-gray-500 font-medium ml-auto">
+              🔒 答錯 2 次顯露提示 (0/2)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右欄：解密卡片序列 & 點點畫板 (佔 7 欄) -->
+      <div class="lg:col-span-7 space-y-5">
         
-        {/* 標頭 Header */}
-        <header className="flex flex-col md:flex-row justify-between items-center border-b-2 border-indigo-100 pb-5 mb-6 gap-4">
-          <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-              <span className="text-3xl animate-bounce">🧩</span>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-sky-600">
-                幾何坐標解密連連看
-              </h1>
-            </div>
-            <p className="text-sm md:text-base text-gray-500 font-medium">
-              一年級專屬：橫軸是英文字母 (A~I)，縱軸是數字 (1~9)，挑戰四大漸進關卡！
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-3 justify-center">
-            <button
-              onClick={() => setShowClassroom(!showClassroom)}
-              className="px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-full shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-0.5 flex items-center gap-1.5"
-            >
-              <span>🏫</span> 座標與連線小教室
-            </button>
-            <button
-              onClick={() => setShowHints(!showHints)}
-              className={`px-4 py-2 font-bold rounded-full shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1.5 ${
-                showHints 
-                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-              }`}
-            >
-              <span>💡</span> {showHints ? "小幫手提示：開啟" : "小幫手提示：關閉"}
-            </button>
-          </div>
-        </header>
-
-        {/* 座標小教室說明 */}
-        {showClassroom && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-5 mb-6 relative animate-fade-in">
-            <button 
-              onClick={() => setShowClassroom(false)}
-              className="absolute top-3 right-3 text-amber-600 hover:text-amber-800 font-bold text-xl"
-            >
-              ✕
-            </button>
-            <h3 className="text-lg font-bold text-amber-800 mb-2 flex items-center gap-1.5">
-              <span>📖</span> 坐報解密與連線規則：
+        <!-- 卡片指令序列 -->
+        <div class="bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-xs font-black text-indigo-950 flex items-center gap-1">
+              <span>🏷️</span> <span>第一步：解鎖坐標指令 (點擊可切換)</span>
             </h3>
-            <ul className="text-sm md:text-base text-amber-900 space-y-2 list-disc pl-5">
-              <li><strong>第一步（解鎖坐標）</strong>：座標格式為 <strong>(英文字母, 數字)</strong>。例如尋找 <strong>(C, 6)</strong>，先在最底橫軸找到 <strong>C</strong>，再往上對齊數字 <strong>6</strong>。點擊格子解鎖秘密箭頭！</li>
-              <li><strong>第二步（點點板連線）</strong>：為方便辨識，5x5 點點板也貼心標示了橫軸字母 (A~E) 與縱軸數字 (1~5)。</li>
-              <li>從點點板上的黃邊閃爍<strong>【紅色起點】</strong>出發，看著下方引導，朝解碼出的箭頭方向依序在點點板連線。</li>
-              <li><strong>🌟 教學輔導機制：</strong>一開始為靜音挑戰模式。不論是「解鎖座標」或「畫點點板」，只要**同一格連續點錯 2 次**，發光的黃色光暈提示就會自動現形協助孩子！</li>
-            </ul>
+            <span id="unlock-progress" class="text-[10px] text-indigo-500 font-semibold bg-indigo-100/60 px-2 py-0.5 rounded-full">
+              進度：0 / 4
+            </span>
           </div>
-        )}
-
-        {/* 關卡切換 Tabs */}
-        <div className="flex flex-col gap-1 mb-6 border-b border-gray-100 pb-4">
-          <span className="text-xs font-bold text-gray-400 mb-1">🎮 選擇挑戰難度：</span>
-          <div className="flex flex-wrap gap-2">
-            {LEVELS.map((lvl, index) => (
-              <button
-                key={lvl.id}
-                onClick={() => handleSelectLevel(index)}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 ${
-                  levelIndex === index
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 ring-2 ring-indigo-300'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                }`}
-              >
-                {lvl.name} ({lvl.path.length}步)
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-indigo-600 mt-2 font-medium">✨ 說明：{currentLevel.desc}</p>
-        </div>
-
-        {/* 提示警示框 */}
-        {errorMessage && (
-          <div className={`p-4 rounded-xl mb-6 text-sm md:text-base font-semibold flex items-center gap-2 ${
-            errorMessage.indexOf("⚠️") === 0
-              ? "bg-red-50 text-red-600 border border-red-200 animate-pulse"
-              : (errorMessage.indexOf("🏆") === 0 || errorMessage.indexOf("🎉") === 0)
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200 animate-bounce"
-                : "bg-indigo-50 text-indigo-700 border border-indigo-200"
-          }`}>
-            <span>📢</span>
-            <p className="flex-1">{errorMessage}</p>
-          </div>
-        )}
-
-        {/* 核心內容區 */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* 左欄：9x9 互動箭頭網格 */}
-          <div className="lg:col-span-5 flex flex-col items-center">
-            <div className="w-full max-w-md bg-sky-100 p-4 rounded-3xl shadow-xl border-4 border-sky-200 relative">
-              <div className="text-center mb-2 font-black text-sky-800 text-sm md:text-base tracking-wide flex justify-between px-2">
-                <span>📍 互動箭頭解密網格 (9 x 9)</span>
-                {hoveredCoord && (
-                  <span className="text-indigo-600 font-extrabold bg-white px-2 py-0.5 rounded-full text-[11px]">
-                    目前：({getXLetter(hoveredCoord.x)}, {hoveredCoord.y})
-                  </span>
-                )}
-              </div>
-              
-              {/* 網格主體 */}
-              <div className="grid grid-cols-10 gap-1 bg-sky-200 p-2 rounded-2xl relative">
-                
-                {/* Y 軸坐標標籤 & 網格單元格 */}
-                {Array.from({ length: 9 }).map((_, rIdx) => {
-                  const yVal = 9 - rIdx;
-                  return (
-                    <React.Fragment key={`row-${yVal}`}>
-                      {/* Y軸數字標籤 */}
-                      <div className="flex items-center justify-center font-bold text-sky-700 text-xs sm:text-sm h-8 sm:h-10 w-6">
-                        {yVal}
-                      </div>
+          <!-- 卡片裝載容器 -->
+          <div id="card-list" class="grid grid-cols-5 gap-1.5">
+            <!-- 這裡會動態填入微型卡片 -->
+          </div>
+        </div>
 
-                      {/* 該列的 9 個單元格 */}
-                      {Array.from({ length: 9 }).map((_, cIdx) => {
-                        const xVal = cIdx + 1;
-                        const cellKey = `${xVal},${yVal}`;
-                        const cellData = ARROWS_DATA[cellKey];
-                        
-                        // 當開啟提示且該卡片點錯達 2 次，才亮起黃格 (安全鏈防護)
-                        const isTargetCoord = showHints && (wrongAttempts >= 2) && (currentLevel.path[activeCardIndex]?.coord === cellKey);
-                        const isHoverCross = hoveredCoord && (hoveredCoord.x === xVal || hoveredCoord.y === yVal);
-                        
-                        return (
-                          <button
-                            key={cellKey}
-                            onClick={() => handleGridCellClick(xVal, yVal)}
-                            onMouseEnter={() => setHoveredCoord({ x: xVal, y: yVal })}
-                            onMouseLeave={() => setHoveredCoord(null)}
-                            style={{ touchAction: 'manipulation' }}
-                            className={`h-8 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-200 relative group overflow-hidden ${
-                              isTargetCoord 
-                                ? 'bg-amber-300 ring-4 ring-amber-400 ring-offset-1 z-10 scale-105 shadow-md animate-pulse' 
-                                : isHoverCross 
-                                  ? 'bg-sky-50 shadow-inner' 
-                                  : 'bg-white hover:bg-indigo-50'
-                            }`}
-                          >
-                            {cellData ? (
-                              <ArrowIcon 
-                                dir={cellData.dir} 
-                                color={cellData.color} 
-                                className="w-5 h-5 sm:w-6 sm:h-6" 
-                              />
-                            ) : (
-                              <span className="text-xs text-gray-300">?</span>
-                            )}
-
-                            {/* 懸停英數座標顯示 */}
-                            <span className="absolute bottom-0 text-[8px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {getXLetter(xVal)},{yVal}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </React.Fragment>
-                  );
-                })}
-
-                {/* X 軸英文字母標籤 (A ~ I) */}
-                <div className="h-6 w-6"></div>
-                {Array.from({ length: 9 }).map((_, cIdx) => (
-                  <div key={`col-lbl-${cIdx + 1}`} className="flex items-center justify-center font-bold text-sky-700 text-xs sm:text-sm h-6">
-                    {getXLetter(cIdx + 1)}
-                  </div>
-                ))}
-
-              </div>
+        <!-- 5x5 點點板 -->
+        <div class="bg-emerald-50/50 p-5 rounded-3xl border border-emerald-100/50 flex flex-col items-center gap-5">
+          
+          <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-xl border border-emerald-100 w-full max-w-lg">
+            <div class="text-center font-black text-emerald-800 text-sm md:text-base mb-3 flex justify-between items-center px-1">
+              <span class="text-base sm:text-lg">🎨 第二步：5 x 5 點點畫板 (自帶座標防看錯)</span>
+              <span id="draw-success-badge" class="hidden text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full text-xs sm:text-sm animate-bounce font-bold">
+                🎉 畫得好！過關了！
+              </span>
             </div>
 
-            {/* 教學對位提示卡 */}
-            <div className="w-full max-w-md bg-indigo-50/50 rounded-2xl p-4 mt-4 border border-indigo-100 text-xs sm:text-sm text-indigo-900">
-              <span className="font-bold block mb-1">🎯 當前尋找目標座標卡：</span>
-              <div className="flex items-center gap-2 bg-white p-2.5 rounded-xl shadow-sm border border-indigo-100">
-                <span className="bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-full font-bold">
-                  第 {activeCardIndex + 1} 步
-                </span>
-                <span className="text-base font-black text-indigo-700">
-                  {/* 安全防禦：防止 out-of-bounds 讀取 crash */}
-                  坐標：({currentLevel.path[activeCardIndex] ? formatCoordStr(currentLevel.path[activeCardIndex].coord) : ""})
-                </span>
-                
-                {showHints && (
-                  wrongAttempts >= 2 ? (
-                    <span className="text-xs text-amber-600 font-extrabold ml-auto animate-pulse flex items-center gap-1">
-                      <span>💡</span> 提示黃格已亮起！
-                    </span>
-                  ) : (
-                    <span className="text-[11px] text-gray-500 font-medium ml-auto flex items-center gap-1">
-                      🔒 答錯 2 次顯露提示 ({wrongAttempts}/2)
-                    </span>
-                  )
-                )}
-              </div>
+            <!-- SVG 畫板外殼 -->
+            <div class="relative aspect-square w-full bg-emerald-50/20 rounded-xl overflow-hidden border border-emerald-50">
+              <svg id="board-svg" class="w-full h-full" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                <!-- 網格細線與點點、線條由 JS 動態更新與繪製 -->
+              </svg>
             </div>
           </div>
 
-          {/* 右欄：解密卡片 & 點點畫板 (佔 7 欄) */}
-          <div className="lg:col-span-7 space-y-5">
-            
-            {/* 上半部：解密座標卡片序列 */}
-            <div className="bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-xs font-black text-indigo-950 flex items-center gap-1">
-                  <span>🏷️</span> <span>第一步：解鎖坐標指令 (對齊點擊即可切換)</span>
-                </h3>
-                <span className="text-[10px] text-indigo-500 font-semibold bg-indigo-100/60 px-2 py-0.5 rounded-full">
-                  進度：{decodedList.filter(Boolean).length} / {currentLevel.path.length}
-                </span>
+          <!-- 下方控制面板與方向提示 -->
+          <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded-2xl border border-emerald-100 flex flex-col justify-between">
+              <div>
+                <h4 class="font-extrabold text-emerald-950 flex items-center gap-1 text-sm sm:text-base">
+                  <span>📌 連線小提示</span>
+                </h4>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                  🌟 起點：<strong>紅色起點圓點</strong> (<span id="star-label-text">B 欄第 2 列</span>)<br />
+                  按照解鎖完畢的卡片順序進行方向點選連線！
+                </p>
               </div>
-              
-              {/* 超緊湊微型卡片 */}
-              <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
-                {currentLevel.path.map((item, idx) => {
-                  const isDecoded = decodedList[idx];
-                  const isActive = activeCardIndex === idx;
-                  const itemLetter = getXLetter(parseInt(item.coord.split(',')[0], 10));
-                  const itemNumber = item.coord.split(',')[1];
-                  
-                  return (
-                    <button
-                      key={`card-${idx}`}
-                      onClick={() => handleSelectCard(idx)}
-                      style={{ touchAction: 'manipulation' }}
-                      className={`relative flex flex-col items-center justify-center py-2 px-0.5 rounded-xl transition-all duration-200 border ${
-                        isActive
-                          ? 'bg-amber-100/80 border-amber-400 ring-2 ring-amber-300 scale-102 shadow-sm'
-                          : isDecoded
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                            : 'bg-white border-gray-150 hover:border-indigo-200'
-                      }`}
-                    >
-                      <span className="text-[9px] font-bold text-gray-400 mb-0.5">
-                        #{idx + 1}
-                      </span>
-                      
-                      <span className="text-[11px] font-black text-gray-850">
-                        {itemLetter},{itemNumber}
-                      </span>
 
-                      <div className="w-5 h-5 flex items-center justify-center mt-1 mb-0.5 rounded-full bg-white/70 shadow-inner">
-                        {isDecoded ? (
-                          <ArrowIcon dir={item.dir} color={ARROWS_DATA[item.coord]?.color || "#4F46E5"} className="w-3.5 h-3.5" />
-                        ) : (
-                          <span className="text-[10px] animate-pulse">🔍</span>
-                        )}
-                      </div>
-
-                      {isDecoded ? (
-                        <span className="text-[8px] text-emerald-600 font-bold">解開</span>
-                      ) : isActive ? (
-                        <span className="text-[8px] text-amber-600 font-bold animate-pulse">
-                          {wrongAttempts >= 2 ? "💡" : "找 (" + wrongAttempts + "/2)"}
-                        </span>
-                      ) : (
-                        <span className="text-[8px] text-gray-400">待鎖</span>
-                      )}
-                    </button>
-                  );
-                })}
+              <!-- 目前需要連線方向 -->
+              <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 mt-3 flex items-center justify-between">
+                <span id="next-dir-title" class="text-xs font-bold text-emerald-800">下一筆方向：</span>
+                <div id="next-dir-badge" class="flex items-center gap-1 bg-white px-2.5 py-1 rounded-full shadow-sm text-emerald-600 font-black animate-pulse text-sm">
+                  <span id="next-arrow-icon" class="w-4 h-4 flex items-center justify-center">→</span>
+                  <span id="next-arrow-text">畫一格 (0/2)</span>
+                </div>
               </div>
             </div>
 
-            {/* 下半部：【全新英數定位化】超大型 5x5 點點板 */}
-            <div className="bg-emerald-50/50 p-5 rounded-3xl border border-emerald-100/50 flex flex-col items-center gap-5">
+            <!-- 連線控制按鈕 -->
+            <div class="flex flex-col justify-between gap-2.5">
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  id="btn-undo"
+                  onclick="undoDraw()"
+                  class="px-3 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1"
+                >
+                  <span>↩️</span> 復原上一步
+                </button>
+                <button
+                  onclick="resetLevel()"
+                  class="px-3 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1"
+                >
+                  <span>🔄</span> 重置連線
+                </button>
+              </div>
               
-              <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-xl border border-emerald-100 w-full max-w-lg">
-                <div className="text-center font-black text-emerald-800 text-sm md:text-base mb-3 flex justify-between items-center px-1">
-                  <span className="text-base sm:text-lg">🎨 第二步：5 x 5 點點畫板 (自帶座標防看錯)</span>
-                  {isCompleted && (
-                    <span className="text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full text-xs sm:text-sm animate-bounce font-bold">
-                      🎉 畫得好！過關了！
-                    </span>
-                  )}
-                </div>
-
-                {/* SVG 點點地圖 */}
-                <div className="relative aspect-square w-full bg-emerald-50/20 rounded-xl overflow-hidden border border-emerald-50">
-                  <svg 
-                    className="w-full h-full" 
-                    viewBox="0 0 300 300"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    {/* 背景網格細格線 */}
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <React.Fragment key={`grid-line-${i}`}>
-                        <line x1={40 + i * 55} y1={40} x2={40 + i * 55} y2={260} stroke="#F1F5F9" strokeWidth="2" strokeDasharray="3 3" />
-                        <line x1={40} y1={40 + i * 55} x2={260} y2={40 + i * 55} stroke="#F1F5F9" strokeWidth="2" strokeDasharray="3 3" />
-                      </React.Fragment>
-                    ))}
-
-                    {/* 5x5 點點網格 Y軸座標 */}
-                    {Array.from({ length: 5 }).map((_, rIdx) => {
-                      const labelY = 5 - rIdx;
-                      const svgY = 40 + rIdx * 55 + 4;
-                      return (
-                        <text
-                          key={`dot-y-lbl-${labelY}`}
-                          x="18"
-                          y={svgY}
-                          textAnchor="middle"
-                          className="fill-indigo-500 font-extrabold text-[11px]"
-                        >
-                          {labelY}
-                        </text>
-                      );
-                    })}
-
-                    {/* 5x5 點點網格 X軸座標 */}
-                    {Array.from({ length: 5 }).map((_, cIdx) => {
-                      const letter = getDotXLetter(cIdx);
-                      const svgX = 40 + cIdx * 55;
-                      return (
-                        <text
-                          key={`dot-x-lbl-${letter}`}
-                          x={svgX}
-                          y="285"
-                          textAnchor="middle"
-                          className="fill-indigo-500 font-extrabold text-[11px]"
-                        >
-                          {letter}
-                        </text>
-                      );
-                    })}
-
-                    {/* 繪製連線軌跡 */}
-                    {drawingPath.length > 1 && (
-                      <g>
-                        {drawingPath.map((pt, idx) => {
-                          if (idx === 0) return null;
-                          const prev = drawingPath[idx - 1];
-                          const x1 = 40 + prev.x * 55;
-                          const y1 = 40 + (4 - prev.y) * 55;
-                          const x2 = 40 + pt.x * 55;
-                          const y2 = 40 + (4 - pt.y) * 55;
-
-                          return (
-                            <line
-                              key={`line-${idx}`}
-                              x1={x1}
-                              y1={y1}
-                              x2={x2}
-                              y2={y2}
-                              stroke="#10B981"
-                              strokeWidth="8"
-                              strokeLinecap="round"
-                              className="animate-draw"
-                            />
-                          );
-                        })}
-                      </g>
-                    )}
-
-                    {/* 繪製 5x5 的背景點 (維持矩陣完整性) */}
-                    {Array.from({ length: 5 }).map((_, rIdx) => {
-                      const dotY = 4 - rIdx;
-                      return Array.from({ length: 5 }).map((_, cIdx) => {
-                        const dotX = cIdx;
-                        const isStart = currentLevel.startDot.x === dotX && currentLevel.startDot.y === dotY;
-                        const isVisited = drawingPath.some(pt => pt.x === dotX && pt.y === dotY);
-                        const isNextValid = isValidNextDot(dotX, dotY);
-
-                        // 連線錯誤達 2 次，才亮起黃色發光圈提示孩子
-                        const showDotHint = showHints && (drawWrongAttempts >= 2) && isNextValid;
-
-                        const svgX = 40 + dotX * 55;
-                        const svgY = 40 + rIdx * 55;
-
-                        return (
-                          <g key={`dot-g-${dotX}-${dotY}`}>
-                            
-                            {/* 錯2次時出現的黃色引導發光圈 */}
-                            {showDotHint && (
-                              <circle
-                                cx={svgX}
-                                cy={svgY}
-                                r="22"
-                                fill="#F59E0B"
-                                opacity="0.4"
-                                className="pulsing-star pointer-events-none"
-                              />
-                            )}
-
-                            {/* 點擊範圍熱區 (特別放大，操作不怕手抖) */}
-                            <circle
-                              cx={svgX}
-                              cy={svgY}
-                              r="26"
-                              fill="transparent"
-                              className="cursor-pointer"
-                              onClick={() => handleDotClick(dotX, dotY)}
-                            />
-
-                            {/* 背景圓點：起點未被造訪時顯示為搶眼的鮮紅色，被造訪後會變成路徑綠色，普通未造訪點為灰藍色 */}
-                            <circle
-                              cx={svgX}
-                              cy={svgY}
-                              r={isVisited ? "8" : "6"}
-                              fill={isStart && !isVisited ? "#EF4444" : isVisited ? "#10B981" : "#CBD5E1"}
-                              className="pointer-events-none transition-all duration-300"
-                            />
-
-                            {/* 起點呼吸環：起點未造訪前，在紅色圓點外緣加上一圈發光的呼吸圓圈，明確且不易混淆，不使用偏位紅星 */}
-                            {isStart && !isVisited && (
-                              <circle
-                                cx={svgX}
-                                cy={svgY}
-                                r="12"
-                                fill="none"
-                                stroke="#EF4444"
-                                strokeWidth="2.5"
-                                opacity="0.7"
-                                className="pulsing-star pointer-events-none"
-                              />
-                            )}
-                          </g>
-                        );
-                      });
-                    })}
-                  </svg>
-                </div>
-              </div>
-
-              {/* 橫向並排控制資訊區 */}
-              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-emerald-100 flex flex-col justify-between">
-                  <div>
-                    <h4 className="font-extrabold text-emerald-950 flex items-center gap-1 text-sm sm:text-base">
-                      <span>📌 連線小提示</span>
-                    </h4>
-                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                      🌟 起點：<strong>紅色起點圓點</strong> (坐標 <strong>{currentLevel.starLabel}</strong>)<br />
-                      按照解鎖完畢的卡片順序進行方向點選連線！
-                    </p>
-                  </div>
-
-                  {/* 目前需要連線方向 */}
-                  <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 mt-3 flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-800">
-                      {drawWrongAttempts >= 2 ? "⚠️ 已亮起黃點輔助：" : "下一筆方向："}
-                    </span>
-                    {nextRequiredArrow ? (
-                      <div className="flex items-center gap-1 bg-white px-2.5 py-1 rounded-full shadow-sm text-emerald-600 font-black animate-pulse text-sm">
-                        <ArrowIcon dir={nextRequiredArrow} className="w-4 h-4" />
-                        <span>畫一格 ({drawWrongAttempts}/2)</span>
-                      </div>
-                    ) : (
-                      <span className="text-emerald-700 font-bold text-xs">圖形已完成！🏆</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 連線控制按鈕 */}
-                <div className="flex flex-col justify-between gap-2.5">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={handleUndoDraw}
-                      disabled={drawingPath.length <= 1 || isCompleted}
-                      className="px-3 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1"
-                    >
-                      <span>↩️</span> 復原上一步
-                    </button>
-                    <button
-                      onClick={() => handleResetLevel()}
-                      className="px-3 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1"
-                    >
-                      <span>🔄</span> 重置連線
-                    </button>
-                  </div>
-                  
-                  <button
-                    onClick={handleAutoDemo}
-                    className="w-full px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs sm:text-sm transition border border-indigo-200 flex items-center justify-center gap-1.5"
-                  >
-                    <span>⚡</span> 點我自動連線示範
-                  </button>
-                </div>
-              </div>
-
+              <button
+                onclick="autoDemo()"
+                class="w-full px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs sm:text-sm transition border border-indigo-200 flex items-center justify-center gap-1.5"
+              >
+                <span>⚡</span> 點我自動連線示範
+              </button>
             </div>
-
           </div>
 
         </div>
-
-        {/* 底部說明 */}
-        <footer className="mt-8 pt-5 border-t border-gray-100 text-center text-xs text-gray-400 font-medium">
-          <p>適合年齡：國小一至三年級 幾何與空間邏輯思維練習教材</p>
-          <p className="mt-1">© 幾何坐標解密互動連連看課堂教材 - 授課演示輔助工具</p>
-        </footer>
 
       </div>
+
     </div>
-  );
-}
+
+    <!-- 頁尾 -->
+    <footer class="mt-8 pt-5 border-t border-gray-100 text-center text-xs text-gray-400 font-medium">
+      <p>適合年齡：國小一至三年級 幾何與空間邏輯思維練習教材</p>
+      <p class="mt-1">© 幾何坐標解密互動連連看課堂教材 - 授課演示輔助工具</p>
+    </footer>
+
+  </div>
+
+  <!-- JavaScript 控制核心 (全量改用 block-comment 避免壓縮註解失效) -->
+  <script>
+    /* ==========================================
+       1. 全域資料與靜態設定
+       ========================================== */
+    const ARROWS_DATA = {
+      "1,9": { dir: "↓", color: "#EF4444" },
+      "2,9": { dir: "→", color: "#A78BFA" },
+      "3,9": { dir: "→", color: "#F97316" },
+      "4,9": { dir: "↓", color: "#A78BFA" },
+      "5,9": { dir: "↖", color: "#F97316" },
+      "6,9": { dir: "↑", color: "#EF4444" },
+      "7,9": { dir: "↖", color: "#10B981" },
+      "8,9": { dir: "→", color: "#A78BFA" },
+      "9,9": { dir: "↓", color: "#10B981" },
+      "1,8": { dir: "←", color: "#3B82F6" },
+      "2,8": { dir: "↙", color: "#F97316" },
+      "3,8": { dir: "↑", color: "#10B981" },
+      "4,8": { dir: "↘", color: "#3B82F6" },
+      "5,8": { dir: "↖", color: "#F97316" },
+      "6,8": { dir: "↙", color: "#A78BFA" },
+      "7,8": { dir: "↗", color: "#F97316" },
+      "8,8": { dir: "↘", color: "#EF4444" },
+      "9,8": { dir: "↑", color: "#A78BFA" },
+      "1,7": { dir: "↗", color: "#A78BFA" },
+      "2,7": { dir: "↘", color: "#EF4444" },
+      "3,7": { dir: "←", color: "#F97316" },
+      "4,7": { dir: "→", color: "#EF4444" },
+      "5,7": { dir: "↙", color: "#F97316" },
+      "6,7": { dir: "↑", color: "#A78BFA" },
+      "7,7": { dir: "→", color: "#10B981" },
+      "8,7": { dir: "↗", color: "#3B82F6" },
+      "9,7": { dir: "↗", color: "#3B82F6" },
+      "1,6": { dir: "↖", color: "#3B82F6" },
+      "2,6": { dir: "↓", color: "#F97316" },
+      "3,6": { dir: "→", color: "#3B82F6" },
+      "4,6": { dir: "↖", color: "#EF4444" },
+      "5,6": { dir: "↓", color: "#F97316" },
+      "6,6": { dir: "←", color: "#EF4444" },
+      "7,6": { dir: "↗", color: "#10B981" },
+      "8,6": { dir: "←", color: "#EF4444" },
+      "9,6": { dir: "↙", color: "#10B981" },
+      "1,5": { dir: "↑", color: "#F97316" },
+      "2,5": { dir: "←", color: "#A78BFA" },
+      "3,5": { dir: "↙", color: "#10B981" },
+      "4,5": { dir: "↖", color: "#A78BFA" },
+      "5,5": { dir: "↑", color: "#10B981" },
+      "6,5": { dir: "↘", color: "#F97316" },
+      "7,5": { dir: "↖", color: "#A78BFA" },
+      "8,5": { dir: "↘", color: "#F97316" },
+      "9,5": { dir: "↓", color: "#EF4444" },
+      "1,4": { dir: "↙", color: "#10B981" },
+      "2,4": { dir: "↗", color: "#EF4444" },
+      "3,4": { dir: "→", color: "#F97316" },
+      "4,4": { dir: "↙", color: "#EF4444" },
+      "5,4": { dir: "↗", color: "#EF4444" },
+      "6,4": { dir: "←", color: "#10B981" },
+      "7,4": { dir: "↓", color: "#10B981" },
+      "8,4": { dir: "↖", color: "#EF4444" },
+      "9,4": { dir: "←", color: "#3B82F6" },
+      "1,3": { dir: "↙", color: "#F97316" },
+      "2,3": { dir: "↑", color: "#3B82F6" },
+      "3,3": { dir: "↖", color: "#10B981" },
+      "4,3": { dir: "↓", color: "#3B82F6" },
+      "5,3": { dir: "↘", color: "#10B981" },
+      "6,3": { dir: "→", color: "#EF4444" },
+      "7,3": { dir: "↖", color: "#A78BFA" },
+      "8,3": { dir: "↗", color: "#10B981" },
+      "9,3": { dir: "↙", color: "#EF4444" },
+      "1,2": { dir: "↘", color: "#3B82F6" },
+      "2,2": { dir: "↗", color: "#F97316" },
+      "3,2": { dir: "↑", color: "#EF4444" },
+      "4,2": { dir: "→", color: "#10B981" },
+      "5,2": { dir: "←", color: "#F97316" },
+      "6,2": { dir: "↘", color: "#10B981" },
+      "7,2": { dir: "↖", color: "#3B82F6" },
+      "8,2": { dir: "↑", color: "#F97316" },
+      "9,2": { dir: "←", color: "#3B82F6" },
+      "1,1": { dir: "↓", color: "#10B981" },
+      "2,1": { dir: "↗", color: "#EF4444" },
+      "3,1": { dir: "↙", color: "#3B82F6" },
+      "4,1": { dir: "↓", color: "#3B82F6" },
+      "5,1": { dir: "↗", color: "#EF4444" },
+      "6,1": { dir: "↑", color: "#A78BFA" },
+      "7,1": { dir: "↘", color: "#F97316" },
+      "8,1": { dir: "←", color: "#10B981" },
+      "9,1": { dir: "←", color: "#EF4444" }
+    };
+
+    /* 橫軸對照表：1~9 對應 A~I (修復為傳統宣告，避免 TDZ 執行期錯誤) */
+    function getXLetter(x) {
+      const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
+      return letters[x - 1] || x;
+    }
+
+    /* 橫軸對照表：5x5點點板橫軸 1~5 對應 A~E */
+    function getDotXLetter(x) {
+      const letters = ["A", "B", "C", "D", "E"];
+      return letters[x] || x;
+    }
+
+    /* 格式化座標 "3,6" -> "C, 6" */
+    function formatCoordStr(coordStr) {
+      if (!coordStr) return "";
+      const parts = coordStr.split(",");
+      const x = parseInt(parts[0], 10);
+      const y = parts[1];
+      return getXLetter(x) + ", " + y;
+    }
+
+    const LEVELS = [
+      {
+        id: 1,
+        name: "關卡 1：超簡單正方形 (4 步)",
+        desc: "最適合入門！解鎖 4 個直觀座標，在連線板畫出一個可愛的正方形吧！",
+        startDot: { x: 1, y: 1 }, /* B,2 */
+        starLabel: "B 欄（第二欄）第 2 列",
+        path: [
+          { coord: "3,6", dir: "→", color: "#3B82F6" },
+          { coord: "5,5", dir: "↑", color: "#10B981" },
+          { coord: "9,2", dir: "←", color: "#3B82F6" },
+          { coord: "1,1", dir: "↓", color: "#10B981" }
+        ]
+      },
+      {
+        id: 2,
+        name: "關卡 2：溫馨小房子 (6 步)",
+        desc: "加入斜角箭頭！解鎖 6 個座標，為小精靈造一間尖屋頂小房子吧！",
+        startDot: { x: 1, y: 1 }, /* B,2 */
+        starLabel: "B 欄（第二欄）第 2 列",
+        path: [
+          { coord: "3,6", dir: "→", color: "#3B82F6" },
+          { coord: "4,2", dir: "→", color: "#10B981" },
+          { coord: "5,5", dir: "↑", color: "#10B981" },
+          { coord: "5,9", dir: "↖", color: "#F97316" },
+          { coord: "2,8", dir: "↙", color: "#F97316" },
+          { coord: "1,1", dir: "↓", color: "#10B981" }
+        ]
+      },
+      {
+        id: 3,
+        name: "關卡 3：魔法時空沙漏 (8 步)",
+        desc: "挑戰交叉路徑！看著坐報箭頭對位，畫出完美的魔法沙漏！",
+        startDot: { x: 1, y: 3 }, /* B,4 */
+        starLabel: "B 欄（第二欄）第 4 列",
+        path: [
+          { coord: "3,6", dir: "→", color: "#3B82F6" },
+          { coord: "4,2", dir: "→", color: "#10B981" },
+          { coord: "2,8", dir: "↙", color: "#F97316" },
+          { coord: "8,5", dir: "↘", color: "#F97316" },
+          { coord: "1,8", dir: "←", color: "#3B82F6" },
+          { coord: "9,2", dir: "←", color: "#3B82F6" },
+          { coord: "2,2", dir: "↗", color: "#F97316" },
+          { coord: "5,9", dir: "↖", color: "#F97316" }
+        ]
+      },
+      {
+        id: 4,
+        name: "關卡 4：經典課本城堡挑戰 (10 步)",
+        desc: "終極挑戰！完美還原課本十個步驟，拼出經典的不規則城堡吧！",
+        startDot: { x: 1, y: 2 }, /* B,3 */
+        starLabel: "B 欄（第二欄）第 3 列",
+        path: [
+          { coord: "1,1", dir: "↓", color: "#10B981" },
+          { coord: "2,2", dir: "↗", color: "#F97316" },
+          { coord: "3,6", dir: "→", color: "#3B82F6" },
+          { coord: "8,5", dir: "↘", color: "#F97316" },
+          { coord: "9,4", dir: "←", color: "#3B82F6" },
+          { coord: "5,5", dir: "↑", color: "#10B981" },
+          { coord: "3,8", dir: "↑", color: "#10B981" },
+          { coord: "1,8", dir: "←", color: "#3B82F6" },
+          { coord: "9,2", dir: "←", color: "#3B82F6" },
+          { coord: "9,9", dir: "↓", color: "#10B981" }
+        ]
+      }
+    ];
+
+    const DIR_VECTORS = {
+      "↑": { dx: 0, dy: 1 },
+      "↓": { dx: 0, dy: -1 },
+      "←": { dx: -1, dy: 0 },
+      "→": { dx: 1, dy: 0 },
+      "↗": { dx: 1, dy: 1 },
+      "↖": { dx: -1, dy: 1 },
+      "↘": { dx: 1, dy: -1 },
+      "↙": { dx: -1, dy: -1 }
+    };
+
+    const DIR_ROTATIONS = {
+      "↑": 0, "↗": 45, "→": 90, "↘": 135,
+      "↓": 180, "↙": 225, "←": 270, "↖": 315
+    };
+
+    /* ==========================================
+       2. 狀態管理
+       ========================================== */
+    let levelIndex = 0;
+    let decodedList = [];
+    let activeCardIndex = 0;
+    let wrongAttempts = 0;
+    let drawWrongAttempts = 0;
+    let drawingPath = [];
+    let showHints = true;
+    let isCompleted = false;
+
+    /* 當前正要畫的方向箭頭 */
+    function getNextRequiredArrow() {
+      const currentDrawStep = drawingPath.length - 1;
+      const lvl = LEVELS[levelIndex];
+      if (currentDrawStep < lvl.path.length) {
+        return lvl.path[currentDrawStep].dir;
+      }
+      return null;
+    }
+
+    /* 判斷下一步連線是否合法 (修復未定義 Bug，以傳統 function 宣告以防 hoisting 與 TDZ 問題) */
+    function isValidNextDot(tx, ty) {
+      const nextRequiredArrow = getNextRequiredArrow();
+      if (nextRequiredArrow === null) return false;
+      const currentDot = drawingPath[drawingPath.length - 1];
+      const vec = DIR_VECTORS[nextRequiredArrow];
+      return currentDot.x + vec.dx === tx && currentDot.y + vec.dy === ty;
+    }
+
+    /* ==========================================
+       3. 初始化與 DOM 綁定
+       ========================================== */
+    window.onload = function() {
+      initConfetti();
+      renderTabs();
+      loadLevel(0);
+      setup9x9Grid();
+    };
+
+    /* 渲染關卡頁籤 */
+    function renderTabs() {
+      const container = document.getElementById('level-tabs');
+      container.innerHTML = '';
+      LEVELS.forEach((lvl, idx) => {
+        const btn = document.createElement('button');
+        btn.innerText = lvl.name;
+        btn.id = `tab-${idx}`;
+        btn.className = `px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-600`;
+        btn.onclick = () => selectLevel(idx);
+        container.appendChild(btn);
+      });
+    }
+
+    /* 點選與載入關卡 */
+    function selectLevel(idx) {
+      playSound('click');
+      levelIndex = idx;
+      loadLevel(idx);
+    }
+
+    function loadLevel(idx) {
+      const lvl = LEVELS[idx];
+      
+      /* 更新 Tabs 狀態 */
+      LEVELS.forEach((_, i) => {
+        const el = document.getElementById(`tab-${i}`);
+        if (el) {
+          if (i === idx) {
+            el.className = `px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 bg-indigo-600 text-white shadow-lg shadow-indigo-200 ring-2 ring-indigo-300`;
+          } else {
+            el.className = `px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-600`;
+          }
+        }
+      });
+
+      /* 更新文字 */
+      document.getElementById('level-desc').innerText = "✨ 說明：" + lvl.desc;
+      document.getElementById('star-label-text').innerText = lvl.starLabel;
+
+      /* 初始化狀態 */
+      decodedList = new Array(lvl.path.length).fill(false);
+      activeCardIndex = 0;
+      wrongAttempts = 0;
+      drawWrongAttempts = 0;
+      drawingPath = [{ x: lvl.startDot.x, y: lvl.startDot.y }];
+      isCompleted = false;
+      hideMessage();
+
+      /* 渲染關卡相關組件 */
+      renderCards();
+      updateTargetCardStatus();
+      render5x5Board();
+      updateNextDirIndicator();
+      refresh9x9GridStyles();
+    }
+
+    /* ==========================================
+       4. 9x9 互動網格 (左側)
+       ========================================== */
+    function setup9x9Grid() {
+      const grid = document.getElementById('grid-9x9');
+      grid.innerHTML = '';
+
+      /* 建立 rows Y從9降到1 */
+      for (let y = 9; y >= 1; y--) {
+        /* Y軸標籤 */
+        const lblY = document.createElement('div');
+        lblY.className = "flex items-center justify-center font-bold text-sky-700 text-xs sm:text-sm h-8 sm:h-10 w-6";
+        lblY.innerText = y;
+        grid.appendChild(lblY);
+
+        /* 建立9個 cell */
+        for (let x = 1; x <= 9; x++) {
+          const key = `${x},${y}`;
+          const arrow = ARROWS_DATA[key];
+          
+          const btn = document.createElement('button');
+          btn.id = `cell-${x}-${y}`;
+          btn.className = `h-8 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-200 relative group overflow-hidden bg-white hover:bg-indigo-50`;
+          btn.onclick = () => handle9x9Click(x, y);
+          btn.onmouseenter = () => showHoverCoord(x, y);
+          btn.onmouseleave = () => hideHoverCoord();
+
+          if (arrow) {
+            btn.innerHTML = getArrowSvg(arrow.dir, arrow.color, "w-5 h-5 sm:w-6 sm:h-6");
+          } else {
+            btn.innerHTML = `<span class="text-xs text-gray-300">?</span>`;
+          }
+
+          /* 小坐標提示 hover 浮現 */
+          const coordTip = document.createElement('span');
+          coordTip.className = "absolute bottom-0 text-[8px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity";
+          coordTip.innerText = `${getXLetter(x)},${y}`;
+          btn.appendChild(coordTip);
+
+          grid.appendChild(btn);
+        }
+      }
+
+      /* X軸最左下角補空格 */
+      const corner = document.createElement('div');
+      corner.className = "h-6 w-6";
+      grid.appendChild(corner);
+
+      /* X軸字母標籤 (A ~ I) */
+      for (let x = 1; x <= 9; x++) {
+        const lblX = document.createElement('div');
+        lblX.className = "flex items-center justify-center font-bold text-sky-700 text-xs sm:text-sm h-6";
+        lblX.innerText = getXLetter(x);
+        grid.appendChild(lblX);
+      }
+    }
+
+    /* 刷新9x9高亮黃格狀態 */
+    function refresh9x9GridStyles() {
+      const lvl = LEVELS[levelIndex];
+      const targetCard = lvl.path[activeCardIndex];
+      const hasGlow = showHints && (wrongAttempts >= 2) && targetCard;
+
+      /* 清除全部黃格與閃爍 */
+      for (let y = 1; y <= 9; y++) {
+        for (let x = 1; x <= 9; x++) {
+          const el = document.getElementById(`cell-${x}-${y}`);
+          if (el) {
+            el.classList.remove('bg-amber-300', 'ring-4', 'ring-amber-400', 'ring-offset-1', 'z-10', 'scale-105', 'shadow-md', 'animate-pulse');
+            el.classList.add('bg-white');
+          }
+        }
+      }
+
+      /* 亮起目前正確提示格 */
+      if (hasGlow) {
+        const coordParts = targetCard.coord.split(',');
+        const targetX = coordParts[0];
+        const targetY = coordParts[1];
+        const el = document.getElementById(`cell-${targetX}-${targetY}`);
+        if (el) {
+          el.classList.remove('bg-white');
+          el.classList.add('bg-amber-300', 'ring-4', 'ring-amber-400', 'ring-offset-1', 'z-10', 'scale-105', 'shadow-md', 'animate-pulse');
+        }
+      }
+    }
+
+    /* 處理滑鼠進入與座標顯示 */
+    function showHoverCoord(x, y) {
+      const el = document.getElementById('hover-coord-text');
+      el.innerText = `目前：(${getXLetter(x)}, ${y})`;
+      el.classList.remove('hidden');
+    }
+
+    function hideHoverCoord() {
+      document.getElementById('hover-coord-text').classList.add('hidden');
+    }
+
+    /* ==========================================
+       5. 座標卡片與解鎖流程 (Step 1)
+       ========================================== */
+    function renderCards() {
+      const list = document.getElementById('card-list');
+      list.innerHTML = '';
+      const lvl = LEVELS[levelIndex];
+
+      lvl.path.forEach((item, idx) => {
+        const isDecoded = decodedList[idx];
+        const isActive = activeCardIndex === idx;
+        const letter = getXLetter(parseInt(item.coord.split(',')[0], 10));
+        const number = item.coord.split(',')[1];
+
+        const btn = document.createElement('button');
+        btn.id = `card-badge-${idx}`;
+        btn.onclick = () => handleSelectCard(idx);
+        
+        let cardBgClass = "bg-white border-gray-150 hover:border-indigo-200";
+        if (isActive) {
+          cardBgClass = "bg-amber-100/80 border-amber-400 ring-2 ring-amber-300 scale-102 shadow-sm";
+        } else if (isDecoded) {
+          cardBgClass = "bg-emerald-50 border-emerald-200 text-emerald-800";
+        }
+
+        btn.className = `relative flex flex-col items-center justify-center py-2 px-0.5 rounded-xl transition-all duration-200 border ${cardBgClass}`;
+        
+        /* 序號 */
+        const numLabel = document.createElement('span');
+        numLabel.className = "text-[9px] font-bold text-gray-400 mb-0.5";
+        numLabel.innerText = `#${idx + 1}`;
+        btn.appendChild(numLabel);
+
+        /* 座標 */
+        const coordLabel = document.createElement('span');
+        coordLabel.className = "text-[11px] font-black text-gray-850";
+        coordLabel.innerText = `${letter},${number}`;
+        btn.appendChild(coordLabel);
+
+        /* 縮小箭頭圓圈 */
+        const arrowContainer = document.createElement('div');
+        arrowContainer.className = "w-5 h-5 flex items-center justify-center mt-1 mb-0.5 rounded-full bg-white/70 shadow-inner";
+        if (isDecoded) {
+          arrowContainer.innerHTML = getArrowSvg(item.dir, ARROWS_DATA[item.coord]?.color || "#4F46E5", "w-3.5 h-3.5");
+        } else {
+          arrowContainer.innerHTML = `<span class="text-[10px] animate-pulse">🔍</span>`;
+        }
+        btn.appendChild(arrowContainer);
+
+        /* 卡片底部狀態文字 */
+        const statusLabel = document.createElement('span');
+        statusLabel.className = "text-[8px] font-bold";
+        if (isDecoded) {
+          statusLabel.className += " text-emerald-600";
+          statusLabel.innerText = "解開";
+        } else if (isActive) {
+          statusLabel.className += " text-amber-600 animate-pulse";
+          statusLabel.innerText = wrongAttempts >= 2 ? "💡" : `找 (${wrongAttempts}/2)`;
+        } else {
+          statusLabel.className += " text-gray-400";
+          statusLabel.innerText = "待鎖";
+        }
+        btn.appendChild(statusLabel);
+
+        list.appendChild(btn);
+      });
+
+      /* 更新解鎖進度標示 */
+      const unlockedCount = decodedList.filter(Boolean).length;
+      document.getElementById('unlock-progress').innerText = `進度：${unlockedCount} / ${lvl.path.length}`;
+    }
+
+    /* 更新下方「目標對位提示卡」的文字資訊 */
+    function updateTargetCardStatus() {
+      const lvl = LEVELS[levelIndex];
+      const targetCard = lvl.path[activeCardIndex];
+      
+      if (targetCard) {
+        document.getElementById('current-step-badge').innerText = `第 ${activeCardIndex + 1} 步`;
+        document.getElementById('current-step-coord').innerText = `座標：(${formatCoordStr(targetCard.coord)})`;
+        
+        const helperText = document.getElementById('current-step-hint-status');
+        if (wrongAttempts >= 2) {
+          helperText.className = "text-xs text-amber-600 font-extrabold ml-auto animate-pulse";
+          helperText.innerHTML = "<span>💡</span> 提示黃格已亮起！";
+        } else {
+          helperText.className = "text-[11px] text-gray-500 font-medium ml-auto";
+          helperText.innerText = `🔒 答錯 2 次顯露提示 (${wrongAttempts}/2)`;
+        }
+      } else {
+        document.getElementById('current-step-badge').innerText = `全部完成`;
+        document.getElementById('current-step-coord').innerText = `已完成全部解密！`;
+        document.getElementById('current-step-hint-status').innerText = `🎉 恭喜！`;
+      }
+    }
+
+    /* 點選 9x9 格子判定 */
+    function handle9x9Click(x, y) {
+      const lvl = LEVELS[levelIndex];
+      const targetCard = lvl.path[activeCardIndex];
+      if (!targetCard || isCompleted) return;
+
+      const clickedCoord = `${x},${y}`;
+      if (clickedCoord === targetCard.coord) {
+        /* 解密成功 */
+        playSound('success');
+        decodedList[activeCardIndex] = true;
+        wrongAttempts = 0;
+        hideMessage();
+
+        /* 進到下一個 */
+        const nextUnresolved = decodedList.findIndex(d => !d);
+        if (nextUnresolved !== -1) {
+          activeCardIndex = nextUnresolved;
+        } else {
+          playSound('victory');
+          showMessage("🎉 太棒了！所有的英數座標指令都解鎖成功！現在快來右下角的點點板，從【紅色起點】開始連線吧！", "success");
+        }
+      } else {
+        /* 答錯 */
+        playSound('error');
+        wrongAttempts++;
+        const clickedStr = `(${getXLetter(x)}, ${y})`;
+        const targetStr = `(${formatCoordStr(targetCard.coord)})`;
+
+        if (wrongAttempts >= 2) {
+          showMessage(`不對哦！你點到的是 ${clickedStr}。沒關係！小幫手已在左方 9x9 網格亮起【黃色發光格】，點選它即可解鎖！`, "error");
+        } else {
+          showMessage(`不對哦！你點到的是 ${clickedStr}。請在左方 9x9 網格仔細找找 ${targetStr} 座標！(再點錯一次會顯示提示格)`, "error");
+        }
+      }
+
+      renderCards();
+      updateTargetCardStatus();
+      refresh9x9GridStyles();
+    }
+
+    /* 手動切換目標卡片 */
+    function handleSelectCard(idx) {
+      playSound('click');
+      activeCardIndex = idx;
+      wrongAttempts = 0;
+      hideMessage();
+      renderCards();
+      updateTargetCardStatus();
+      refresh9x9GridStyles();
+    }
+
+    /* ==========================================
+       6. 5x5 點點板繪製與連線 (Step 2)
+       ========================================== */
+    function render5x5Board() {
+      const svg = document.getElementById('board-svg');
+      svg.innerHTML = '';
+
+      const lvl = LEVELS[levelIndex];
+
+      /* 背景幾何虛格線 */
+      for (let i = 0; i < 5; i++) {
+        /* 垂直虛線 */
+        const vLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        vLine.setAttribute("x1", 40 + i * 55);
+        vLine.setAttribute("y1", 40);
+        vLine.setAttribute("x2", 40 + i * 55);
+        vLine.setAttribute("y2", 260);
+        vLine.setAttribute("stroke", "#F1F5F9");
+        vLine.setAttribute("stroke-width", "2");
+        vLine.setAttribute("stroke-dasharray", "3 3");
+        svg.appendChild(vLine);
+
+        /* 水平虛線 */
+        const hLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        hLine.setAttribute("x1", 40);
+        hLine.setAttribute("y1", 40 + i * 55);
+        hLine.setAttribute("x2", 260);
+        hLine.setAttribute("y2", 40 + i * 55);
+        hLine.setAttribute("stroke", "#F1F5F9");
+        hLine.setAttribute("stroke-width", "2");
+        hLine.setAttribute("stroke-dasharray", "3 3");
+        svg.appendChild(hLine);
+      }
+
+      /* Y軸座標數字標籤 (1~5，左側) */
+      for (let r = 0; r < 5; r++) {
+        const valY = 5 - r;
+        const textY = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        textY.setAttribute("x", "18");
+        textY.setAttribute("y", 40 + r * 55 + 4);
+        textY.setAttribute("text-anchor", "middle");
+        textY.setAttribute("class", "fill-indigo-500 font-extrabold text-[11px]");
+        textY.textContent = valY;
+        svg.appendChild(textY);
+      }
+
+      /* X軸座標字母標籤 (A~E，底側) */
+      for (let c = 0; c < 5; c++) {
+        const valX = getDotXLetter(c);
+        const textX = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        textX.setAttribute("x", 40 + c * 55);
+        textX.setAttribute("y", "285");
+        textX.setAttribute("text-anchor", "middle");
+        textX.setAttribute("class", "fill-indigo-500 font-extrabold text-[11px]");
+        textX.textContent = valX;
+        svg.appendChild(textX);
+      }
+
+      /* 繪製目前的草綠色連線路徑 */
+      if (drawingPath.length > 1) {
+        for (let idx = 1; idx < drawingPath.length; idx++) {
+          const prev = drawingPath[idx - 1];
+          const curr = drawingPath[idx];
+          
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", 40 + prev.x * 55);
+          line.setAttribute("y1", 40 + (4 - prev.y) * 55);
+          line.setAttribute("x2", 40 + curr.x * 55);
+          line.setAttribute("y2", 40 + (4 - curr.y) * 55);
+          line.setAttribute("stroke", "#10B981");
+          line.setAttribute("stroke-width", "8");
+          line.setAttribute("stroke-linecap", "round");
+          line.setAttribute("class", "animate-draw");
+          svg.appendChild(line);
+        }
+      }
+
+      /* 繪製點點以及合法的熱區 */
+      for (let rIdx = 0; rIdx < 5; rIdx++) {
+        const dotY = 4 - rIdx;
+        for (let dotX = 0; dotX < 5; dotX++) {
+          const isStart = lvl.startDot.x === dotX && lvl.startDot.y === dotY;
+          const isVisited = drawingPath.some(pt => pt.x === dotX && pt.y === dotY);
+          const isNextValid = isValidNextDot(dotX, dotY);
+
+          /* 連錯 2 次，才亮起黃色閃爍發光圈 */
+          const showDotHint = showHints && (drawWrongAttempts >= 2) && isNextValid;
+
+          const svgX = 40 + dotX * 55;
+          const svgY = 40 + rIdx * 55;
+
+          const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+          /* 黃色提示閃爍圈 */
+          if (showDotHint) {
+            const hintCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            hintCircle.setAttribute("cx", svgX);
+            hintCircle.setAttribute("cy", svgY);
+            hintCircle.setAttribute("r", "22");
+            hintCircle.setAttribute("fill", "#F59E0B");
+            hintCircle.setAttribute("opacity", "0.4");
+            hintCircle.setAttribute("class", "pulsing-glow");
+            group.appendChild(hintCircle);
+          }
+
+          /* 放大隱形點擊熱區 */
+          const touchArea = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          touchArea.setAttribute("cx", svgX);
+          touchArea.setAttribute("cy", svgY);
+          touchArea.setAttribute("r", "26");
+          touchArea.setAttribute("fill", "transparent");
+          touchArea.setAttribute("class", "cursor-pointer");
+          touchArea.onclick = () => handleDotClick(dotX, dotY);
+          group.appendChild(touchArea);
+
+          /* 可見的圓點 */
+          const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          dot.setAttribute("cx", svgX);
+          dot.setAttribute("cy", svgY);
+          dot.setAttribute("r", isVisited ? "8" : "6");
+          
+          /* 起點未造訪為鮮紅色，已造訪為草綠色，一般為灰藍色 */
+          let dotColor = "#CBD5E1";
+          if (isStart && !isVisited) {
+            dotColor = "#EF4444";
+          } else if (isVisited) {
+            dotColor = "#10B981";
+          }
+          dot.setAttribute("fill", dotColor);
+          dot.setAttribute("class", "pointer-events-none transition-all duration-300");
+          group.appendChild(dot);
+
+          /* 起點未造訪前在外圍包裹一圈呼吸紅環 */
+          if (isStart && !isVisited) {
+            const glowRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            glowRing.setAttribute("cx", svgX);
+            glowRing.setAttribute("cy", svgY);
+            glowRing.setAttribute("r", "12");
+            glowRing.setAttribute("fill", "none");
+            glowRing.setAttribute("stroke", "#EF4444");
+            glowRing.setAttribute("stroke-width", "2.5");
+            glowRing.setAttribute("opacity", "0.7");
+            glowRing.setAttribute("class", "pulsing-glow");
+            group.appendChild(glowRing);
+          }
+
+          svg.appendChild(group);
+        }
+      }
+    }
+
+    /* 處理點點板點選連線 */
+    function handleDotClick(dotX, dotY) {
+      const allDecoded = decodedList.every(v => v);
+      if (!allDecoded) {
+        playSound('error');
+        showMessage("⚠️ 請先將第一步的箭頭座標全部解密解鎖，才能開始連線喔！", "error");
+        return;
+      }
+
+      if (isCompleted) return;
+
+      /* 如果點到上一步，相當於復原 */
+      if (drawingPath.length > 1 && drawingPath[drawingPath.length - 2].x === dotX && drawingPath[drawingPath.length - 2].y === dotY) {
+        playSound('click');
+        drawingPath.pop();
+        drawWrongAttempts = 0;
+        hideMessage();
+        render5x5Board();
+        updateNextDirIndicator();
+        return;
+      }
+
+      /* 檢查是否為合法下一步 */
+      if (isValidNextDot(dotX, dotY)) {
+        playSound('click');
+        drawingPath.push({ x: dotX, y: dotY });
+        drawWrongAttempts = 0;
+        hideMessage();
+
+        const lvl = LEVELS[levelIndex];
+        if (drawingPath.length - 1 === lvl.path.length) {
+          /* 連線全完畢 */
+          isCompleted = true;
+          playSound('victory');
+          startConfetti();
+          showMessage("🏆 太完美了！你成功依據對位指令畫出了正確的幾何城堡圖案！真是連線大師！", "success");
+          document.getElementById('draw-success-badge').classList.remove('hidden');
+        }
+      } else {
+        /* 連線點錯 */
+        playSound('error');
+        drawWrongAttempts++;
+        if (drawWrongAttempts >= 2) {
+          showMessage("連線不對唷！小幫手已在 5x5 點點板亮起【黃色發光圈提示】，請照著發光圈畫一格！", "error");
+        } else {
+          const dotName = `(${getDotXLetter(dotX)}, ${dotY + 1})`;
+          showMessage(`不對唷，點到 ${dotName} 了。請看下方【下一筆方向】指示，朝著箭頭引導的方向畫一格！(再錯一次會現形提示)`, "error");
+        }
+      }
+
+      render5x5Board();
+      updateNextDirIndicator();
+    }
+
+    /* 復原上一步 */
+    function undoDraw() {
+      if (drawingPath.length > 1 && !isCompleted) {
+        playSound('click');
+        drawingPath.pop();
+        drawWrongAttempts = 0;
+        hideMessage();
+        render5x5Board();
+        updateNextDirIndicator();
+      }
+    }
+
+    /* 更新下方連線方向圖示和文字 */
+    function updateNextDirIndicator() {
+      const arrowIcon = document.getElementById('next-arrow-icon');
+      const arrowText = document.getElementById('next-arrow-text');
+      const successBadge = document.getElementById('draw-success-badge');
+
+      if (isCompleted) {
+        successBadge.classList.remove('hidden');
+        document.getElementById('next-dir-title').innerText = "連線完成！";
+        arrowIcon.innerText = "🏆";
+        arrowText.innerText = "圖形挑戰成功！";
+        document.getElementById('btn-undo').disabled = true;
+        return;
+      }
+
+      document.getElementById('btn-undo').disabled = drawingPath.length <= 1;
+      successBadge.classList.add('hidden');
+      document.getElementById('next-dir-title').innerText = drawWrongAttempts >= 2 ? "⚠️ 已亮起黃點輔助：" : "下一筆方向：";
+
+      const nextRequiredArrow = getNextRequiredArrow();
+      if (nextRequiredArrow) {
+        arrowIcon.innerHTML = getArrowSvg(nextRequiredArrow, "#10B981", "w-4 h-4");
+        arrowText.innerText = `畫一格 (${drawWrongAttempts}/2)`;
+      } else {
+        arrowIcon.innerText = "🔍";
+        arrowText.innerText = "請先解鎖所有卡片";
+      }
+    }
+
+    /* ==========================================
+       7. 輔助與示範按鈕功能
+       ========================================== */
+    function toggleHints() {
+      playSound('click');
+      showHints = !showHints;
+      const btn = document.getElementById('btn-toggle-hint');
+      if (showHints) {
+        btn.innerText = "💡 小幫手提示：開啟";
+        btn.className = "px-4 py-2 font-bold rounded-full shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white";
+      } else {
+        btn.innerText = "💡 小幫手提示：關閉";
+        btn.className = "px-4 py-2 font-bold rounded-full shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1.5 bg-gray-200 hover:bg-gray-300 text-gray-600";
+      }
+      refresh9x9GridStyles();
+      render5x5Board();
+    }
+
+    function toggleModal(show) {
+      playSound('click');
+      const modal = document.getElementById('classroom-modal');
+      if (show) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    /* 重置連線與解鎖 */
+    function resetLevel() {
+      playSound('click');
+      loadLevel(levelIndex);
+    }
+
+    /* ⚡ 自動連線示範 */
+    function autoDemo() {
+      const lvl = LEVELS[levelIndex];
+      playSound('victory');
+      
+      /* 自動將卡片設為全部解鎖 */
+      decodedList = new Array(lvl.path.length).fill(true);
+      activeCardIndex = lvl.path.length - 1;
+      
+      /* 自動繪製出所有軌跡點 */
+      let pathTrace = [{ x: lvl.startDot.x, y: lvl.startDot.y }];
+      let curr = { x: lvl.startDot.x, y: lvl.startDot.y };
+      lvl.path.forEach(step => {
+        const vec = DIR_VECTORS[step.dir];
+        curr = { x: curr.x + vec.dx, y: curr.y + vec.dy };
+        pathTrace.push(curr);
+      });
+
+      drawingPath = pathTrace;
+      isCompleted = true;
+      startConfetti();
+      showMessage("✨ 這是自動示範連線的成果！點選【重置連線】自己動手試看看喔！", "success");
+
+      renderCards();
+      updateTargetCardStatus();
+      render5x5Board();
+      updateNextDirIndicator();
+      refresh9x9GridStyles();
+    }
+
+    /* ==========================================
+       8. 精緻通用組件與繪製 Helper
+       ========================================== */
+    function getArrowSvg(dir, color, sizeClass) {
+      const rot = DIR_ROTATIONS[dir] ?? 0;
+      return `<svg class="${sizeClass} transition-transform duration-300" style="transform: rotate(${rot}deg); transform-origin: center;" fill="none" stroke="${color}" stroke-width="3.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M12 5l-7 7m7-7l7 7" />
+      </svg>`;
+    }
+
+    function showMessage(text, type) {
+      const box = document.getElementById('message-box');
+      const boxText = document.getElementById('message-text');
+      boxText.innerText = text;
+      box.classList.remove('hidden', 'bg-red-50', 'text-red-600', 'border-red-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-200');
+      
+      if (type === 'error') {
+        box.classList.add('bg-red-50', 'text-red-600', 'border', 'border-red-200');
+      } else if (type === 'success') {
+        box.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-200');
+      } else {
+        box.classList.add('bg-indigo-50', 'text-indigo-700', 'border', 'border-indigo-200');
+      }
+    }
+
+    function hideMessage() {
+      document.getElementById('message-box').classList.add('hidden');
+    }
+
+    /* ==========================================
+       9. HTML5 Canvas 紙花慶祝粒子系統
+       ========================================== */
+    let canvas, ctx, animationFrameId;
+    let particles = [];
+    const colors = ['#FFC107', '#FF5722', '#E91E63', '#9C27B0', '#3F51B5', '#00BCD4', '#4CAF50', '#FFEB3B'];
+
+    function initConfetti() {
+      canvas = document.getElementById('confetti-canvas');
+      ctx = canvas.getContext('2d');
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function startConfetti() {
+      particles = [];
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * -canvas.height - 20,
+          r: Math.random() * 6 + 4,
+          d: Math.random() * canvas.height,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.random() * 10 - 5,
+          tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+          tiltAngle: 0
+        });
+      }
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      drawConfetti();
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let remaining = false;
+
+      particles.forEach(p => {
+        p.tiltAngle += p.tiltAngleIncremental;
+        p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+        p.x += Math.sin(p.tiltAngle);
+        p.tilt = Math.sin(p.tiltAngle - p.r / 2) * 5;
+
+        if (p.y <= canvas.height) {
+          remaining = true;
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+          ctx.stroke();
+        }
+      });
+
+      if (remaining) {
+        animationFrameId = requestAnimationFrame(drawConfetti);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  </script>
+</body>
+</html>
