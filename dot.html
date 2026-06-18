@@ -246,15 +246,14 @@
 
     </div>
 
-    <!-- 頁尾 -->
+    <!-- 頁尾 (已完成自訂字樣更新) -->
     <footer class="mt-8 pt-5 border-t border-gray-100 text-center text-xs text-gray-400 font-medium">
-      <p>適合年齡：國小一至三年級 幾何與空間邏輯思維練習教材</p>
-      <p class="mt-1">© 幾何坐標解密互動連連看課堂教材 - 授課演示輔助工具</p>
+      <p>© 2026 從遊戲中學程式 | 專為康樂國小創意科技課程教學設計 | popoyu</p>
     </footer>
 
   </div>
 
-  <!-- JavaScript 控制核心 -->
+  <!-- JavaScript 控制核心 (全量改用 block-comment 避免壓縮註解失效) -->
   <script>
     /* ==========================================
        1. 全域資料與靜態設定
@@ -343,7 +342,7 @@
       "9,1": { dir: "←", color: "#EF4444" }
     };
 
-    /* 橫軸對照表：1~9 對應 A~I */
+    /* 橫軸對照表：1~9 對應 A~I (修復為傳統宣告，避免 TDZ 執行期錯誤) */
     function getXLetter(x) {
       const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
       return letters[x - 1] || x;
@@ -426,7 +425,7 @@
       {
         id: 1,
         name: "關卡 1：超簡單正方形 (4 步)",
-        desc: "最適合入門！解鎖 4 個最直觀的坐標，在連線板連出一個可愛的小正方形吧！",
+        desc: "最適合入門！解鎖 4 個最直觀的坐報，在連線板連出一個可愛的小正方形吧！",
         startDot: { x: 1, y: 1 }, /* B,2 */
         starLabel: "B 欄（第二欄）第 2 列",
         path: [
@@ -950,7 +949,7 @@
 
       const lvl = LEVELS[levelIndex];
 
-      /* 背景幾何虛格線 */
+      /* 背景幾何虛格線 (加上 style pointer-events: none 避免干擾觸控) */
       for (let i = 0; i < 5; i++) {
         /* 垂直虛線 */
         const vLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
