@@ -132,7 +132,7 @@ const LEVELS = [
   {
     id: 1,
     name: "關卡 1：超簡單正方形 (4 步挑戰)",
-    desc: "最適合入門！解開 4 個最直觀的坐報，在點點板連出一個可愛的小正方形吧！",
+    desc: "最適合入門！解開 4 個最直觀的坐標，在點點板連出一個可愛的小正方形吧！",
     startDot: { x: 1, y: 1 }, // 起點在 B, 2 (1, 1)
     starLabel: "B 欄（第二欄）第 2 列",
     path: [
@@ -275,8 +275,8 @@ const ArrowIcon = ({ dir, className = "w-6 h-6", color = "currentColor" }) => {
     <svg
       className={`${className} transition-transform duration-300`}
       style={{ 
-        transform: `rotate(${rotation}deg)`,
-        transformOrigin: 'center'
+        transform: "rotate(" + rotation + "deg)",
+        transformOrigin: "center"
       }}
       fill="none"
       stroke={color}
@@ -388,8 +388,8 @@ export default function App() {
       const newAttempts = wrongAttempts + 1;
       setWrongAttempts(newAttempts);
 
-      const clickedStr = `(${getXLetter(x)}, ${y})`;
-      const targetStr = `(${formatCoordStr(targetCoord)})`;
+      const clickedStr = "(" + getXLetter(x) + ", " + y + ")";
+      const targetStr = "(" + formatCoordStr(targetCoord) + ")";
 
       if (newAttempts >= 2) {
         setErrorMessage("不對哦！你點到的是 " + clickedStr + "。沒關係！小幫手已在 9x9 網格亮起【黃色發光格】，點選它即可解鎖！");
@@ -518,14 +518,14 @@ export default function App() {
           key={p.id}
           className="absolute pointer-events-none rounded-sm"
           style={{
-            left: `${p.x}%`,
-            top: `${p.y}vh`,
-            width: `${p.size}px`,
-            height: `${p.size}px`,
+            left: p.x + "%",
+            top: p.y + "vh",
+            width: p.size + "px",
+            height: p.size + "px",
             backgroundColor: p.color,
-            transform: `rotate(${p.rotation}deg)`,
+            transform: "rotate(" + p.rotation + "deg)",
             opacity: 0.9,
-            animation: `fall ${p.duration}s linear ${p.delay}s infinite`,
+            animation: "fall " + p.duration + "s linear " + p.delay + "s infinite",
           }}
         />
       ))}
@@ -629,9 +629,9 @@ export default function App() {
         {/* 提示警示框 */}
         {errorMessage && (
           <div className={`p-4 rounded-xl mb-6 text-sm md:text-base font-semibold flex items-center gap-2 ${
-            errorMessage.startsWith("⚠️") 
+            errorMessage.indexOf("⚠️") === 0
               ? "bg-red-50 text-red-600 border border-red-200 animate-pulse"
-              : errorMessage.startsWith("🏆") || errorMessage.startsWith("🎉")
+              : (errorMessage.indexOf("🏆") === 0 || errorMessage.indexOf("🎉") === 0)
                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200 animate-bounce"
                 : "bg-indigo-50 text-indigo-700 border border-indigo-200"
           }`}>
@@ -674,7 +674,7 @@ export default function App() {
                         const cellKey = `${xVal},${yVal}`;
                         const cellData = ARROWS_DATA[cellKey];
                         
-                        // 當開啟提示且該卡片點錯達 2 次，才亮起黃格 (修復加安全防禦鏈)
+                        // 當開啟提示且該卡片點錯達 2 次，才亮起黃格 (安全鏈防護)
                         const isTargetCoord = showHints && (wrongAttempts >= 2) && (currentLevel.path[activeCardIndex]?.coord === cellKey);
                         const isHoverCross = hoveredCoord && (hoveredCoord.x === xVal || hoveredCoord.y === yVal);
                         
@@ -733,7 +733,7 @@ export default function App() {
                   第 {activeCardIndex + 1} 步
                 </span>
                 <span className="text-base font-black text-indigo-700">
-                  {/* 修復防護：加入安全條件渲染以防止 out-of-bounds 讀取 crash */}
+                  {/* 安全防禦：防止 out-of-bounds 讀取 crash */}
                   坐標：({currentLevel.path[activeCardIndex] ? formatCoordStr(currentLevel.path[activeCardIndex].coord) : ""})
                 </span>
                 
@@ -771,6 +771,9 @@ export default function App() {
                 {currentLevel.path.map((item, idx) => {
                   const isDecoded = decodedList[idx];
                   const isActive = activeCardIndex === idx;
+                  const itemLetter = getXLetter(parseInt(item.coord.split(',')[0], 10));
+                  const itemNumber = item.coord.split(',')[1];
+                  
                   return (
                     <button
                       key={`card-${idx}`}
@@ -789,7 +792,7 @@ export default function App() {
                       </span>
                       
                       <span className="text-[11px] font-black text-gray-850">
-                        {formatCoordStr(item.coord).split(',')[0]},{item.coord.split(',')[1]}
+                        {itemLetter},{itemNumber}
                       </span>
 
                       <div className="w-5 h-5 flex items-center justify-center mt-1 mb-0.5 rounded-full bg-white/70 shadow-inner">
@@ -804,7 +807,7 @@ export default function App() {
                         <span className="text-[8px] text-emerald-600 font-bold">解開</span>
                       ) : isActive ? (
                         <span className="text-[8px] text-amber-600 font-bold animate-pulse">
-                          {wrongAttempts >= 2 ? "💡" : `找 (${wrongAttempts}/2)`}
+                          {wrongAttempts >= 2 ? "💡" : "找 (" + wrongAttempts + "/2)"}
                         </span>
                       ) : (
                         <span className="text-[8px] text-gray-400">待鎖</span>
