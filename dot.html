@@ -58,7 +58,7 @@
           </h1>
         </div>
         <p class="text-sm md:text-base text-gray-500 font-medium">
-          一年級專屬：橫軸是英文字母 (A~I)，縱軸是數字 (1~9)，挑戰四大漸進關卡！
+          一年級專屬：橫軸是英文字母 (A~I)，縱軸是數字 (1~9)，挑戰全新八大漸進關卡！
         </p>
       </div>
       
@@ -342,7 +342,7 @@
       "9,1": { dir: "←", color: "#EF4444" }
     };
 
-    /* 橫軸對照表：1~9 對應 A~I (修復為傳統宣告，避免 TDZ 執行期錯誤) */
+    /* 橫軸對照表：1~9 對應 A~I */
     function getXLetter(x) {
       const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
       return letters[x - 1] || x;
@@ -363,7 +363,7 @@
       return getXLetter(x) + ", " + y;
     }
 
-    /* 【新增修復】：音效生成器 (Web Audio API) 補回並改用傳統 function 宣告以防 hoisting 問題 */
+    /* 音效生成器 (Web Audio API) */
     function playSound(type) {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -376,10 +376,10 @@
 
         if (type === 'success') {
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(523.25, now); /* C5 */
-          osc.frequency.setValueAtTime(659.25, now + 0.08); /* E5 */
-          osc.frequency.setValueAtTime(783.99, now + 0.16); /* G5 */
-          osc.frequency.setValueAtTime(1046.50, now + 0.24); /* C6 */
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          osc.frequency.setValueAtTime(1046.50, now + 0.24);
           gain.gain.setValueAtTime(0.12, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
           osc.start(now);
@@ -420,69 +420,136 @@
       }
     }
 
+    /* 【全新設計】：八大漸進式難度關卡 (補足四題，合計 8 關，全量升級！) */
     const LEVELS = [
       {
         id: 1,
         name: "關卡 1：超簡單正方形 (4 步)",
-        desc: "最適合入門！解鎖 4 個直觀座標，在連線板畫出一個可愛的正方形吧！",
+        desc: "最適合入門！解鎖 4 個最直觀的坐標，在連線板連出一個可愛的小正方形吧！",
         startDot: { x: 1, y: 1 }, /* B,2 */
         starLabel: "B 欄（第二欄）第 2 列",
         path: [
-          { coord: "3,6", dir: "→", color: "#3B82F6" },
-          { coord: "5,5", dir: "↑", color: "#10B981" },
-          { coord: "9,2", dir: "←", color: "#3B82F6" },
-          { coord: "1,1", dir: "↓", color: "#10B981" }
+          { coord: "3,6", dir: "→", color: "#3B82F6" },     /* B,2 -> C,2 */
+          { coord: "5,5", dir: "↑", color: "#10B981" },     /* C,2 -> C,3 */
+          { coord: "9,2", dir: "←", color: "#3B82F6" },     /* C,3 -> B,3 */
+          { coord: "1,1", dir: "↓", color: "#10B981" }      /* B,3 -> B,2 (閉合) */
         ]
       },
       {
         id: 2,
-        name: "關卡 2：溫馨小房子 (6 步)",
-        desc: "加入斜角箭頭！解鎖 6 個座標，為小精靈造一間尖屋頂小房子吧！",
-        startDot: { x: 1, y: 1 }, /* B,2 */
-        starLabel: "B 欄（第二欄）第 2 列",
+        name: "關卡 2：神秘小旗子 (6 步)",
+        desc: "【新關卡】練習畫出一面神氣的小旗子！解鎖 6 個坐標在點點板連線吧！",
+        startDot: { x: 1, y: 0 }, /* B,1 */
+        starLabel: "B 欄（第二欄）第 1 列",
         path: [
-          { coord: "3,6", dir: "→", color: "#3B82F6" },
-          { coord: "4,2", dir: "→", color: "#10B981" },
-          { coord: "5,5", dir: "↑", color: "#10B981" },
-          { coord: "5,9", dir: "↖", color: "#F97316" },
-          { coord: "2,8", dir: "↙", color: "#F97316" },
-          { coord: "1,1", dir: "↓", color: "#10B981" }
+          { coord: "3,8", dir: "↑", color: "#10B981" },     /* B,1 -> B,2 */
+          { coord: "5,5", dir: "↑", color: "#10B981" },     /* B,2 -> B,3 */
+          { coord: "3,6", dir: "→", color: "#3B82F6" },     /* B,3 -> C,3 */
+          { coord: "1,1", dir: "↓", color: "#10B981" },     /* C,3 -> C,2 */
+          { coord: "9,2", dir: "←", color: "#3B82F6" },     /* C,2 -> B,2 */
+          { coord: "9,9", dir: "↓", color: "#10B981" }      /* B,2 -> B,1 (閉合) */
         ]
       },
       {
         id: 3,
-        name: "關卡 3：魔法時空沙漏 (8 步)",
-        desc: "挑戰交叉路徑！看著坐報箭頭對位，畫出完美的魔法沙漏！",
-        startDot: { x: 1, y: 3 }, /* B,4 */
-        starLabel: "B 欄（第二欄）第 4 列",
+        name: "關卡 3：溫馨小房子 (6 步)",
+        desc: "加入斜向角箭頭！解鎖 6 個座標，為小精靈造一間漂亮的三角形尖屋頂小屋！",
+        startDot: { x: 1, y: 1 }, /* B,2 */
+        starLabel: "B 欄（第二欄）第 2 列",
         path: [
-          { coord: "3,6", dir: "→", color: "#3B82F6" },
-          { coord: "4,2", dir: "→", color: "#10B981" },
-          { coord: "2,8", dir: "↙", color: "#F97316" },
-          { coord: "8,5", dir: "↘", color: "#F97316" },
-          { coord: "1,8", dir: "←", color: "#3B82F6" },
-          { coord: "9,2", dir: "←", color: "#3B82F6" },
-          { coord: "2,2", dir: "↗", color: "#F97316" },
-          { coord: "5,9", dir: "↖", color: "#F97316" }
+          { coord: "3,6", dir: "→", color: "#3B82F6" },     /* B,2 -> C,2 */
+          { coord: "4,2", dir: "→", color: "#10B981" },     /* C,2 -> D,2 */
+          { coord: "5,5", dir: "↑", color: "#10B981" },     /* D,2 -> D,3 */
+          { coord: "5,9", dir: "↖", color: "#F97316" },     /* D,3 -> C,4 */
+          { coord: "2,8", dir: "↙", color: "#F97316" },     /* C,4 -> B,3 */
+          { coord: "1,1", dir: "↓", color: "#10B981" }      /* B,3 -> B,2 (閉合) */
         ]
       },
       {
         id: 4,
-        name: "關卡 4：經典課本城堡挑戰 (10 步)",
-        desc: "終極挑戰！完美還原課本十個步驟，拼出經典的不規則城堡吧！",
+        name: "關卡 4：魔法小聖代 (6 步)",
+        desc: "【新關卡】解開座標，在點點板畫出一個對稱、好看的夏日高腳果汁杯！",
+        startDot: { x: 2, y: 0 }, /* C,1 */
+        starLabel: "C 欄（第三欄）第 1 列",
+        path: [
+          { coord: "1,6", dir: "↖", color: "#3B82F6" },     /* C,1 -> B,2 */
+          { coord: "5,5", dir: "↑", color: "#10B981" },     /* B,2 -> B,3 */
+          { coord: "3,6", dir: "→", color: "#3B82F6" },     /* B,3 -> C,3 */
+          { coord: "4,2", dir: "→", color: "#10B981" },     /* C,3 -> D,3 */
+          { coord: "1,1", dir: "↓", color: "#10B981" },     /* D,3 -> D,2 */
+          { coord: "2,8", dir: "↙", color: "#F97316" }      /* D,2 -> C,1 (閉合) */
+        ]
+      },
+      {
+        id: 5,
+        name: "關卡 5：魔法時空沙漏 (8 步)",
+        desc: "挑戰更豐富的斜線路徑！看著坐標箭頭交叉，畫出美麗又對稱的魔法沙漏！",
+        startDot: { x: 1, y: 3 }, /* B,4 */
+        starLabel: "B 欄（第二欄）第 4 列",
+        path: [
+          { coord: "3,6", dir: "→", color: "#3B82F6" },     /* B,4 -> C,4 */
+          { coord: "4,2", dir: "→", color: "#10B981" },     /* C,4 -> D,4 */
+          { coord: "2,8", dir: "↙", color: "#F97316" },     /* D,4 -> C,3 */
+          { coord: "8,5", dir: "↘", color: "#F97316" },     /* C,3 -> D,2 */
+          { coord: "1,8", dir: "←", color: "#3B82F6" },     /* D,2 -> C,2 */
+          { coord: "9,2", dir: "←", color: "#3B82F6" },     /* C,2 -> B,2 */
+          { coord: "2,2", dir: "↗", color: "#F97316" },     /* B,2 -> C,3 */
+          { coord: "5,9", dir: "↖", color: "#F97316" }      /* C,3 -> B,4 (閉合) */
+        ]
+      },
+      {
+        id: 6,
+        name: "關卡 6：飛天魔法魚 (8 步)",
+        desc: "【新關卡】畫出一條在空中游水的小魚，魚身在中間有一個好玩的交叉點喔！",
+        startDot: { x: 0, y: 2 }, /* A,3 */
+        starLabel: "A 欄（第一欄）第 3 列",
+        path: [
+          { coord: "3,6", dir: "→", color: "#3B82F6" },     /* A,3 -> B,3 */
+          { coord: "2,2", dir: "↗", color: "#F97316" },     // B,3 -> C,4
+          { coord: "4,2", dir: "→", color: "#10B981" },     // C,4 -> D,4
+          { coord: "8,5", dir: "↘", color: "#F97316" },     // D,4 -> E,3
+          { coord: "9,4", dir: "←", color: "#3B82F6" },     // E,3 -> D,3
+          { coord: "5,5", dir: "↑", color: "#10B981" },     // D,3 -> D,4
+          { coord: "3,8", dir: "↑", color: "#10B981" },     // D,4 -> D,5
+          { coord: "1,8", dir: "←", color: "#3B82F6" },     // D,5 -> C,5
+          { coord: "9,2", dir: "←", color: "#3B82F6" },     // C,5 -> B,5
+          { coord: "9,9", dir: "↓", color: "#10B981" }      // B,5 -> B,4 (閉合)
+        ]
+      },
+      {
+        id: 7,
+        name: "關卡 7：幸運小飛蝶 (8 步)",
+        desc: "【新難度】用斜角箭頭對稱拼圖，在點點板連線畫出一隻漂亮的蝴蝶結！",
+        startDot: { x: 2, y: 2 }, /* C,3 */
+        starLabel: "C 欄（第三欄）第 3 列",
+        path: [
+          { coord: "2,2", dir: "↗", color: "#F97316" },     /* C,3 -> D,4 */
+          { coord: "1,1", dir: "↓", color: "#10B981" },     /* D,4 -> D,3 */
+          { coord: "9,9", dir: "↓", color: "#10B981" },     /* D,3 -> D,2 */
+          { coord: "1,6", dir: "↖", color: "#3B82F6" },     /* D,2 -> C,3 */
+          { coord: "2,8", dir: "↙", color: "#F97316" },     /* C,3 -> B,2 */
+          { coord: "5,5", dir: "↑", color: "#10B981" },     /* B,2 -> B,3 */
+          { coord: "3,8", dir: "↑", color: "#10B981" },     /* B,3 -> B,4 */
+          { coord: "8,5", dir: "↘", color: "#F97316" }      /* B,4 -> C,3 (閉合) */
+        ]
+      },
+      {
+        id: 8,
+        name: "關卡 8：經典課本城堡挑戰 (10 步)",
+        desc: "終極挑戰！完美還原課本十個步驟，解密並連線出最終的城堡圖形！",
         startDot: { x: 1, y: 2 }, /* B,3 */
         starLabel: "B 欄（第二欄）第 3 列",
         path: [
-          { coord: "1,1", dir: "↓", color: "#10B981" },
-          { coord: "2,2", dir: "↗", color: "#F97316" },
-          { coord: "3,6", dir: "→", color: "#3B82F6" },
-          { coord: "8,5", dir: "↘", color: "#F97316" },
-          { coord: "9,4", dir: "←", color: "#3B82F6" },
-          { coord: "5,5", dir: "↑", color: "#10B981" },
-          { coord: "3,8", dir: "↑", color: "#10B981" },
-          { coord: "1,8", dir: "←", color: "#3B82F6" },
-          { coord: "9,2", dir: "←", color: "#3B82F6" },
-          { coord: "9,9", dir: "↓", color: "#10B981" }
+          { coord: "1,1", dir: "↓", color: "#10B981" },     /* B,3 -> B,2 */
+          { coord: "2,2", dir: "↗", color: "#F97316" },     /* B,2 -> C,3 */
+          { coord: "3,6", dir: "→", color: "#3B82F6" },     /* C,3 -> D,3 */
+          { coord: "8,5", dir: "↘", color: "#F97316" },     /* D,3 -> E,2 */
+          { coord: "9,4", dir: "←", color: "#3B82F6" },     /* E,2 -> D,2 */
+          { coord: "5,5", dir: "↑", color: "#10B981" },     /* D,2 -> D,3 */
+          { coord: "3,8", dir: "↑", color: "#10B981" },     /* D,3 -> D,4 */
+          { coord: "1,8", dir: "←", color: "#3B82F6" },     /* D,4 -> C,4 */
+          { coord: "9,2", dir: "←", color: "#3B82F6" },     /* C,4 -> B,4 */
+          { coord: "9,9", dir: "↓", color: "#10B981" }      /* B,4 -> B,3 (閉合) */
         ]
       }
     ];
@@ -576,7 +643,7 @@
     }
 
     function loadLevel(idx) {
-      const lvl = LEVELS[idx];
+      const lvl = LEVELS[idx] || LEVELS[0];
       
       /* 更新 Tabs 狀態 */
       LEVELS.forEach((_, i) => {
@@ -855,7 +922,7 @@
         if (wrongAttempts >= 2) {
           showMessage(`不對哦！你點到的是 ${clickedStr}。沒關係！小幫手已在左方 9x9 網格亮起【黃色發光格】，點選它即可解鎖！`, "error");
         } else {
-          showMessage(`不對哦！你點到的是 ${clickedStr}。請在左方 9x9 網格仔計找找 ${targetStr} 座標！(再點錯一次會顯示提示格)`, "error");
+          showMessage(`不對哦！你點到的是 ${clickedStr}。請在左方 9x9 網格仔細找找 ${targetStr} 座標！(再點錯一次會顯示提示格)`, "error");
         }
       }
 
@@ -911,27 +978,27 @@
         svg.appendChild(hLine);
       }
 
-      /* Y軸座標數字標籤 (加上 style pointer-events: none) */
+      /* Y軸座標數字標籤 (使用極低干擾的灰藍色，加上 style pointer-events: none) */
       for (let r = 0; r < 5; r++) {
         const valY = 5 - r;
         const textY = document.createElementNS("http://www.w3.org/2000/svg", "text");
         textY.setAttribute("x", "18");
         textY.setAttribute("y", 40 + r * 55 + 4);
         textY.setAttribute("text-anchor", "middle");
-        textY.setAttribute("class", "fill-indigo-500 font-extrabold text-[11px]");
+        textY.setAttribute("class", "fill-slate-300 font-bold text-[10px]");
         textY.setAttribute("style", "pointer-events: none;");
         textY.textContent = valY;
         svg.appendChild(textY);
       }
 
-      /* X軸座標字母標籤 (加上 style pointer-events: none) */
+      /* X軸座標字母標籤 (使用極低干擾的灰藍色，加上 style pointer-events: none) */
       for (let c = 0; c < 5; c++) {
         const valX = getDotXLetter(c);
         const textX = document.createElementNS("http://www.w3.org/2000/svg", "text");
         textX.setAttribute("x", 40 + c * 55);
         textX.setAttribute("y", "285");
         textX.setAttribute("text-anchor", "middle");
-        textX.setAttribute("class", "fill-indigo-500 font-extrabold text-[11px]");
+        textX.setAttribute("class", "fill-slate-300 font-bold text-[10px]");
         textX.setAttribute("style", "pointer-events: none;");
         textX.textContent = valX;
         svg.appendChild(textX);
@@ -1023,7 +1090,7 @@
           dot.setAttribute("style", "pointer-events: none;");
           group.appendChild(dot);
 
-          /* 起點未造訪前在外圍包裹一圈呼吸紅環 (加上 pointer-events: none 穿透) */
+          /* 起點未造訪前在外圍包裹一圈呼吸紅環 (加上 pointer-events: none 穿透，減少視覺干擾) */
           if (isStart && !isVisited) {
             const glowRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             glowRing.setAttribute("cx", svgX);
