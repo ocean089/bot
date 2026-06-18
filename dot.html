@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>幾何坐標解密連連看</title>
+  <title>找出箭頭完成圖形</title>
   <!-- 載入 Tailwind CSS (保證排版美觀) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -54,7 +54,7 @@
         <div class="flex items-center justify-center md:justify-start gap-2 mb-1">
           <span class="text-3xl animate-bounce">🧩</span>
           <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-sky-600">
-            幾何坐標解密連連看
+            找出箭頭完成圖形
           </h1>
         </div>
         <p class="text-sm md:text-base text-gray-500 font-medium">
@@ -156,16 +156,17 @@
         <!-- 卡片指令序列 -->
         <div class="bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
           <div class="flex justify-between items-center mb-2">
-            <h3 class="text-xs font-black text-indigo-950 flex items-center gap-1">
-              <span>🏷️</span> <span>第一步：解鎖坐標指令 (點擊可切換)</span>
+            <!-- 【優化放大】：第一步標題字體顯著放大 -->
+            <h3 class="text-sm sm:text-base font-black text-indigo-950 flex items-center gap-1.5">
+              <span>🏷️</span> <span>第一步：解鎖座標指令 (點擊卡片可切換)</span>
             </h3>
-            <span id="unlock-progress" class="text-[10px] text-indigo-500 font-semibold bg-indigo-100/60 px-2 py-0.5 rounded-full">
+            <span id="unlock-progress" class="text-xs sm:text-sm text-indigo-600 font-bold bg-indigo-100/60 px-3 py-0.5 rounded-full">
               進度：0 / 4
             </span>
           </div>
           
           <!-- 卡片裝載容器 -->
-          <div id="card-list" class="grid grid-cols-5 gap-1.5">
+          <div id="card-list" class="grid grid-cols-5 gap-2">
             <!-- 這裡會動態填入微型卡片 -->
           </div>
         </div>
@@ -253,7 +254,7 @@
 
   </div>
 
-  <!-- JavaScript 控制核心 (全量改用 block-comment 避免壓縮註解失效) -->
+  <!-- JavaScript 控制核心 -->
   <script>
     /* ==========================================
        1. 全域資料與靜態設定
@@ -420,7 +421,7 @@
       }
     }
 
-    /* 【全新設計】：八大漸進式難度關卡 (補足四題，合計 8 關，全量升級！) */
+    /* 八大漸進式難度關卡 (補足四題，合計 8 關，全量升級！) */
     const LEVELS = [
       {
         id: 1,
@@ -592,7 +593,7 @@
       return null;
     }
 
-    /* 判斷下一步連線是否合法 (以傳統 function 宣告以防 hoisting 與 TDZ 問題) */
+    /* 判斷下一步連線是否合法 */
     function isValidNextDot(tx, ty) {
       const nextRequiredArrow = getNextRequiredArrow();
       if (nextRequiredArrow === null) return false;
@@ -703,7 +704,6 @@
           btn.className = `h-8 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-200 relative group overflow-hidden bg-white hover:bg-indigo-50 cursor-pointer select-none`;
           btn.style.touchAction = "manipulation";
           
-          /* 【重要平板防護】：雙向綁定 onclick 和 ontouchstart，並用 preventDefault 防止 ghost click 引發多重觸控問題 */
           btn.onclick = (e) => {
             e.preventDefault();
             handle9x9Click(x, y);
@@ -719,7 +719,7 @@
             btn.innerHTML = `<span class="text-xs text-gray-300 pointer-events-none">?</span>`;
           }
 
-          /* 小坐標提示 hover 浮現 (加上 pointer-events-none 避開平板觸控遮擋) */
+          /* 小坐標提示 hover 浮現 */
           const coordTip = document.createElement('span');
           coordTip.className = "absolute bottom-0 text-[8px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none";
           coordTip.innerText = `${getXLetter(x)},${y}`;
@@ -802,7 +802,6 @@
         btn.id = `card-badge-${idx}`;
         btn.style.touchAction = "manipulation";
         
-        /* 【重要平板防護】：雙向綁定 onclick 和 ontouchstart */
         btn.onclick = (e) => {
           e.preventDefault();
           handleSelectCard(idx);
@@ -819,39 +818,39 @@
           cardBgClass = "bg-emerald-50 border-emerald-200 text-emerald-800 cursor-pointer";
         }
 
-        btn.className = `relative flex flex-col items-center justify-center py-2 px-0.5 rounded-xl transition-all duration-200 border ${cardBgClass}`;
+        btn.className = `relative flex flex-col items-center justify-center py-2.5 px-0.5 rounded-xl transition-all duration-200 border ${cardBgClass}`;
         
         /* 序號 */
         const numLabel = document.createElement('span');
-        numLabel.className = "text-[9px] font-bold text-gray-400 mb-0.5 pointer-events-none";
+        numLabel.className = "text-[11px] sm:text-xs font-bold text-gray-400 mb-0.5 pointer-events-none";
         numLabel.innerText = `#${idx + 1}`;
         btn.appendChild(numLabel);
 
-        /* 座標 */
+        /* 座標 (字體與字重顯著放大) */
         const coordLabel = document.createElement('span');
-        coordLabel.className = "text-[11px] font-black text-gray-850 pointer-events-none";
+        coordLabel.className = "text-sm sm:text-base font-extrabold text-gray-850 pointer-events-none";
         coordLabel.innerText = `${letter},${number}`;
         btn.appendChild(coordLabel);
 
-        /* 縮小箭頭圓圈 */
+        /* 縮小箭頭圓圈 (圓圈與內部 SVG 顯著放大) */
         const arrowContainer = document.createElement('div');
-        arrowContainer.className = "w-5 h-5 flex items-center justify-center mt-1 mb-0.5 rounded-full bg-white/70 shadow-inner pointer-events-none";
+        arrowContainer.className = "w-7 h-7 flex items-center justify-center mt-1.5 mb-1 rounded-full bg-white/70 shadow-inner pointer-events-none";
         if (isDecoded) {
-          arrowContainer.innerHTML = getArrowSvg(item.dir, ARROWS_DATA[item.coord]?.color || "#4F46E5", "w-3.5 h-3.5");
+          arrowContainer.innerHTML = getArrowSvg(item.dir, ARROWS_DATA[item.coord]?.color || "#4F46E5", "w-4.5 h-4.5");
         } else {
-          arrowContainer.innerHTML = `<span class="text-[10px] animate-pulse">🔍</span>`;
+          arrowContainer.innerHTML = `<span class="text-xs animate-pulse">🔍</span>`;
         }
         btn.appendChild(arrowContainer);
 
-        /* 卡片底部狀態文字 */
+        /* 卡片底部狀態文字 (字體放大) */
         const statusLabel = document.createElement('span');
-        statusLabel.className = "text-[8px] font-bold pointer-events-none";
+        statusLabel.className = "text-[10px] sm:text-xs font-bold pointer-events-none";
         if (isDecoded) {
           statusLabel.className += " text-emerald-600";
           statusLabel.innerText = "解開";
         } else if (isActive) {
           statusLabel.className += " text-amber-600 animate-pulse";
-          statusLabel.innerText = wrongAttempts >= 2 ? "💡" : `找 (${wrongAttempts}/2)`;
+          statusLabel.innerText = wrongAttempts >= 2 ? "💡" : "找 (" + wrongAttempts + "/2)";
         } else {
           statusLabel.className += " text-gray-400";
           statusLabel.innerText = "待鎖";
@@ -951,7 +950,7 @@
 
       const lvl = LEVELS[levelIndex];
 
-      /* 背景幾何虛格線 (加上 style pointer-events: none 避免干擾觸控) */
+      /* 背景幾何虛格線 */
       for (let i = 0; i < 5; i++) {
         /* 垂直虛線 */
         const vLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -978,7 +977,7 @@
         svg.appendChild(hLine);
       }
 
-      /* Y軸座標數字標籤 (使用極低干擾的灰藍色，加上 style pointer-events: none) */
+      /* Y軸座標數字標籤 */
       for (let r = 0; r < 5; r++) {
         const valY = 5 - r;
         const textY = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -991,7 +990,7 @@
         svg.appendChild(textY);
       }
 
-      /* X軸座標字母標籤 (使用極低干擾的灰藍色，加上 style pointer-events: none) */
+      /* X軸座標字母標籤 */
       for (let c = 0; c < 5; c++) {
         const valX = getDotXLetter(c);
         const textX = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1004,7 +1003,7 @@
         svg.appendChild(textX);
       }
 
-      /* 繪製目前的草綠色連線路徑 (加上 style pointer-events: none 防止阻擋點點觸控) */
+      /* 繪製目前的草綠色連線路徑 */
       if (drawingPath.length > 1) {
         for (let idx = 1; idx < drawingPath.length; idx++) {
           const prev = drawingPath[idx - 1];
@@ -1040,7 +1039,7 @@
 
           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
-          /* 黃色提示閃爍圈 (加上 pointer-events: none 防止攔截點擊) */
+          /* 黃色提示閃爍圈 */
           if (showDotHint) {
             const hintCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             hintCircle.setAttribute("cx", svgX);
@@ -1053,7 +1052,7 @@
             group.appendChild(hintCircle);
           }
 
-          /* 放大隱形點擊熱區 (加強平板 cursor: pointer 與 touch-action 樣式) */
+          /* 放大隱形點擊熱區 */
           const touchArea = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           touchArea.setAttribute("cx", svgX);
           touchArea.setAttribute("cy", svgY);
@@ -1072,7 +1071,7 @@
           };
           group.appendChild(touchArea);
 
-          /* 可見的圓點 (加上 pointer-events-none 確保穿透) */
+          /* 可見圓點 */
           const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           dot.setAttribute("cx", svgX);
           dot.setAttribute("cy", svgY);
@@ -1090,7 +1089,7 @@
           dot.setAttribute("style", "pointer-events: none;");
           group.appendChild(dot);
 
-          /* 起點未造訪前在外圍包裹一圈呼吸紅環 (加上 pointer-events: none 穿透，減少視覺干擾) */
+          /* 起點未造訪前在外圍包裹一圈呼吸紅環 */
           if (isStart && !isVisited) {
             const glowRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             glowRing.setAttribute("cx", svgX);
@@ -1145,7 +1144,7 @@
           isCompleted = true;
           playSound('victory');
           startConfetti();
-          showMessage("🏆 太完美了！你成功依據對位指令畫出了正確的幾何城堡圖案！真是連線大師！", "success");
+          showMessage("🏆 太完美了！你成功依據對位指令畫出了正確的幾何圖形！真是連線大師！", "success");
           document.getElementById('draw-success-badge').classList.remove('hidden');
         }
       } else {
@@ -1274,7 +1273,7 @@
        ========================================== */
     function getArrowSvg(dir, color, sizeClass) {
       const rot = DIR_ROTATIONS[dir] ?? 0;
-      /* 加強 SVG 及其內部 path 的 pointer-events: none 與 style 穿透，確保平板點擊精準不被阻擋 */
+      /* 加強 SVG 及其內部 path 的 pointer-events: none 與 style 穿透 */
       return `<svg class="${sizeClass} transition-transform duration-300" style="transform: rotate(${rot}deg); transform-origin: center; pointer-events: none;" fill="none" stroke="${color}" stroke-width="3.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" pointer-events="none">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M12 5l-7 7m7-7l7 7" style="pointer-events: none;" />
       </svg>`;
