@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @keyframes pulseGlow {
-      0%, 100 { transform: scale(1); opacity: 0.8; }
+      0%, 100% { transform: scale(1); opacity: 0.8; }
       50% { transform: scale(1.15); opacity: 1; }
     }
     /* 呼吸發光效果：限定自身中心點縮放，絕不產生位移 */
@@ -157,7 +157,7 @@
         <div class="bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
           <div class="flex justify-between items-center mb-2">
             <h3 class="text-xs font-black text-indigo-950 flex items-center gap-1">
-              <span>🏷️</span> <span>第一步：解鎖坐報指令 (點擊可切換)</span>
+              <span>🏷️</span> <span>第一步：解鎖坐標指令 (點擊可切換)</span>
             </h3>
             <span id="unlock-progress" class="text-[10px] text-indigo-500 font-semibold bg-indigo-100/60 px-2 py-0.5 rounded-full">
               進度：0 / 4
@@ -496,7 +496,17 @@
         btn.innerText = lvl.name;
         btn.id = `tab-${idx}`;
         btn.className = `px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-600`;
-        btn.onclick = () => selectLevel(idx);
+        btn.style.touchAction = "manipulation";
+        
+        btn.onclick = (e) => {
+          e.preventDefault();
+          selectLevel(idx);
+        };
+        btn.ontouchstart = (e) => {
+          e.preventDefault();
+          selectLevel(idx);
+        };
+        
         container.appendChild(btn);
       });
     }
@@ -568,7 +578,16 @@
           btn.id = `cell-${x}-${y}`;
           btn.className = `h-8 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-200 relative group overflow-hidden bg-white hover:bg-indigo-50 cursor-pointer select-none`;
           btn.style.touchAction = "manipulation";
-          btn.onclick = () => handle9x9Click(x, y);
+          
+          /* 【重要平板防護】：雙向綁定 onclick 和 ontouchstart，並用 preventDefault 防止 ghost click 引發多重觸控問題 */
+          btn.onclick = (e) => {
+            e.preventDefault();
+            handle9x9Click(x, y);
+          };
+          btn.ontouchstart = (e) => {
+            e.preventDefault();
+            handle9x9Click(x, y);
+          };
 
           if (arrow) {
             btn.innerHTML = getArrowSvg(arrow.dir, arrow.color, "w-5 h-5 sm:w-6 sm:h-6 pointer-events-none");
@@ -657,8 +676,17 @@
 
         const btn = document.createElement('button');
         btn.id = `card-badge-${idx}`;
-        btn.onclick = () => handleSelectCard(idx);
         btn.style.touchAction = "manipulation";
+        
+        /* 【重要平板防護】：雙向綁定 onclick 和 ontouchstart */
+        btn.onclick = (e) => {
+          e.preventDefault();
+          handleSelectCard(idx);
+        };
+        btn.ontouchstart = (e) => {
+          e.preventDefault();
+          handleSelectCard(idx);
+        };
         
         let cardBgClass = "bg-white border-gray-150 hover:border-indigo-200 cursor-pointer";
         if (isActive) {
