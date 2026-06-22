@@ -85,7 +85,7 @@
         </div>
       </div>
       
-      <!-- 功能快捷列 (已移除小幫手提示切換按鈕) -->
+      <!-- 功能快捷列 -->
       <div class="flex flex-wrap items-center gap-3 justify-center">
         <button
           onclick="toggleModal(true)"
@@ -109,8 +109,8 @@
       </h3>
       <ul class="text-sm md:text-base text-amber-900 space-y-2 list-disc pl-5">
         <li><strong>第一步（解鎖座標）</strong>：座標格式為 <strong>(英文字母, 數字)</strong>。例如尋找 <strong>(C, 6)</strong>，先在最底橫軸找到 <strong>C</strong>，再往上對齊數字 <strong>6</strong>。點擊格子解鎖秘密箭頭！</li>
-        <li><strong>第二步（點點板連線）</strong>：為方便辨識，5x5 點點板也貼心標示了橫軸字母 (A~E) 與縱軸數字 (1~5)。</li>
-        <li>從點點板上的黃邊閃爍<strong>【紅色起點】</strong>出發，看著上方引導，朝解碼出的箭頭方向依序在點點板連線。</li>
+        <li><strong>第二步（點點板連線）</strong>：為方便辨識與連線，5x5 點點板已移除了座標標籤，純粹看方向來畫圖！</li>
+        <li>從點點板上的<strong>【紅色起點圓點】</strong>出發，看著解碼出的箭頭方向依序在點點板連線。</li>
         <li><strong>🌟 教學輔導機制：</strong>本遊戲採用自動輔助提示。不論是「解鎖座標」或「畫點點板連線」，只要學生<strong>同一格連續點錯 3 次</strong>，黃色發光提示就會全自動現形，保護孩子的學習信心！</li>
       </ul>
     </div>
@@ -334,7 +334,7 @@
       {
         id: 2, 
         name: "第 2 關 (5步)", 
-        desc: "【新設計】練習畫出一面神氣的小旗子！解鎖 5 個坐報在點點板連線吧，絕無重疊！",
+        desc: "【新設計】練習畫出一面神氣的小旗子！解鎖 5 個坐標在點點板連線吧，絕無重疊！",
         startDot: { x: 1, y: 1 }, /* B,2 */
         starLabel: "B 欄（第二欄）第 2 列",
         /* 重塑第 2 關指令路徑，縮減為 5 步，無任何重疊軌跡，組成完美小旗子圖形 */
@@ -363,7 +363,7 @@
         ]
       },
       {
-        id: 5, name: "第 5 關 (8步)", desc: "挑戰更豐富的斜線路徑！看著坐標箭頭對位，畫出美麗又對稱的魔法沙漏！",
+        id: 5, name: "第 5 關 (8步)", desc: "挑戰更豐富的斜線路徑！看著坐報箭頭對位，畫出美麗又對稱的魔法沙漏！",
         startDot: { x: 1, y: 3 }, path: [
           { coord: "3,6", dir: "→", color: "#3B82F6" }, { coord: "4,2", dir: "→", color: "#10B981" },
           { coord: "2,8", dir: "↙", color: "#F97316" }, { coord: "8,5", dir: "↘", color: "#F97316" },
@@ -426,7 +426,35 @@
     let wrongAttempts = 0;
     let drawWrongAttempts = 0;
     let drawingPath = [];
+    let showHints = true;
     let isCompleted = false;
+
+    /* 全域音訊上下文實例與解鎖核心機制 (Singleton Pattern to resolve iOS unlock limits) */
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    /* 全域觸發器：在使用者進行第一次點選螢幕時，主動解鎖 iOS/Safari/Chrome 的音訊狀態限制 */
+    function unlockAudio() {
+      try {
+        const ctx = getAudioCtx();
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume();
+        }
+      } catch (e) {}
+      /* 解鎖後移除事件，不重複消耗資源 */
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    }
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
 
     function getNextRequiredArrow() {
       const currentDrawStep = drawingPath.length - 1;
@@ -445,10 +473,11 @@
       return currentDot.x + vec.dx === tx && currentDot.y + vec.dy === ty;
     }
 
-    /* 音效生成器 (Web Audio API) */
+    /* 音效生成器 (複用 getAudioCtx 進行 0 延遲播放) */
     function playSound(type) {
       try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = getAudioCtx();
+        if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -463,21 +492,24 @@
           osc.frequency.setValueAtTime(1046.50, now + 0.24);
           gain.gain.setValueAtTime(0.12, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-          osc.start(now); osc.stop(now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
         } else if (type === 'click') {
           osc.type = 'sine';
           osc.frequency.setValueAtTime(600, now);
           osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
           gain.gain.setValueAtTime(0.08, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-          osc.start(now); osc.stop(now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
         } else if (type === 'error') {
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(180, now);
           osc.frequency.linearRampToValueAtTime(110, now + 0.2);
           gain.gain.setValueAtTime(0.12, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-          osc.start(now); osc.stop(now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
         } else if (type === 'victory') {
           const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
           notes.forEach((freq, idx) => {
@@ -589,7 +621,7 @@
     function refresh9x9GridStyles() {
       const lvl = LEVELS[levelIndex];
       const targetCard = lvl.path[activeCardIndex];
-      /* 【系統重構】：刪除 showHints 判斷，全自動在錯誤滿 3 次時亮格 */
+      /* 刪除 showHints 判斷，全自動在錯誤滿 3 次時亮格 */
       const hasGlow = (wrongAttempts >= 3) && targetCard;
 
       for (let y = 1; y <= 9; y++) {
@@ -633,9 +665,9 @@
         list.appendChild(btn);
       });
       
-      const progEl = document.getElementById('unlock-progress');
-      if (progEl) {
-        progEl.innerText = `進度：${decodedList.filter(Boolean).length} / ${lvl.path.length}`;
+      const prog = document.getElementById('unlock-progress');
+      if (prog) {
+        prog.innerText = `進度：${decodedList.filter(Boolean).length} / ${lvl.path.length}`;
       }
     }
 
@@ -688,40 +720,63 @@
       const svg = document.getElementById('board-svg'); svg.innerHTML = '';
       const lvl = LEVELS[levelIndex];
 
+      /* 背景幾何虛格線 */
       for (let i = 0; i < 5; i++) {
+        /* 垂直虛線 */
         const vL = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        vL.setAttribute("x1", 40 + i * 55); vL.setAttribute("y1", 40); vLineAttr(vL, 40 + i * 55, 260); svg.appendChild(vL);
+        vL.setAttribute("x1", 40 + i * 55); 
+        vL.setAttribute("y1", 40); 
+        vLineAttr(vL, 40 + i * 55, 260); 
+        svg.appendChild(vL);
+
+        /* 水平虛線 */
         const hL = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        hL.setAttribute("x1", 40); hL.setAttribute("y1", 40 + i * 55); vLineAttr(hL, 260, 40 + i * 55); svg.appendChild(hL);
+        hL.setAttribute("x1", 40); 
+        hL.setAttribute("y1", 40 + i * 55); 
+        vLineAttr(hL, 260, 40 + i * 55); 
+        svg.appendChild(hL);
       }
-      function vLineAttr(el, x2, y2) { el.setAttribute("x2", x2); el.setAttribute("y2", y2); el.setAttribute("stroke", "#F1F5F9"); el.setAttribute("stroke-width", "2"); el.setAttribute("stroke-dasharray", "3 3"); el.setAttribute("style", "pointer-events: none;"); }
-
-      for (let r = 0; r < 5; r++) {
-        const tY = document.createElementNS("http://www.w3.org/2000/svg", "text"); textAttr(tY, "18", 40 + r * 55 + 4, 5 - r); svg.appendChild(tY);
-        const tX = document.createElementNS("http://www.w3.org/2000/svg", "text"); textAttr(tX, 40 + r * 55, "285", getDotXLetter(r)); svg.appendChild(tX);
+      
+      function vLineAttr(el, x2, y2) { 
+        el.setAttribute("x2", x2); 
+        el.setAttribute("y2", y2); 
+        el.setAttribute("stroke", "#F1F5F9"); 
+        el.setAttribute("stroke-width", "2"); 
+        el.setAttribute("stroke-dasharray", "3 3"); 
+        el.setAttribute("style", "pointer-events: none;"); 
       }
-      function textAttr(el, x, y, txt) { el.setAttribute("x", x); el.setAttribute("y", y); el.setAttribute("text-anchor", "middle"); el.setAttribute("class", "fill-slate-300 font-bold text-[10px]"); el.setAttribute("style", "pointer-events: none;"); el.textContent = txt; }
 
+      /* 繪製目前的草綠色連線路徑 */
       if (drawingPath.length > 1) {
         for (let idx = 1; idx < drawingPath.length; idx++) {
-          const prev = drawingPath[idx - 1]; const curr = drawingPath[idx];
+          const prev = drawingPath[idx - 1]; 
+          const curr = drawingPath[idx];
+          
           const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-          line.setAttribute("x1", 40 + prev.x * 55); line.setAttribute("y1", 40 + (4 - prev.y) * 55);
-          line.setAttribute("x2", 40 + curr.x * 55); line.setAttribute("y2", 40 + (4 - curr.y) * 55);
-          line.setAttribute("stroke", "#10B981"); line.setAttribute("stroke-width", "8"); line.setAttribute("stroke-linecap", "round"); line.setAttribute("class", "animate-draw"); line.setAttribute("style", "pointer-events: none;");
+          line.setAttribute("x1", 40 + prev.x * 55); 
+          line.setAttribute("y1", 40 + (4 - prev.y) * 55);
+          line.setAttribute("x2", 40 + curr.x * 55); 
+          line.setAttribute("y2", 40 + (4 - curr.y) * 55);
+          line.setAttribute("stroke", "#10B981"); 
+          line.setAttribute("stroke-width", "8"); 
+          line.setAttribute("stroke-linecap", "round");
+          line.setAttribute("class", "animate-draw");
+          line.setAttribute("style", "pointer-events: none;");
           svg.appendChild(line);
         }
       }
 
+      /* 繪製 5x5 的背景點點以及合法的透明熱區 */
       for (let rIdx = 0; rIdx < 5; rIdx++) {
         const dotY = 4 - rIdx;
         for (let dotX = 0; dotX < 5; dotX++) {
           const isStart = lvl.startDot.x === dotX && lvl.startDot.y === dotY;
           const isVisited = drawingPath.some(pt => pt.x === dotX && pt.y === dotY);
           const isNextValid = isValidNextDot(dotX, dotY);
-          /* 【系統重構】：刪除 showHints 判斷，連錯滿 3 次自動顯示黃色呼吸提示點 */
+          /* 連錯 3 次自動顯示黃色呼吸提示點 */
           const showDotHint = (drawWrongAttempts >= 3) && isNextValid;
-          const svgX = 40 + dotX * 55; const svgY = 40 + rIdx * 55;
+          const svgX = 40 + dotX * 55; 
+          const svgY = 40 + rIdx * 55;
 
           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
           if (showDotHint) {
@@ -779,7 +834,7 @@
       } else {
         playSound('error'); drawWrongAttempts++;
         if (drawWrongAttempts >= 3) showMessage("連線不對唷！小幫手已在連線板亮起【黃色發光圈提示】！", "error");
-        else showMessage(`不對唷，點到座標了。請看下方卡片指令前進！(再錯 ${3 - drawWrongAttempts} 次提供發光圈)`, "error");
+        else showMessage(`不對唷，點到座標了。請看上方卡片指令前進！(再錯 ${3 - drawWrongAttempts} 次提供發光圈)`, "error");
       }
       render5x5Board(); updateNextDirIndicator();
     }
