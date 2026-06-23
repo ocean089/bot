@@ -48,7 +48,7 @@
             border: 1px solid rgba(99, 102, 241, 0.12);
         }
 
-        /* 毒氣垃圾星警戒區閃爍動畫 (防禦性編程教學) */
+        /* 毒氣垃圾星警戒區閃爍動畫 */
         @keyframes pulse-toxic {
             0%, 100% { border-color: rgba(34, 197, 94, 0.25); box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.1); }
             50% { border-color: rgba(34, 197, 94, 0.6); box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.3); }
@@ -84,21 +84,12 @@
             transform-origin: 50% 95px;
             animation: pulse-wake 0.1s infinite;
         }
-
-        /* 霓虹發光文字 */
-        .neon-text-indigo {
-            text-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
-        }
-        .neon-text-cyan {
-            text-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
-    <!-- 頂部導覽列 (精簡高度) -->
+    <!-- 頂部導覽列 -->
     <header class="bg-slate-950/85 border-b border-indigo-500/20 backdrop-blur-md px-4 py-2 flex flex-wrap items-center justify-between gap-2 z-40 sticky top-0">
-        <!-- 康樂航空站：點擊可回首頁 -->
         <div onclick="returnToHome()" class="flex items-center gap-2 cursor-pointer group select-none" title="返回首頁">
             <div class="bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white p-2 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
                 <i class="fa-solid fa-satellite-dish text-xl animate-pulse"></i>
@@ -111,26 +102,21 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap text-xs">
-            <!-- 學生登錄狀態顯示 -->
             <div id="userBadge" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1 font-bold flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
                 <span id="userBadgeText" class="text-slate-300">正在確認身分...</span>
             </div>
 
-            <!-- 關卡選擇器 -->
             <div class="relative">
                 <select id="levelSelect" onchange="changeLevel(this.value)" class="bg-slate-900 border border-slate-800 text-indigo-300 px-3 py-1.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer font-bold text-xs">
-                    <!-- 關卡選單由 JS 自動動態生成 -->
                 </select>
             </div>
 
-            <!-- 換太空船按鈕 -->
             <button onclick="openShipModal()" class="bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-cyan-500/20 hover:border-cyan-400/50 font-bold px-2.5 py-1.5 rounded-xl transition text-xs flex items-center gap-1" title="更換探險太空船">
                 <i class="fa-solid fa-shuttle-space"></i>
-                <span>換太空船</span>
+                <span class="hidden sm:inline">換太空船</span>
             </button>
             
-            <!-- 教師設定按鈕 -->
             <button onclick="openTeacherModal()" class="bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 hover:border-amber-400/50 font-bold px-2.5 py-1.5 rounded-xl transition text-xs flex items-center gap-1" title="教師雲端試算表設定">
                 <i class="fa-solid fa-gear"></i>
                 <span class="hidden sm:inline">教師設定</span>
@@ -141,18 +127,17 @@
                 <span class="hidden sm:inline">重置</span>
             </button>
 
-            <!-- 回首頁按鈕 -->
             <button onclick="returnToHome()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/20 px-2.5 py-1.5 rounded-xl transition text-xs font-bold flex items-center gap-1">
                 <i class="fa-solid fa-power-off"></i>
-                <span>回首頁</span>
+                <span class="hidden sm:inline">回首頁</span>
             </button>
         </div>
     </header>
 
-    <!-- 主要遊戲區域 (高度限制與內部滾動，專為平板單一版面設計) -->
+    <!-- 主要遊戲區域 -->
     <main class="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 md:p-4 max-w-7xl mx-auto w-full lg:h-[calc(100vh-100px)] lg:overflow-hidden">
         
-        <!-- 左側面板：故事、對話與思維概念 (佔 3/12，內部可垂直滾動) -->
+        <!-- 左側面板：故事、對話與思維概念 -->
         <section class="lg:col-span-3 flex flex-col gap-3 lg:h-full lg:overflow-hidden">
             <div class="bg-slate-950/60 border border-slate-900 rounded-2xl p-4 shadow-2xl flex flex-col justify-between h-full backdrop-blur-md lg:overflow-hidden">
                 <div class="flex flex-col flex-1 lg:overflow-hidden">
@@ -163,34 +148,27 @@
                         <span id="levelTitle" class="text-xs font-bold text-slate-400">載入中...</span>
                     </div>
                     
-                    <h3 id="storyTitle" class="text-sm font-black text-slate-100 mb-2">太空日誌載入中...</h3>
+                    <h3 id="storyTitle" class="text-sm md:text-base font-black text-slate-100 mb-2">太空日誌載入中...</h3>
                     
-                    <!-- 對話盒展示區 (平板高度限制) -->
                     <div id="dialogueContainer" class="space-y-3 flex-1 overflow-y-auto pr-1 max-h-[160px] lg:max-h-none">
-                        <!-- 對話將由 JS 自動動態插入 -->
                     </div>
                 </div>
 
-                <!-- 運算思維概念展示卡 (做錯一次解鎖) -->
                 <div id="conceptCard" class="mt-3 bg-slate-950/40 border border-slate-900 rounded-xl p-3 opacity-75 shrink-0">
-                    <p id="conceptText" class="text-[11px] text-indigo-200 leading-relaxed">
-                        <!-- 概念卡將由 JS 動態更新 -->
+                    <p id="conceptText" class="text-[11px] md:text-xs text-indigo-200 leading-relaxed">
                     </p>
                 </div>
             </div>
         </section>
 
-        <!-- 中間面板：星際地圖與控制 (佔 5/12，嚴格高度控管) -->
+        <!-- 中間面板：星際地圖與控制 -->
         <section class="lg:col-span-5 flex flex-col items-center justify-between gap-3 lg:h-full lg:overflow-hidden">
-            <!-- 地圖狀態看板 (精簡內距) -->
             <div class="w-full bg-slate-950/60 border border-slate-900 rounded-xl p-3 flex items-center justify-between gap-2 text-xs backdrop-blur-md shrink-0">
                 <div class="flex items-center gap-3">
-                    <!-- 羅盤微件 -->
                     <div class="flex items-center gap-2 text-amber-400 font-bold">
                         <div class="relative w-8 h-8 rounded-full border border-amber-500/40 flex items-center justify-center bg-slate-950/80 text-[7px] font-black select-none">
                             <span class="absolute top-0.5 text-rose-500 text-[8px]">N</span>
                             <span class="absolute bottom-0.5">S</span>
-                            <!-- 旋轉指針 -->
                             <div id="compassNeedle" class="w-1 h-5 bg-gradient-to-t from-slate-500 via-amber-500 to-amber-400 rounded-full transition-transform duration-300" style="transform: rotate(0deg);"></div>
                         </div>
                         <div class="text-[10px]">
@@ -198,10 +176,7 @@
                             <span id="compassDir" class="font-black text-amber-400">北 (↑)</span>
                         </div>
                     </div>
-                    
                     <div class="text-slate-750">|</div>
-                    
-                    <!-- 鑰匙狀態 -->
                     <div class="flex items-center gap-1.5">
                         <div id="keyIconContainer" class="w-7 h-7 rounded-lg bg-slate-950/60 border border-slate-900 flex items-center justify-center text-slate-500 text-xs">
                             <i class="fa-solid fa-key"></i>
@@ -212,80 +187,69 @@
                         </div>
                     </div>
                 </div>
-                
                 <div id="levelDescription" class="text-[10px] text-slate-400 font-medium text-right max-w-[150px]">
                     載入中...
                 </div>
             </div>
 
-            <!-- 2D 星航地圖網格 (地圖自適應 vh) -->
             <div class="w-full flex-grow flex items-center justify-center lg:overflow-hidden">
-                <div id="mapWrapper" class="space-bg rounded-2xl p-2 shadow-2xl border-2 border-slate-900 relative w-full aspect-square max-h-[36vh] max-w-[36vh] flex items-center justify-center">
+                <div id="mapWrapper" class="space-bg rounded-2xl p-2 shadow-2xl border-2 border-slate-900 relative w-full aspect-square max-h-[38vh] max-w-[38vh] flex items-center justify-center">
                     <div id="mapGrid" class="grid w-full h-full relative">
-                        <!-- 網格單元由 JS 自動生成 -->
                     </div>
                 </div>
             </div>
             
-            <!-- 運行控制器按鈕 -->
             <div class="flex gap-2.5 w-full max-w-[450px] shrink-0 pb-1">
-                <button id="runBtn" onclick="runCode()" class="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-white font-black py-2.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5 text-base">
+                <button id="runBtn" onclick="runCode()" class="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-white font-black py-2.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5 text-base md:text-lg">
                     <i class="fa-solid fa-shuttle-space"></i> 啟動太空引擎
                 </button>
-                <button id="stopBtn" onclick="stopExecution()" class="bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-1.5 text-base hidden">
+                <button id="stopBtn" onclick="stopExecution()" class="bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-1.5 text-base md:text-lg hidden">
                     <i class="fa-solid fa-square"></i> 緊急煞車
                 </button>
-                <button onclick="clearWorkspace()" class="bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold py-2.5 px-4 rounded-xl border border-slate-800 transition text-sm flex items-center justify-center gap-1">
+                <button onclick="clearWorkspace()" class="bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold py-2.5 px-4 rounded-xl border border-slate-800 transition text-sm md:text-base flex items-center justify-center gap-1">
                     <i class="fa-solid fa-trash-can"></i> 清除
                 </button>
             </div>
         </section>
 
-        <!-- 右側面板：工具箱與我的程式碼工作區 (佔 4/12，全平板內部滾動) -->
+        <!-- 右側面板：工具箱與我的程式碼工作區 -->
         <section class="lg:col-span-4 flex flex-col gap-3 lg:h-full lg:overflow-hidden">
-            <!-- 程式積木工具箱 -->
             <div class="bg-slate-950/60 border border-slate-900 rounded-2xl p-4 shadow-2xl flex flex-col gap-2.5 backdrop-blur-md shrink-0">
                 <div class="border-b border-slate-900 pb-2">
                     <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400 flex items-center gap-1">
                         <i class="fa-solid fa-cubes"></i> 航天指令庫 (點擊加入)
                     </span>
                 </div>
-                
-                <!-- 卡片列表 (高扁平度) -->
-                <div id="cardToolbox" class="grid grid-cols-2 gap-2 max-h-[140px] overflow-y-auto">
-                    <!-- 依解鎖項目動態生成 -->
+                <!-- 卡片列表放寬高度 -->
+                <div id="cardToolbox" class="grid grid-cols-2 gap-2 md:gap-3 max-h-[22vh] overflow-y-auto">
                 </div>
             </div>
 
-            <!-- 我的程式碼 (工作區) -->
             <div class="bg-slate-950/60 border border-slate-900 rounded-2xl p-4 shadow-2xl flex-grow flex flex-col gap-2.5 backdrop-blur-md lg:overflow-hidden">
                 <div class="flex items-center justify-between border-b border-slate-900 pb-2 shrink-0">
                     <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400 flex items-center gap-1">
                         <i class="fa-solid fa-code"></i> 編程指令序列
                     </span>
-                    <span id="instructionCount" class="text-xs font-bold text-slate-500">0 步</span>
+                    <span id="instructionCount" class="text-xs md:text-sm font-bold text-slate-500">0 步</span>
                 </div>
 
-                <!-- 空白提示 -->
                 <div id="emptyWorkspaceHint" class="flex-grow flex flex-col items-center justify-center text-center p-4 text-slate-600 gap-2">
-                    <i class="fa-solid fa-compass-drafting text-3xl opacity-20"></i>
-                    <p class="text-xs text-slate-400">請點選上方的指令庫編程！</p>
+                    <i class="fa-solid fa-compass-drafting text-4xl opacity-20"></i>
+                    <p class="text-xs md:text-sm text-slate-400">請點選上方的指令庫編程！</p>
                 </div>
 
-                <!-- 程式工作區滾動列表 -->
-                <div id="workspace" class="flex-grow overflow-y-auto space-y-2 pr-1 min-h-0 hidden">
-                    <!-- 指令卡片動態列表 -->
+                <div id="workspace" class="flex-grow overflow-y-auto space-y-2.5 pr-1 min-h-0 hidden">
                 </div>
             </div>
         </section>
-
     </main>
 
     <!-- 頁尾 -->
-    <footer class="bg-slate-950 border-t border-slate-900/40 py-2 text-center text-[10px] text-slate-500 mt-2 shrink-0">
+    <footer class="bg-slate-950 border-t border-slate-900/40 py-2 text-center text-[10px] md:text-xs text-slate-500 mt-2 shrink-0">
         <p>© 2026 康樂航空站 | 專為康樂國小創意科技課程教學設計 | popoyu</p>
     </footer>
 
+    <!-- Overlay & Modals ... -->
     <!-- --- A. 歡迎與模式登錄 Overlay --- -->
     <div id="loginOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-lg flex items-center justify-center z-50 p-4">
         <div class="bg-gradient-to-b from-slate-900 to-indigo-950 border border-indigo-500/30 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative overflow-hidden">
@@ -296,19 +260,17 @@
                 <div class="bg-indigo-600 text-white w-14 h-14 rounded-full mx-auto flex items-center justify-center text-2xl mb-2 shadow-lg shadow-indigo-500/30 animate-pulse">
                     <i class="fa-solid fa-user-astronaut"></i>
                 </div>
-                <h2 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-purple-400 tracking-widest mb-0.5">康樂航空站</h2>
-                <p class="text-slate-400 text-xs">星際編程大冒險・請選擇太空艇與模式</p>
+                <h2 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-purple-400 tracking-widest mb-0.5">康樂航空站</h2>
+                <p class="text-slate-400 text-xs md:text-sm">星際編程大冒險・請選擇太空艇與模式</p>
             </div>
 
-            <!-- 太空船座艙自選區 (首頁大圖示) -->
             <div class="mb-5 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800">
-                <h4 class="text-xs font-bold text-cyan-400 mb-2.5 flex items-center gap-1.5">
+                <h4 class="text-xs md:text-sm font-bold text-cyan-400 mb-2.5 flex items-center gap-1.5">
                     <i class="fa-solid fa-shuttle-space"></i> 🚀 選擇你的探險太空船：
                 </h4>
                 <div class="grid grid-cols-3 gap-3">
                     <div id="shipSelect-classic" onclick="setShipStyle('classic')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all">
                         <div class="w-12 h-12 flex items-center justify-center">
-                            <!-- 藍色經典 -->
                             <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
                                 <polygon class="engine-wake" points="44,95 50,115 56,95" fill="#f43f5e" />
                                 <path d="M 50,10 C 75,40 70,85 62,95 L 38,95 C 30,85 25,40 50,10 Z" fill="#1e1b4b" stroke="#818cf8" stroke-width="5" />
@@ -317,12 +279,11 @@
                                 <path d="M 50,20 L 62,45 L 50,38 L 38,45 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" />
                             </svg>
                         </div>
-                        <span class="text-[10px] font-bold block mt-1">經典蔚藍</span>
+                        <span class="text-[10px] md:text-xs font-bold block mt-1">經典蔚藍</span>
                     </div>
 
                     <div id="shipSelect-blitz" onclick="setShipStyle('blitz')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all">
                         <div class="w-12 h-12 flex items-center justify-center">
-                            <!-- 烈焰橘光 -->
                             <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
                                 <polygon class="engine-wake" points="40,95 50,120 60,95" fill="#eab308" />
                                 <path d="M 50,5 L 75,65 L 60,95 L 40,95 L 25,65 Z" fill="#3f3f46" stroke="#f97316" stroke-width="5" />
@@ -331,12 +292,11 @@
                                 <polygon points="50,15 58,40 50,34 42,40" fill="#fbbf24" />
                             </svg>
                         </div>
-                        <span class="text-[10px] font-bold block mt-1">烈焰橘光</span>
+                        <span class="text-[10px] md:text-xs font-bold block mt-1">烈焰橘光</span>
                     </div>
 
                     <div id="shipSelect-miracle" onclick="setShipStyle('miracle')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all">
                         <div class="w-12 h-12 flex items-center justify-center">
-                            <!-- 星河奇蹟 -->
                             <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
                                 <polygon class="engine-wake" points="45,95 50,115 55,95" fill="#a855f7" />
                                 <ellipse cx="50" cy="55" rx="20" ry="40" fill="#064e3b" stroke="#10b981" stroke-width="5" />
@@ -344,12 +304,11 @@
                                 <circle cx="50" cy="30" r="8" fill="#22d3ee" />
                             </svg>
                         </div>
-                        <span class="text-[10px] font-bold block mt-1">星河奇蹟</span>
+                        <span class="text-[10px] md:text-xs font-bold block mt-1">星河奇蹟</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 兩大核心模式選擇區 -->
             <div class="grid grid-cols-1 gap-3 mb-4">
                 <button onclick="selectPlayMode('free')" class="w-full text-left p-3.5 rounded-2xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition-all group">
                     <div class="flex items-center gap-3">
@@ -357,8 +316,8 @@
                             <i class="fa-solid fa-satellite"></i>
                         </div>
                         <div>
-                            <span class="block font-black text-slate-100 text-sm">🛸 自由探索模式</span>
-                            <span class="block text-[11px] text-slate-400 mt-0.5">不需登錄即可挑戰 24 大關卡，適合自由練習！</span>
+                            <span class="block font-black text-slate-100 text-sm md:text-base">🛸 自由探索模式</span>
+                            <span class="block text-[11px] md:text-xs text-slate-400 mt-0.5">不需登錄即可挑戰 24 大關卡，適合自由練習！</span>
                         </div>
                     </div>
                 </button>
@@ -369,31 +328,30 @@
                             <i class="fa-solid fa-graduation-cap"></i>
                         </div>
                         <div>
-                            <span class="block font-black text-slate-100 text-sm">🚀 任務登錄模式</span>
-                            <span class="block text-[11px] text-slate-400 mt-0.5">登錄身分，作答成果與關卡進度會上傳給老師喔！</span>
+                            <span class="block font-black text-slate-100 text-sm md:text-base">🚀 任務登錄模式</span>
+                            <span class="block text-[11px] md:text-xs text-slate-400 mt-0.5">登錄身分，作答成果與關卡進度會上傳給老師喔！</span>
                         </div>
                     </div>
                 </button>
             </div>
 
-            <!-- 任務登錄表單 -->
             <div id="loginForm" class="hidden border-t border-slate-800 pt-4 space-y-4">
-                <h4 class="text-xs font-black text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-address-card"></i> 請輸入您的乘組員登錄資訊：</h4>
+                <h4 class="text-xs md:text-sm font-black text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-address-card"></i> 請輸入您的乘組員登錄資訊：</h4>
                 <div class="grid grid-cols-12 gap-3">
                     <div class="col-span-4">
-                        <label class="block text-[10px] text-slate-400 mb-1">班級 (如21)</label>
-                        <input type="text" id="classInput" placeholder="班級" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                        <label class="block text-[10px] md:text-xs text-slate-400 mb-1">班級 (如21)</label>
+                        <input type="text" id="classInput" placeholder="班級" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
                     </div>
                     <div class="col-span-4">
-                        <label class="block text-[10px] text-slate-400 mb-1">座號 (如08)</label>
-                        <input type="number" id="seatInput" placeholder="座號" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                        <label class="block text-[10px] md:text-xs text-slate-400 mb-1">座號 (如08)</label>
+                        <input type="number" id="seatInput" placeholder="座號" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
                     </div>
                     <div class="col-span-4">
-                        <label class="block text-[10px] text-slate-400 mb-1">姓名</label>
-                        <input type="text" id="nameInput" placeholder="姓名" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                        <label class="block text-[10px] md:text-xs text-slate-400 mb-1">姓名</label>
+                        <input type="text" id="nameInput" placeholder="姓名" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
                     </div>
                 </div>
-                <button onclick="submitMissionLogin()" class="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl transition shadow-lg">
+                <button onclick="submitMissionLogin()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-sm rounded-xl transition shadow-lg">
                     確認登入・開始任務
                 </button>
             </div>
@@ -419,7 +377,7 @@
                             <path d="M 50,20 L 62,45 L 50,38 L 38,45 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" />
                         </svg>
                     </div>
-                    <span class="text-[10px] font-bold block mt-1.5">經典蔚藍</span>
+                    <span class="text-[10px] md:text-xs font-bold block mt-1.5">經典蔚藍</span>
                 </div>
 
                 <div id="modalShip-blitz" onclick="setShipStyle('blitz')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-3 text-center flex flex-col items-center justify-center transition-all">
@@ -432,7 +390,7 @@
                             <polygon points="50,15 58,40 50,34 42,40" fill="#fbbf24" />
                         </svg>
                     </div>
-                    <span class="text-[10px] font-bold block mt-1.5">烈焰橘光</span>
+                    <span class="text-[10px] md:text-xs font-bold block mt-1.5">烈焰橘光</span>
                 </div>
 
                 <div id="modalShip-miracle" onclick="setShipStyle('miracle')" class="cursor-pointer border-2 border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 rounded-xl p-3 text-center flex flex-col items-center justify-center transition-all">
@@ -444,12 +402,12 @@
                             <circle cx="50" cy="30" r="8" fill="#22d3ee" />
                         </svg>
                     </div>
-                    <span class="text-[10px] font-bold block mt-1.5">星河奇蹟</span>
+                    <span class="text-[10px] md:text-xs font-bold block mt-1.5">星河奇蹟</span>
                 </div>
             </div>
 
             <div class="flex justify-end gap-3">
-                <button onclick="closeShipModal()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-xl text-xs transition">
+                <button onclick="closeShipModal()" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-xl text-sm transition shadow-lg">
                     確認選取
                 </button>
             </div>
@@ -462,16 +420,16 @@
             <h2 class="text-xl md:text-2xl font-black text-amber-400 mb-2 flex items-center gap-2">
                 <i class="fa-solid fa-network-wired"></i> 教師雲端後台設定
             </h2>
-            <p class="text-slate-400 text-xs mb-4">設定您的 Google 試算表 Web App 網址，將學生的任務答題歷程全數匯集自動化紀錄。</p>
+            <p class="text-slate-400 text-xs md:text-sm mb-4">設定您的 Google 試算表 Web App 網址，將學生的任務答題歷程全數匯集自動化紀錄。</p>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">1. Google Apps Script 部署 URL：</label>
+                    <label class="block text-xs md:text-sm font-bold text-slate-300 mb-1.5">1. Google Apps Script 部署 URL：</label>
                     <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500" />
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">2. Google Sheets 教師設定與程式碼 (Apps Script)：</label>
+                    <label class="block text-xs md:text-sm font-bold text-slate-300 mb-1.5">2. Google Sheets 教師設定與程式碼 (Apps Script)：</label>
                     <div class="bg-slate-950 border border-slate-850 p-3 rounded-xl max-h-[180px] overflow-y-auto text-xs font-mono text-cyan-300 leading-normal">
                         <pre id="gasCode">
 function doPost(e) {
@@ -492,7 +450,6 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  // 支援 JSONP 以防 CORS 跨域限制
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   sheet.appendRow([
     new Date(),
@@ -508,12 +465,9 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }</pre>
                     </div>
-                    <button onclick="copyGasCode()" class="mt-2 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">
+                    <button onclick="copyGasCode()" class="mt-3 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition">
                         <i class="fa-regular fa-copy"></i> 複製上列 Apps Script 程式碼
                     </button>
-                    <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">
-                        【使用教學】: 在 Google 試算表內點擊「擴充功能」-「Apps Script」，貼上此代碼，點擊「部署」為「網頁應用程式」，並設定為「任何人」均可存取，完成後將產出的網址貼到上方的輸入欄即可！
-                    </p>
                 </div>
             </div>
 
@@ -528,7 +482,7 @@ function doGet(e) {
         </div>
     </div>
 
-    <!-- --- C. 成功闖關 / 結幕 Modal --- -->
+    <!-- --- C. 成功闖關 Modal --- -->
     <div id="winModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
         <div class="bg-gradient-to-b from-slate-900 to-indigo-950 border border-emerald-500/30 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl text-center relative overflow-hidden">
             <div class="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -539,16 +493,13 @@ function doGet(e) {
             </div>
             
             <h2 class="text-2xl md:text-3xl font-black text-emerald-400 mb-2">太空任務成功！</h2>
-            <p id="winModalLevelName" class="text-sm font-bold text-slate-400 mb-4">第一關：順序之始</p>
+            <p id="winModalLevelName" class="text-sm md:text-base font-bold text-slate-400 mb-4">第一關：順序之始</p>
             
-            <!-- 結幕感言 -->
             <div class="bg-slate-950/60 border border-slate-900 rounded-2xl p-4 text-left text-sm text-slate-300 mb-6 max-h-[200px] overflow-y-auto leading-relaxed">
                 <p id="winModalEpilogue">恭喜您成功抵達核心能源！</p>
             </div>
 
-            <!-- 雲端同步狀態提示 -->
             <div id="cloudUploadStatus" class="text-xs font-bold text-slate-500 mb-4 flex items-center justify-center gap-2">
-                <!-- 由 JS 依模式與狀況動態插入 -->
             </div>
 
             <div class="flex gap-3 justify-center">
@@ -562,20 +513,19 @@ function doGet(e) {
         </div>
     </div>
 
-    <!-- --- D. 失敗 / 遭遇阻礙 Modal --- -->
+    <!-- --- D. 失敗 Modal --- -->
     <div id="loseModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
         <div class="bg-gradient-to-b from-slate-900 to-rose-950/60 border border-rose-500/30 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden">
             <div class="bg-rose-600 text-white w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-lg shadow-rose-500/30">
                 <i class="fa-solid fa-burst"></i>
             </div>
             
-            <h2 class="text-2xl font-black text-rose-400 mb-2">太空艇當機！</h2>
-            <p id="loseModalReason" class="text-slate-300 text-sm mb-6 leading-relaxed">
+            <h2 class="text-2xl md:text-3xl font-black text-rose-400 mb-2">太空艇當機！</h2>
+            <p id="loseModalReason" class="text-slate-300 text-sm md:text-base mb-6 leading-relaxed">
                 探險艇偏離了路線，撞上了隕石...
             </p>
 
-            <div class="flex gap-3 justify-center">
-                <!-- 「修正卡片」正式更名為「路線重新規劃」 -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <button onclick="closeLoseModal()" class="bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/30 hover:border-indigo-400 text-white font-black py-3 px-6 rounded-xl transition shadow-md">
                     路線重新規劃
                 </button>
@@ -594,7 +544,6 @@ function doGet(e) {
 
     <!-- 遊戲資料與邏輯核心 JS -->
     <script>
-        // 擴充至 24 個階梯式關卡，精簡導航與角色對話（康康與樂樂、導航儀-康樂），並去除答案提示
         const levels = [
             {
                 name: "第一關：推進 1 步",
@@ -608,17 +557,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 0,
-                    backward: -1,
-                    left: -1,
-                    right: -1,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 0, backward: -1, left: -1, right: -1, shoot: -1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: false,
                 story: {
                     prologue: "歡迎來到康樂航空站！點擊推進卡，控制探險艇吧！",
@@ -642,17 +581,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 0,
-                    backward: -1,
-                    left: -1,
-                    right: -1,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 0, backward: -1, left: -1, right: -1, shoot: -1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: false,
                 story: {
                     title: "順序直航：一步步前進",
@@ -675,17 +604,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 0,
-                    backward: -1,
-                    left: 0,
-                    right: 0,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 0, backward: -1, left: 0, right: 0, shoot: -1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: false,
                 story: {
                     title: "轉彎大抉擇：向左還是向右？",
@@ -708,17 +627,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 0,
-                    backward: -1,
-                    left: 0, 
-                    right: 0, 
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 0, backward: -1, left: 0, right: 0, shoot: -1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: false,
                 story: {
                     title: "向左轉：看準藍光指向",
@@ -741,17 +650,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 0,
-                    backward: -1,
-                    left: 0,
-                    right: 0,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 0, backward: -1, left: 0, right: 0, shoot: -1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: false,
                 story: {
                     title: "L型航線：多步驟拆解",
@@ -774,17 +673,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 0,
-                    backward: -1,
-                    left: 0,
-                    right: 0,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 0, backward: -1, left: 0, right: 0, shoot: -1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: false,
                 story: {
                     title: "隕石避障：左右迴避",
@@ -806,18 +695,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 1,
-                    backward: -1,
-                    left: -1,
-                    right: -1,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
-                obstacles: [],
+                limits: { forward: 1, backward: -1, left: -1, right: -1, shoot: -1, wait: -1, repeat_2: -1, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "重複力量：減少多餘卡片",
@@ -834,23 +712,13 @@ function doGet(e) {
                 size: 5,
                 startPos: { x: 1, y: 4 },
                 endPos: { x: 3, y: 2 },
-                obstacles: [{ x: 1, y: 2 }, { x: 2, y: 4 }], // 修正：將 y 由 3 修正為 4，避免阻礙正確的之字形階梯航道
+                obstacles: [{ x: 1, y: 2 }, { x: 2, y: 4 }], 
                 driftwoods: [],
                 trashIslands: [],
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 2,
-                    backward: -1,
-                    left: 2,
-                    right: 2,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: 1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 2, backward: -1, left: 2, right: 2, shoot: -1, wait: -1, repeat_2: 1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "小樓梯大智慧：重複內縮包裹",
@@ -867,25 +735,13 @@ function doGet(e) {
                 size: 6,
                 startPos: { x: 1, y: 5 },
                 endPos: { x: 4, y: 2 },
-                obstacles: [
-                    { x: 1, y: 3 }, { x: 2, y: 5 }, { x: 2, y: 2 }, { x: 3, y: 4 } // 修正：將 y 由 4 與 3 修正為 5 與 4，暢通正確航線，防止撞機
-                ],
+                obstacles: [{ x: 1, y: 3 }, { x: 2, y: 5 }, { x: 2, y: 2 }, { x: 3, y: 4 }],
                 driftwoods: [],
                 trashIslands: [],
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 2,
-                    backward: -1,
-                    left: 2,
-                    right: 2,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 2, backward: -1, left: 2, right: 2, shoot: -1, wait: -1, repeat_2: -1, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "長台階：模式識別與簡化",
@@ -908,17 +764,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 1,
-                    backward: -1,
-                    left: -1,
-                    right: 1,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 1, backward: -1, left: -1, right: 1, shoot: -1, wait: -1, repeat_2: -1, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "正方形繞行：最精簡編程",
@@ -941,17 +787,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 6,
-                    backward: 2,
-                    left: 2,
-                    right: 2,
-                    shoot: 1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 6, backward: 2, left: 2, right: 2, shoot: 1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: false,
                 story: {
                     title: "順序極限之舞：不撞障礙",
@@ -975,17 +811,7 @@ function doGet(e) {
                 portals: [],
                 blackHoles: [{ x: 2, y: 4 }, { x: 3, y: 2 }], 
                 keyPos: null,
-                limits: {
-                    forward: 4,
-                    backward: -1,
-                    left: 2,
-                    right: 2,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: 1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 4, backward: -1, left: 2, right: 2, shoot: -1, wait: -1, repeat_2: 1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "引力迴避：之字形折線",
@@ -1011,17 +837,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [{ x: 4, y: 6, color: "purple" }, { x: 4, y: 2, color: "purple" }],
                 keyPos: null,
-                limits: {
-                    forward: 4,
-                    backward: -1,
-                    left: 1,
-                    right: 1,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 4, backward: -1, left: 1, right: 1, shoot: -1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: false,
                 story: {
                     title: "空間跳躍：函數呼叫",
@@ -1046,17 +862,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: { x: 0, y: 4 },
-                limits: {
-                    forward: 8,
-                    backward: -1,
-                    left: 2,
-                    right: 3,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: -1,
-                    repeat_custom: 0
-                },
+                limits: { forward: 8, backward: -1, left: 2, right: 3, shoot: -1, wait: -1, repeat_2: -1, repeat_3: -1, repeat_custom: 0 },
                 showRepeat: true,
                 story: {
                     title: "條件解鎖：If / Else 判斷",
@@ -1079,17 +885,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 4,
-                    backward: -1,
-                    left: -1,
-                    right: -1,
-                    shoot: 1,
-                    wait: -1,
-                    repeat_2: 2,
-                    repeat_3: 2,
-                    repeat_custom: 1
-                },
+                limits: { forward: 4, backward: -1, left: -1, right: -1, shoot: 1, wait: -1, repeat_2: 2, repeat_3: 2, repeat_custom: 1 },
                 showRepeat: true,
                 story: {
                     title: "主動除錯：排除阻礙",
@@ -1112,17 +908,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 1,   
-                    backward: -1,
-                    left: -1,
-                    right: -1,
-                    shoot: 1,
-                    wait: -1,
-                    repeat_2: -1,
-                    repeat_3: 1,   
-                    repeat_custom: -1
-                },
+                limits: { forward: 1, backward: -1, left: -1, right: -1, shoot: 1, wait: -1, repeat_2: -1, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "極限解錯：射擊與迴圈的組合",
@@ -1145,17 +931,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 1,   // 限 1 張！
-                    backward: -1,
-                    left: -1,
-                    right: -1,
-                    shoot: 1,     // 限 1 張！
-                    wait: -1,
-                    repeat_2: 1,  // 必須用重複x2卡包裝
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 1, backward: -1, left: -1, right: -1, shoot: 1, wait: -1, repeat_2: 1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "代碼封裝：迴圈除錯",
@@ -1178,17 +954,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 6,
-                    backward: -1,
-                    left: 3,
-                    right: 3,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: 2,
-                    repeat_3: 2,
-                    repeat_custom: 1
-                },
+                limits: { forward: 6, backward: -1, left: 3, right: 3, shoot: -1, wait: -1, repeat_2: 2, repeat_3: 2, repeat_custom: 1 },
                 showRepeat: true,
                 story: {
                     title: "防禦性程式設計：例外排除",
@@ -1212,17 +978,7 @@ function doGet(e) {
                 portals: [],
                 blackHoles: [{ x: 2, y: 3 }, { x: 4, y: 3 }], 
                 keyPos: { x: 3, y: 3 }, 
-                limits: {
-                    forward: 8,
-                    backward: -1,
-                    left: 3,
-                    right: 3,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: 1,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 8, backward: -1, left: 3, right: 3, shoot: -1, wait: -1, repeat_2: 1, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "引力禁區：精確引導",
@@ -1248,17 +1004,7 @@ function doGet(e) {
                 sharks: [{ id: 1780321479415, x1: 0, y1: 4, x2: 8, y2: 4, curX: 0, curY: 4, direction: 1 }],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 5,
-                    backward: -1,
-                    left: 2,
-                    right: 2,
-                    shoot: 1,
-                    wait: 1,
-                    repeat_2: 1,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 5, backward: -1, left: 2, right: 2, shoot: 1, wait: 1, repeat_2: 1, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "時序同步與併發控制",
@@ -1282,17 +1028,7 @@ function doGet(e) {
                 portals: [],
                 blackHoles: [{ x: 1, y: 3 }, { x: 5, y: 3 }], 
                 keyPos: null,
-                limits: {
-                    forward: 6,
-                    backward: -1,
-                    left: 2,
-                    right: 2,
-                    shoot: -1,
-                    wait: 2, 
-                    repeat_2: 1,
-                    repeat_3: -1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 6, backward: -1, left: 2, right: 2, shoot: -1, wait: 2, repeat_2: 1, repeat_3: -1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "太空狹路相逢：時序控制",
@@ -1319,17 +1055,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 1,  
-                    backward: -1,
-                    left: 1,
-                    right: 1,
-                    shoot: -1,
-                    wait: -1,
-                    repeat_2: 1,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 1, backward: -1, left: 1, right: 1, shoot: -1, wait: -1, repeat_2: 1, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "代碼優化：極限縮減",
@@ -1357,17 +1083,7 @@ function doGet(e) {
                 ],
                 portals: [],
                 keyPos: { x: 4, y: 6 },
-                limits: {
-                    forward: 8,
-                    backward: -1,
-                    left: 3,
-                    right: 3,
-                    shoot: -1,
-                    wait: 2,
-                    repeat_2: 2,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 8, backward: -1, left: 3, right: 3, shoot: -1, wait: 2, repeat_2: 2, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "時序與條件：雙重考驗",
@@ -1391,17 +1107,7 @@ function doGet(e) {
                 sharks: [],
                 portals: [],
                 keyPos: null,
-                limits: {
-                    forward: 8,
-                    backward: -1,
-                    left: 4,
-                    right: 4,
-                    shoot: 1,
-                    wait: -1,
-                    repeat_2: 1,
-                    repeat_3: 1,
-                    repeat_custom: -1
-                },
+                limits: { forward: 8, backward: -1, left: 4, right: 4, shoot: 1, wait: -1, repeat_2: 1, repeat_3: 1, repeat_custom: -1 },
                 showRepeat: true,
                 story: {
                     title: "太空迴圈大迷宮",
@@ -1433,93 +1139,67 @@ function doGet(e) {
                     this.ctx.resume();
                 }
             }
-            // 介面點擊清脆回饋音 (新增)
             playClick() {
                 this.init();
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, now);
                 osc.frequency.exponentialRampToValueAtTime(1400, now + 0.05);
-
                 gain.gain.setValueAtTime(0.04, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
-
                 osc.start(now);
                 osc.stop(now + 0.05);
             }
-            // 開始太空船持續引擎推進音 (新增)
             startThrusterHum() {
                 this.init();
-                if (this.humOsc) return; // 已經在播放，防重複
-
+                if (this.humOsc) return; 
                 const now = this.ctx.currentTime;
-                
-                // 1. 低頻深空重力引擎轟鳴聲
                 this.humOsc = this.ctx.createOscillator();
                 this.humGain = this.ctx.createGain();
                 const lowpass = this.ctx.createBiquadFilter();
-                
                 this.humOsc.type = 'sawtooth';
-                this.humOsc.frequency.setValueAtTime(45, now); // 45Hz 深沉重低音
-                
+                this.humOsc.frequency.setValueAtTime(45, now); 
                 lowpass.type = 'lowpass';
                 lowpass.frequency.setValueAtTime(110, now);
-                
-                // 動態 LFO 調頻：產生太空引擎點火後的起伏感
                 this.lfo = this.ctx.createOscillator();
                 const lfoGain = this.ctx.createGain();
-                this.lfo.frequency.setValueAtTime(5.5, now); // 5.5Hz 脈動
+                this.lfo.frequency.setValueAtTime(5.5, now); 
                 lfoGain.gain.setValueAtTime(0.03, now);
-                
                 this.humGain.gain.setValueAtTime(0.08, now);
-                
                 this.lfo.connect(lfoGain);
                 lfoGain.connect(this.humGain.gain);
-                
                 this.humOsc.connect(lowpass);
                 lowpass.connect(this.humGain);
                 this.humGain.connect(this.ctx.destination);
-                
-                // 2. 白噪音模擬太空推進的氣流噴射聲
                 const bufferSize = this.ctx.sampleRate * 2.0; 
                 const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) {
                     data[i] = Math.random() * 2 - 1;
                 }
-                
                 this.noiseSource = this.ctx.createBufferSource();
                 this.noiseSource.buffer = buffer;
                 this.noiseSource.loop = true;
-                
                 const noiseFilter = this.ctx.createBiquadFilter();
                 noiseFilter.type = 'bandpass';
                 noiseFilter.frequency.setValueAtTime(320, now);
                 noiseFilter.Q.setValueAtTime(1.2, now);
-                
                 this.noiseGain = this.ctx.createGain();
-                this.noiseGain.gain.setValueAtTime(0.02, now); // 輕微推進氣流感
-                
+                this.noiseGain.gain.setValueAtTime(0.02, now); 
                 this.noiseSource.connect(noiseFilter);
                 noiseFilter.connect(this.noiseGain);
                 this.noiseGain.connect(this.ctx.destination);
-                
                 this.humOsc.start(now);
                 this.lfo.start(now);
                 this.noiseSource.start(now);
             }
-            // 熄滅太空船引擎音 (新增淡出，防爆音)
             stopThrusterHum() {
                 if (!this.ctx) return;
                 const now = this.ctx.currentTime;
-                
-                // 平滑淡出引擎推進噪聲
                 if (this.humGain) {
                     this.humGain.gain.cancelScheduledValues(now);
                     this.humGain.gain.setValueAtTime(this.humGain.gain.value, now);
@@ -1530,7 +1210,6 @@ function doGet(e) {
                     this.noiseGain.gain.setValueAtTime(this.noiseGain.gain.value, now);
                     this.noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
                 }
-                
                 const self = this;
                 setTimeout(() => {
                     try {
@@ -1540,35 +1219,28 @@ function doGet(e) {
                     } catch(e) {}
                 }, 350);
             }
-            // 單步位置前進噴射聲
             playMove() {
                 this.init();
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 const filter = this.ctx.createBiquadFilter();
-                
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(95, now);
                 osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
-
                 filter.type = 'bandpass';
                 filter.frequency.setValueAtTime(300, now);
                 filter.frequency.exponentialRampToValueAtTime(120, now + 0.3);
                 filter.Q.setValueAtTime(4, now);
-
                 gain.gain.setValueAtTime(0.01, now);
                 gain.gain.linearRampToValueAtTime(0.4, now + 0.05);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-
                 osc.connect(filter);
                 filter.connect(gain);
                 gain.connect(this.ctx.destination);
-
                 osc.start(now);
                 osc.stop(now + 0.3);
             }
-            // 陀螺姿態迴轉音
             playTurn() {
                 this.init();
                 const now = this.ctx.currentTime;
@@ -1576,33 +1248,26 @@ function doGet(e) {
                 const osc2 = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 const filter = this.ctx.createBiquadFilter();
-
                 osc1.type = 'sine';
                 osc1.frequency.setValueAtTime(780, now);
                 osc1.frequency.exponentialRampToValueAtTime(950, now + 0.2);
-
                 osc2.type = 'sine';
                 osc2.frequency.setValueAtTime(390, now);
                 osc2.frequency.exponentialRampToValueAtTime(475, now + 0.2);
-
                 filter.type = 'peaking';
                 filter.frequency.setValueAtTime(800, now);
                 filter.Q.setValueAtTime(12, now);
-
                 gain.gain.setValueAtTime(0.18, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-
                 osc1.connect(filter);
                 osc2.connect(filter);
                 filter.connect(gain);
                 gain.connect(this.ctx.destination);
-
                 osc1.start(now);
                 osc2.start(now);
                 osc1.stop(now + 0.2);
                 osc2.stop(now + 0.2);
             }
-            // 黑洞引力爆裂與重力撞擊聲
             playExplosion() {
                 this.init();
                 const now = this.ctx.currentTime;
@@ -1613,77 +1278,61 @@ function doGet(e) {
                 for (let i = 0; i < bufferSize; i++) {
                     data[i] = Math.random() * 2 - 1;
                 }
-
                 const noise = this.ctx.createBufferSource();
                 noise.buffer = buffer;
-
                 const filter = this.ctx.createBiquadFilter();
                 filter.type = 'lowpass';
                 filter.frequency.setValueAtTime(600, now);
                 filter.frequency.exponentialRampToValueAtTime(20, now + dur);
-
                 const hum = this.ctx.createOscillator();
                 hum.type = 'sawtooth';
                 hum.frequency.setValueAtTime(95, now);
                 hum.frequency.linearRampToValueAtTime(25, now + dur);
-
                 const gain = this.ctx.createGain();
                 gain.gain.setValueAtTime(0.7, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-
                 noise.connect(filter);
                 hum.connect(filter);
                 filter.connect(gain);
                 gain.connect(this.ctx.destination);
-
                 noise.start(now);
                 hum.start(now);
                 noise.stop(now + dur);
                 hum.stop(now + dur);
             }
-            // 水晶解鎖和弦
             playKey() {
                 this.init();
                 const now = this.ctx.currentTime;
-                const notes = [659.25, 880, 1174.66, 1318.51]; // Mi, A, D, Mi
+                const notes = [659.25, 880, 1174.66, 1318.51]; 
                 notes.forEach((freq, idx) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(freq, now + idx * 0.05);
                     osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + idx * 0.05 + 0.35);
-
                     gain.gain.setValueAtTime(0.12, now + idx * 0.05);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.35);
-
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
-
                     osc.start(now + idx * 0.05);
                     osc.stop(now + idx * 0.05 + 0.35);
                 });
             }
-            // 電漿離子雷射
             playShoot() {
                 this.init();
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(1400, now);
                 osc.frequency.exponentialRampToValueAtTime(65, now + 0.25);
-
                 gain.gain.setValueAtTime(0.2, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
-
                 osc.start(now);
                 osc.stop(now + 0.25);
             }
-            // 蟲洞量子波
             playTeleport() {
                 this.init();
                 const now = this.ctx.currentTime;
@@ -1691,47 +1340,37 @@ function doGet(e) {
                 const fm = this.ctx.createOscillator();
                 const fmGain = this.ctx.createGain();
                 const gain = this.ctx.createGain();
-
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(250, now);
                 osc.frequency.exponentialRampToValueAtTime(3200, now + 0.35);
-
                 fm.type = 'sine';
-                fm.frequency.setValueAtTime(15, now); // LFO
+                fm.frequency.setValueAtTime(15, now); 
                 fmGain.gain.setValueAtTime(100, now);
-
                 gain.gain.setValueAtTime(0.25, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
                 fm.connect(fmGain);
                 fmGain.connect(osc.frequency);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
-
                 fm.start(now);
                 osc.start(now);
                 fm.stop(now + 0.35);
                 osc.stop(now + 0.35);
             }
-            // 凱旋交響長音
             playWin() {
                 this.init();
                 const now = this.ctx.currentTime;
-                const freqs = [261.63, 392, 523.25, 659.25, 783.99, 1174.66]; // C9 和弦
+                const freqs = [261.63, 392, 523.25, 659.25, 783.99, 1174.66];
                 freqs.forEach((freq, idx) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
-                    
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(freq, now + idx * 0.08);
                     osc.frequency.linearRampToValueAtTime(freq * 1.05, now + 1.2);
-
                     gain.gain.setValueAtTime(0.12, now + idx * 0.08);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
-
                     osc.start(now + idx * 0.08);
                     osc.stop(now + 1.2);
                 });
@@ -1744,13 +1383,13 @@ function doGet(e) {
         let activeLevel = levels[0]; 
         let currentMode = 'free'; 
         let studentInfo = { className: '', seatNo: '', studentName: '' };
-        let levelHasFailed = false; // 控制左下角思維秘笈「做錯一次才解鎖」
-        let currentShipStyle = 'classic'; // 太空船樣式：'classic', 'blitz', 'miracle'
+        let levelHasFailed = false; 
+        let currentShipStyle = 'classic'; 
 
         let shipState = {
             x: 0,
             y: 0,
-            dir: 0, // 0: 北, 1: 東, 2: 南, 3: 西
+            dir: 0, 
             hasKey: false,
             driftwoodsDestroyed: []
         };
@@ -1766,11 +1405,10 @@ function doGet(e) {
         window.addEventListener('DOMContentLoaded', () => {
             initLevelSelect();
             checkSavedConfig();
-            setShipStyle('classic'); // 預設經典太空船
+            setShipStyle('classic'); 
             showLoginOverlay();
         });
 
-        // 讀取本地儲存的 Web App URL
         function checkSavedConfig() {
             const savedUrl = localStorage.getItem('kangle_gas_url');
             if (savedUrl) {
@@ -1778,7 +1416,6 @@ function doGet(e) {
             }
         }
 
-        // 動態生成關卡選單
         function initLevelSelect() {
             const select = document.getElementById('levelSelect');
             select.innerHTML = '';
@@ -1790,11 +1427,9 @@ function doGet(e) {
             });
         }
 
-        // 設定太空船造型
         function setShipStyle(style) {
             currentShipStyle = style;
             
-            // 移除舊的歡迎畫面選取邊框
             ['classic', 'blitz', 'miracle'].forEach(s => {
                 const elWelcome = document.getElementById(`shipSelect-${s}`);
                 const elModal = document.getElementById(`modalShip-${s}`);
@@ -1806,7 +1441,6 @@ function doGet(e) {
                 }
             });
 
-            // 加入霓虹發光選取邊框
             const activeWelcome = document.getElementById(`shipSelect-${style}`);
             const activeModal = document.getElementById(`modalShip-${style}`);
             if (activeWelcome) {
@@ -1816,14 +1450,13 @@ function doGet(e) {
                 activeModal.className = "cursor-pointer border-2 border-cyan-500 bg-cyan-950/40 rounded-xl p-3 text-center flex flex-col items-center justify-center scale-105 transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)]";
             }
 
-            renderMap(); // 即時重繪地圖上的太空船外觀
+            renderMap(); 
         }
 
-        // 換太空船 Modal 顯示
         function openShipModal() {
             sfx.playClick();
             document.getElementById('shipModal').classList.remove('hidden');
-            setShipStyle(currentShipStyle); // 確保選取邊框即時渲染
+            setShipStyle(currentShipStyle); 
         }
 
         function closeShipModal() {
@@ -1831,39 +1464,34 @@ function doGet(e) {
             document.getElementById('shipModal').classList.add('hidden');
         }
 
-        // 顯示登入畫面 (回首頁)
         function showLoginOverlay() {
             document.getElementById('loginOverlay').classList.remove('hidden');
             document.getElementById('loginForm').classList.add('hidden');
         }
 
-        // 點擊左上角「康樂航空站」或按鈕返回首頁
         function returnToHome() {
             sfx.playClick();
             stopExecution();
             showLoginOverlay();
         }
 
-        // 切換顯示任務登入表單
         function toggleLoginForm() {
             sfx.playClick();
             document.getElementById('loginForm').classList.toggle('hidden');
         }
 
-        // 選擇自由探索
         function selectPlayMode(mode) {
             sfx.playClick();
             currentMode = mode;
             if (mode === 'free') {
                 studentInfo = { className: '', seatNo: '', studentName: '' };
                 document.getElementById('userBadgeText').innerHTML = '🛸 自由探索模式';
-                document.getElementById('userBadge').className = "bg-slate-900 border border-slate-800 rounded-xl px-4 py-1.5 text-sm font-bold flex items-center gap-2 text-indigo-400";
+                document.getElementById('userBadge').className = "bg-slate-900 border border-slate-800 rounded-xl px-4 py-1.5 text-xs font-bold flex items-center gap-2 text-indigo-400";
                 document.getElementById('loginOverlay').classList.add('hidden');
                 loadLevel(0);
             }
         }
 
-        // 任務登錄提交
         function submitMissionLogin() {
             sfx.playClick();
             const classVal = document.getElementById('classInput').value.trim();
@@ -1890,28 +1518,24 @@ function doGet(e) {
             loadLevel(0);
         }
 
-        // 登出 / 返回首頁
         function logout() {
             sfx.playClick();
             stopExecution();
             showLoginOverlay();
         }
 
-        // 載入指定關卡
         function loadLevel(index) {
             currentLevelIndex = index;
             activeLevel = levels[index];
             document.getElementById('levelSelect').value = index;
             
-            // 重設工作區與執行狀態
             workspaceCode = [];
             stopExecution();
             updateWorkspaceUI();
             
-            levelHasFailed = false; // 初始未失敗，祕笈鎖定
+            levelHasFailed = false; 
             updateConceptUI();
 
-            // 重置主角船隻位置
             shipState = {
                 x: activeLevel.startPos.x,
                 y: activeLevel.startPos.y,
@@ -1920,10 +1544,8 @@ function doGet(e) {
                 driftwoodsDestroyed: []
             };
 
-            // 深拷貝幽浮狀態
             sharksState = JSON.parse(JSON.stringify(activeLevel.sharks || []));
 
-            // 更新文字資訊
             document.getElementById('levelTitle').textContent = activeLevel.name;
             document.getElementById('levelDescription').textContent = activeLevel.desc;
             document.getElementById('storyTitle').textContent = activeLevel.story.title;
@@ -1936,7 +1558,6 @@ function doGet(e) {
             updateKeyUI();
         }
 
-        // 重試與重置本關
         function retryLevel() {
             closeLoseModal();
             resetLevel();
@@ -1957,7 +1578,6 @@ function doGet(e) {
             updateKeyUI();
         }
 
-        // 更新左下角運算思維概念展示區 (做錯一次才解鎖祕笈)
         function updateConceptUI() {
             const textEl = document.getElementById('conceptText');
             const cardEl = document.getElementById('conceptCard');
@@ -1982,12 +1602,10 @@ function doGet(e) {
             loadLevel(parseInt(index));
         }
 
-        // 渲染對話記錄
         function renderDialogue() {
             const container = document.getElementById('dialogueContainer');
             container.innerHTML = '';
             
-            // 新增前言
             if (activeLevel.story.prologue) {
                 const prologue = document.createElement('div');
                 prologue.className = "text-[11px] text-indigo-300 italic bg-slate-950/40 p-2 rounded-xl border border-slate-900 mb-1.5 leading-snug";
@@ -1995,7 +1613,6 @@ function doGet(e) {
                 container.appendChild(prologue);
             }
 
-            // 新增角色對話泡泡 (二年級交替角色登場)
             const resolvedCaptainName = (currentLevelIndex % 2 === 0) ? "康康 (🧑‍🚀)" : "樂樂 (🧑‍🚀)";
 
             activeLevel.story.dialogue.forEach(chat => {
@@ -2015,11 +1632,9 @@ function doGet(e) {
                 container.appendChild(box);
             });
             
-            // 自動滾動到底部
             container.scrollTop = container.scrollHeight;
         }
 
-        // 渲染地圖
         function renderMap() {
             const grid = document.getElementById('mapGrid');
             const size = activeLevel.size;
@@ -2027,7 +1642,6 @@ function doGet(e) {
             grid.style.gridTemplateRows = `repeat(${size}, minmax(0, 1fr))`;
             grid.innerHTML = '';
 
-            // 計算垃圾星的毒氣警戒崩潰區 (周圍一格，含斜角)
             const toxicTiles = new Set();
             if (activeLevel.trashIslands) {
                 activeLevel.trashIslands.forEach(island => {
@@ -2050,7 +1664,6 @@ function doGet(e) {
                     tile.dataset.x = x;
                     tile.dataset.y = y;
 
-                    // 1. 垃圾星警戒毒氣
                     const key = `${x},${y}`;
                     if (toxicTiles.has(key)) {
                         tile.classList.add('toxic-warning');
@@ -2060,25 +1673,22 @@ function doGet(e) {
                         tile.appendChild(toxicIcon);
                     }
 
-                    // 2. 傳送蟲洞門 (雙向渦流)
                     const portal = (activeLevel.portals || []).find(p => p.x === x && p.y === y);
                     if (portal) {
                         const portalEl = document.createElement('div');
                         const colorClass = portal.color === 'purple' ? 'text-purple-500' : (portal.color === 'green' ? 'text-emerald-500' : 'text-blue-500');
-                        portalEl.className = `vortex absolute w-4/5 h-4/5 flex items-center justify-center ${colorClass} opacity-80 text-xl`;
+                        portalEl.className = `vortex absolute w-4/5 h-4/5 flex items-center justify-center ${colorClass} opacity-80 text-2xl`;
                         portalEl.innerHTML = '<i class="fa-solid fa-circle-notch"></i>';
                         tile.appendChild(portalEl);
                     }
 
-                    // 3. 能量鑰匙
                     if (activeLevel.keyPos && activeLevel.keyPos.x === x && activeLevel.keyPos.y === y && !shipState.hasKey) {
                         const keyEl = document.createElement('div');
-                        keyEl.className = "absolute text-amber-400 text-lg drop-shadow-md animate-bounce flex items-center justify-center z-10";
+                        keyEl.className = "absolute text-amber-400 text-xl md:text-2xl drop-shadow-md animate-bounce flex items-center justify-center z-10";
                         keyEl.innerHTML = '<i class="fa-solid fa-key"></i>';
                         tile.appendChild(keyEl);
                     }
 
-                    // 4. 終點能量核心 (太空星球)
                     if (activeLevel.endPos.x === x && activeLevel.endPos.y === y) {
                         const planetEl = document.createElement('div');
                         planetEl.className = "absolute w-full h-full flex items-center justify-center z-10 pointer-events-none";
@@ -2088,7 +1698,7 @@ function doGet(e) {
                         const planetFill = isUnlocked ? 'url(#planet-energy-grad)' : 'url(#planet-locked-grad)';
 
                         planetEl.innerHTML = `
-                            <svg class="w-10 h-10 overflow-visible" viewBox="0 0 100 100">
+                            <svg class="w-10 h-10 md:w-12 md:h-12 overflow-visible" viewBox="0 0 100 100">
                                 <defs>
                                     <radialGradient id="planet-energy-grad" cx="50%" cy="30%" r="50%">
                                         <stop offset="0%" stop-color="#38bdf8" />
@@ -2109,35 +1719,31 @@ function doGet(e) {
                         tile.appendChild(planetEl);
                     }
 
-                    // 5. 障礙物：星際隕石群
                     const isObstacle = (activeLevel.obstacles || []).some(o => o.x === x && o.y === y);
                     if (isObstacle) {
                         const obsEl = document.createElement('div');
-                        obsEl.className = "absolute text-slate-550 text-lg flex items-center justify-center";
+                        obsEl.className = "absolute text-slate-400 text-xl md:text-2xl flex items-center justify-center";
                         obsEl.innerHTML = '<i class="fa-solid fa-meteor"></i>';
                         tile.appendChild(obsEl);
                     }
 
-                    // 6. 障礙物：太空廢棄貨櫃
                     const isDriftwood = (activeLevel.driftwoods || []).some(d => d.x === x && d.y === y);
                     const isDestroyed = shipState.driftwoodsDestroyed.some(d => d.x === x && d.y === y);
                     if (isDriftwood && !isDestroyed) {
                         const woodEl = document.createElement('div');
-                        woodEl.className = "absolute text-amber-600 text-base flex items-center justify-center";
+                        woodEl.className = "absolute text-amber-500 text-xl md:text-2xl flex items-center justify-center";
                         woodEl.innerHTML = '<i class="fa-solid fa-box-archive"></i>';
                         tile.appendChild(woodEl);
                     }
 
-                    // 7. 障礙物：宇宙劇毒垃圾星
                     const isTrashIsland = (activeLevel.trashIslands || []).some(t => t.x === x && t.y === y);
                     if (isTrashIsland) {
                         const trashEl = document.createElement('div');
-                        trashEl.className = "absolute text-green-500 text-xl flex items-center justify-center z-10";
+                        trashEl.className = "absolute text-green-400 text-2xl md:text-3xl flex items-center justify-center z-10";
                         trashEl.innerHTML = '<i class="fa-solid fa-biohazard animate-pulse"></i>';
                         tile.appendChild(trashEl);
                     }
 
-                    // 8. 全新障礙：引力黑洞 🌌
                     const isBlackHole = (activeLevel.blackHoles || []).some(bh => bh.x === x && bh.y === y);
                     if (isBlackHole) {
                         const bhEl = document.createElement('div');
@@ -2160,16 +1766,14 @@ function doGet(e) {
                         tile.appendChild(bhEl);
                     }
 
-                    // 9. 星際巡邏幽浮 🛸
                     const shark = sharksState.find(s => s.curX === x && s.curY === y);
                     if (shark) {
                         const sharkEl = document.createElement('div');
-                        sharkEl.className = "absolute text-cyan-400 text-xl flex items-center justify-center z-20 animate-bounce";
+                        sharkEl.className = "absolute text-cyan-300 text-2xl md:text-3xl flex items-center justify-center z-20 animate-bounce";
                         sharkEl.innerHTML = `<i class="fa-solid fa-user-ninja"></i>`;
                         tile.appendChild(sharkEl);
                     }
 
-                    // 10. 自選太空探險船「編程之星號」⛵
                     if (shipState.x === x && shipState.y === y) {
                         const shipContainer = document.createElement('div');
                         shipContainer.className = "absolute flex items-center justify-center z-30 transition-transform duration-300 ease-out pointer-events-none";
@@ -2179,10 +1783,8 @@ function doGet(e) {
                         const rotationDegrees = shipState.dir * 90;
                         shipContainer.style.transform = `rotate(${rotationDegrees}deg)`;
 
-                        // 依學生自選的 `currentShipStyle` 渲染不同外觀
                         let shipSvgContent = '';
                         if (currentShipStyle === 'blitz') {
-                            // 烈焰橘光號 (速度型)
                             shipSvgContent = `
                                 <svg class="w-16 h-16 overflow-visible" viewBox="0 0 100 100">
                                     <defs>
@@ -2201,7 +1803,6 @@ function doGet(e) {
                                 </svg>
                             `;
                         } else if (currentShipStyle === 'miracle') {
-                            // 星河奇蹟號 (幽浮探索型)
                             shipSvgContent = `
                                 <svg class="w-16 h-16 overflow-visible" viewBox="0 0 100 100">
                                     <defs>
@@ -2219,7 +1820,6 @@ function doGet(e) {
                                 </svg>
                             `;
                         } else {
-                            // 經典蔚藍號
                             shipSvgContent = `
                                 <svg class="w-16 h-16 overflow-visible" viewBox="0 0 100 100">
                                     <defs>
@@ -2280,10 +1880,10 @@ function doGet(e) {
                 const remaining = limit === 0 ? '∞' : Math.max(0, limit - used);
                 
                 const btn = document.createElement('button');
-                btn.className = `border px-2 py-1.5 rounded-xl flex items-center justify-between transition-all duration-350 font-bold text-[10px] ${card.color} shadow-sm`;
+                btn.className = `border-2 px-3 py-2 md:py-2.5 rounded-xl flex items-center justify-between transition-all duration-300 font-black text-xs md:text-sm ${card.color} shadow-md active:scale-95`;
                 if (limit > 0 && remaining === 0) {
                     btn.disabled = true;
-                    btn.className = "border border-slate-800 bg-slate-800 text-slate-600 px-2 py-1.5 rounded-xl flex items-center justify-between font-bold text-[10px] opacity-50 cursor-not-allowed";
+                    btn.className = "border-2 border-slate-800 bg-slate-800 text-slate-600 px-3 py-2 md:py-2.5 rounded-xl flex items-center justify-between font-black text-xs md:text-sm opacity-50 cursor-not-allowed";
                 }
                 
                 btn.onclick = () => {
@@ -2293,7 +1893,7 @@ function doGet(e) {
                 
                 const labelDiv = document.createElement('div');
                 labelDiv.className = "flex items-center gap-1.5";
-                labelDiv.innerHTML = `<i class="fa-solid ${card.icon} text-[10px]"></i> ${card.label}`;
+                labelDiv.innerHTML = `<i class="fa-solid ${card.icon} text-sm md:text-base"></i> ${card.label}`;
                 
                 const limitSpan = document.createElement('span');
                 limitSpan.className = "bg-slate-900/60 px-1.5 py-0.5 rounded-md text-[9px] text-indigo-300 border border-indigo-500/10";
@@ -2313,7 +1913,6 @@ function doGet(e) {
             return count;
         }
 
-        // 新增卡片
         function addCardToWorkspace(type, count = null) {
             const cardId = Date.now() + Math.random().toString(36).substr(2, 9);
             workspaceCode.push({
@@ -2326,7 +1925,6 @@ function doGet(e) {
             renderToolbox();
         }
 
-        // 刪除卡片
         function removeCard(id) {
             sfx.playClick();
             workspaceCode = workspaceCode.filter(c => c.id !== id);
@@ -2334,7 +1932,6 @@ function doGet(e) {
             renderToolbox();
         }
 
-        // 上移
         function moveCardUp(index) {
             sfx.playClick();
             if (index <= 0) return;
@@ -2344,7 +1941,6 @@ function doGet(e) {
             updateWorkspaceUI();
         }
 
-        // 下移
         function moveCardDown(index) {
             sfx.playClick();
             if (index >= workspaceCode.length - 1) return;
@@ -2354,14 +1950,12 @@ function doGet(e) {
             updateWorkspaceUI();
         }
 
-        // 向右推 (縮排、包入迴圈)
         function indentCard(index) {
             sfx.playClick();
             workspaceCode[index].isIndented = true;
             updateWorkspaceUI();
         }
 
-        // 向左推 (移出迴圈)
         function outdentCard(index) {
             sfx.playClick();
             workspaceCode[index].isIndented = false;
@@ -2376,7 +1970,7 @@ function doGet(e) {
             renderToolbox();
         }
 
-        // 更新工作區 UI (積木自動縮小智慧型響應式機制，防超長，方便平板核對)
+        // 更新工作區 UI (全新高亮、高對比實心按鈕，防壓縮設計)
         function updateWorkspaceUI() {
             const container = document.getElementById('workspace');
             const hint = document.getElementById('emptyWorkspaceHint');
@@ -2398,73 +1992,68 @@ function doGet(e) {
                 const item = document.createElement('div');
                 item.id = `workcard-${card.id}`;
                 
-                // 智慧型自動縮小設定：卡片多時自動變扁、間距與文字與按鈕尺寸變小
+                // 動態響應式縮小設定：大觸控區保證
                 const blockCount = workspaceCode.length;
-                let paddingClass = "p-2.5";
-                let textClass = "text-xs";
-                let iconSizeClass = "w-7 h-7 text-xs";
-                let btnSizeClass = "h-7 w-7 text-xs";
+                let paddingClass = "p-2.5 md:p-3";
+                let textClass = "text-sm";
+                let iconSizeClass = "w-8 h-8 md:w-10 md:h-10 text-sm md:text-base";
+                let btnSizeClass = "h-8 w-8 md:h-10 md:w-10 text-sm md:text-base";
                 
                 if (blockCount > 15) {
-                    paddingClass = "p-1 py-0.5 px-1.5";
-                    textClass = "text-[9px]";
-                    iconSizeClass = "w-4 h-4 text-[9px]";
-                    btnSizeClass = "h-5 w-5 text-[8px]";
-                } else if (blockCount > 10) {
                     paddingClass = "p-1.5 py-1 px-2";
                     textClass = "text-[10px]";
-                    iconSizeClass = "w-5 h-5 text-[10px]";
-                    btnSizeClass = "h-6 w-6 text-[9px]";
-                } else if (blockCount > 6) {
-                    paddingClass = "p-2 py-1 px-2";
-                    textClass = "text-[11px]";
                     iconSizeClass = "w-6 h-6 text-xs";
-                    btnSizeClass = "h-6.5 w-6.5 text-[10px]";
+                    btnSizeClass = "h-7 w-7 text-xs";
+                } else if (blockCount > 10) {
+                    paddingClass = "p-2 py-1.5 px-2.5";
+                    textClass = "text-xs";
+                    iconSizeClass = "w-7 h-7 text-sm";
+                    btnSizeClass = "h-8 w-8 text-sm";
                 }
 
-                const indentClass = card.isIndented ? 'ml-6 border-l-2 border-amber-500/50 pl-2 bg-slate-900/40' : 'bg-slate-900/20';
-                item.className = `border border-slate-800 rounded-xl ${paddingClass} flex items-center justify-between transition-all duration-300 ${indentClass}`;
+                const indentClass = card.isIndented ? 'ml-6 md:ml-8 border-l-4 border-amber-500 pl-2 bg-slate-900/60' : 'bg-slate-900/40';
+                item.className = `border-2 border-slate-700 rounded-xl ${paddingClass} flex items-center justify-between transition-all duration-300 ${indentClass} shadow-md`;
                 
                 const left = document.createElement('div');
                 left.className = "flex items-center gap-1.5";
                 
-                let badgeClass = 'bg-slate-700 text-slate-300';
+                let badgeClass = 'bg-slate-700 text-slate-300 border-slate-600';
                 let label = '';
                 let icon = '';
 
                 switch (card.type) {
-                    case 'forward': label = '推進'; icon = 'fa-arrow-up'; badgeClass = 'bg-indigo-950 text-indigo-300 border-indigo-800/50'; break;
-                    case 'backward': label = '倒退'; icon = 'fa-arrow-down'; badgeClass = 'bg-indigo-950 text-indigo-300 border-indigo-800/50'; break;
-                    case 'left': label = '左轉'; icon = 'fa-rotate-left'; badgeClass = 'bg-sky-950 text-sky-300 border-sky-800/50'; break;
-                    case 'right': label = '右轉'; icon = 'fa-rotate-right'; badgeClass = 'bg-sky-950 text-sky-300 border-sky-800/50'; break;
-                    case 'shoot': label = '射擊'; icon = 'fa-crosshairs'; badgeClass = 'bg-rose-950 text-rose-300 border-rose-800/50'; break;
-                    case 'wait': label = '等待'; icon = 'fa-hourglass'; badgeClass = 'bg-slate-850 text-slate-300 border-slate-700/50'; break;
-                    case 'repeat_2': label = '重複 2 次'; icon = 'fa-repeat'; badgeClass = 'bg-amber-950 text-amber-300 border-amber-800/50'; break;
-                    case 'repeat_3': label = '重複 3 次'; icon = 'fa-repeat'; badgeClass = 'bg-amber-950 text-amber-300 border-amber-800/50'; break;
+                    case 'forward': label = '推進'; icon = 'fa-arrow-up'; badgeClass = 'bg-indigo-900 text-indigo-200 border-indigo-700'; break;
+                    case 'backward': label = '倒退'; icon = 'fa-arrow-down'; badgeClass = 'bg-indigo-900 text-indigo-200 border-indigo-700'; break;
+                    case 'left': label = '左轉'; icon = 'fa-rotate-left'; badgeClass = 'bg-sky-900 text-sky-200 border-sky-700'; break;
+                    case 'right': label = '右轉'; icon = 'fa-rotate-right'; badgeClass = 'bg-sky-900 text-sky-200 border-sky-700'; break;
+                    case 'shoot': label = '射擊'; icon = 'fa-crosshairs'; badgeClass = 'bg-rose-900 text-rose-200 border-rose-700'; break;
+                    case 'wait': label = '等待'; icon = 'fa-hourglass'; badgeClass = 'bg-slate-800 text-slate-300 border-slate-600'; break;
+                    case 'repeat_2': label = '重複 2 次'; icon = 'fa-repeat'; badgeClass = 'bg-amber-900 text-amber-200 border-amber-700'; break;
+                    case 'repeat_3': label = '重複 3 次'; icon = 'fa-repeat'; badgeClass = 'bg-amber-900 text-amber-200 border-amber-700'; break;
                 }
 
                 left.innerHTML = `
-                    <span class="flex items-center justify-center ${iconSizeClass} rounded-lg border ${badgeClass}">
+                    <span class="flex items-center justify-center ${iconSizeClass} rounded-lg border-2 ${badgeClass}">
                         <i class="fa-solid ${icon}"></i>
                     </span>
-                    <span class="font-bold ${textClass} text-slate-100">${label}</span>
+                    <span class="font-black ${textClass} text-slate-100 drop-shadow-md ml-1">${label}</span>
                 `;
 
                 const right = document.createElement('div');
-                right.className = "flex items-center gap-1.5"; 
+                right.className = "flex items-center gap-1.5 shrink-0"; // 保證操作區絕對不會被擠壓
 
-                // 重新設計的高亮度、高對比圓角操作按鈕 (兒童友善大點擊區)
+                // 重新設計的高亮度、高對比實體按鈕 (兒童友善大點擊區)
                 if (!card.type.startsWith('repeat')) {
                     if (card.isIndented) {
                         const outdentBtn = document.createElement('button');
-                        outdentBtn.className = `bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 border border-indigo-500/40 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 shadow-md`;
+                        outdentBtn.className = `bg-sky-500 hover:bg-sky-400 text-sky-950 border-2 border-sky-600 font-black ${btnSizeClass} rounded-lg transition flex items-center justify-center active:scale-90 shadow-md shrink-0`;
                         outdentBtn.title = "移出迴圈";
                         outdentBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i>';
                         outdentBtn.onclick = () => outdentCard(index);
                         right.appendChild(outdentBtn);
                     } else {
                         const indentBtn = document.createElement('button');
-                        indentBtn.className = `bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 border border-amber-500/40 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 shadow-md`;
+                        indentBtn.className = `bg-amber-400 hover:bg-amber-300 text-amber-950 border-2 border-amber-500 font-black ${btnSizeClass} rounded-lg transition flex items-center justify-center active:scale-90 shadow-md shrink-0`;
                         indentBtn.title = "包入迴圈";
                         indentBtn.innerHTML = '<i class="fa-solid fa-arrow-right"></i>';
                         indentBtn.onclick = () => indentCard(index);
@@ -2473,19 +2062,19 @@ function doGet(e) {
                 }
 
                 const upBtn = document.createElement('button');
-                upBtn.className = `bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-750 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 disabled:opacity-20`;
+                upBtn.className = `bg-slate-600 hover:bg-slate-500 text-white border-2 border-slate-700 font-black ${btnSizeClass} rounded-lg transition flex items-center justify-center active:scale-90 shadow-md shrink-0 disabled:opacity-30`;
                 upBtn.disabled = index === 0;
                 upBtn.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
                 upBtn.onclick = () => moveCardUp(index);
 
                 const downBtn = document.createElement('button');
-                downBtn.className = `bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-750 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 disabled:opacity-20`;
+                downBtn.className = `bg-slate-600 hover:bg-slate-500 text-white border-2 border-slate-700 font-black ${btnSizeClass} rounded-lg transition flex items-center justify-center active:scale-90 shadow-md shrink-0 disabled:opacity-30`;
                 downBtn.disabled = index === workspaceCode.length - 1;
                 downBtn.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
                 downBtn.onclick = () => moveCardDown(index);
 
                 const delBtn = document.createElement('button');
-                delBtn.className = `bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 border border-rose-500/40 ${btnSizeClass} rounded-xl transition flex items-center justify-center active:scale-95 shadow-md`;
+                delBtn.className = `bg-rose-600 hover:bg-rose-500 text-white border-2 border-rose-700 font-black ${btnSizeClass} rounded-lg transition flex items-center justify-center active:scale-90 shadow-md shrink-0 ml-1`;
                 delBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
                 delBtn.onclick = () => removeCard(card.id);
 
@@ -2499,13 +2088,10 @@ function doGet(e) {
             });
         }
 
-        // 展平縮排與迴圈代碼
         function compileWorkspace() {
             let result = [];
-            
             for (let i = 0; i < workspaceCode.length; i++) {
                 const block = workspaceCode[i];
-                
                 if (block.type.startsWith('repeat')) {
                     const loopCount = block.count;
                     let childBlocks = [];
@@ -2514,29 +2100,19 @@ function doGet(e) {
                         childBlocks.push(workspaceCode[j]);
                         j++;
                     }
-                    
                     for (let c = 0; c < loopCount; c++) {
                         childBlocks.forEach(child => {
-                            result.push({
-                                type: child.type,
-                                originId: child.id,
-                                isLoopBody: true
-                            });
+                            result.push({ type: child.type, originId: child.id, isLoopBody: true });
                         });
                     }
                     i = j - 1;
                 } else {
-                    result.push({
-                        type: block.type,
-                        originId: block.id,
-                        isLoopBody: block.isIndented
-                    });
+                    result.push({ type: block.type, originId: block.id, isLoopBody: block.isIndented });
                 }
             }
             return result;
         }
 
-        // 開始太空航行
         function runCode() {
             if (isExecuting) return;
             sfx.init();
@@ -2552,10 +2128,8 @@ function doGet(e) {
             document.getElementById('runBtn').classList.add('hidden');
             document.getElementById('stopBtn').classList.remove('hidden');
 
-            // 啟動實時合成太空探險引擎推进背景音 (新增)
             sfx.startThrusterHum();
 
-            // 確保每次重新運行時，都回歸初始值
             shipState = {
                 x: activeLevel.startPos.x,
                 y: activeLevel.startPos.y,
@@ -2582,9 +2156,7 @@ function doGet(e) {
         }
 
         function stopExecution() {
-            // 熄滅太空船背景推進音 (新增)
             sfx.stopThrusterHum();
-
             if (executionTimer) {
                 clearInterval(executionTimer);
                 executionTimer = null;
@@ -2604,21 +2176,19 @@ function doGet(e) {
             if (reachEnd) {
                 if (needKey && !shipState.hasKey) {
                     sfx.playExplosion();
-                    levelHasFailed = true; // 判定失敗，解鎖祕笈
+                    levelHasFailed = true; 
                     updateConceptUI();
                     showLoseModal("你雖然飛抵了能量核心，但是探險艇上沒有攜帶金鑰！請規劃路線去拿取鑰匙。");
                 } else {
                     sfx.playWin();
                     showWinModal();
-                    
-                    // 如果是任務登錄模式，自動傳送歷程至 Google 試算表
                     if (currentMode === 'login') {
                         uploadProgressToGoogleSheets("Success");
                     }
                 }
             } else {
                 sfx.playExplosion();
-                levelHasFailed = true; // 判定失敗，解鎖祕笈
+                levelHasFailed = true; 
                 updateConceptUI();
                 showLoseModal("探險艇停止了。你尚未抵達能量核心的位置，再重新規劃一下指令序列吧！");
                 if (currentMode === 'login') {
@@ -2627,7 +2197,6 @@ function doGet(e) {
             }
         }
 
-        // 串接 Google Sheets
         function uploadProgressToGoogleSheets(status) {
             const gasUrl = localStorage.getItem('kangle_gas_url');
             const statusEl = document.getElementById('cloudUploadStatus');
@@ -2693,7 +2262,6 @@ function doGet(e) {
             cards.forEach(c => c.classList.remove('executing-card'));
         }
 
-        // 執行單步動作 (已整合黑洞碰撞、毒氣、UFO與失敗偵測)
         function executeStep(inst) {
             let nextX = shipState.x;
             let nextY = shipState.y;
@@ -2729,23 +2297,21 @@ function doGet(e) {
                 sfx.playTurn();
             }
 
-            // 安全與碰撞邊界偵測
             const size = activeLevel.size;
             if (nextX < 0 || nextX >= size || nextY < 0 || nextY >= size) {
                 stopExecution();
                 sfx.playExplosion();
-                levelHasFailed = true; // 解鎖運算思維提示
+                levelHasFailed = true; 
                 updateConceptUI();
                 showLoseModal("糟了！太空艇飛離了安全航道，在無盡的深空宇宙中迷航了！");
                 return;
             }
 
-            // 碰撞黑洞引力偵測
             const hitBlackHole = (activeLevel.blackHoles || []).some(bh => bh.x === nextX && bh.y === nextY);
             if (hitBlackHole) {
                 stopExecution();
                 sfx.playExplosion();
-                levelHasFailed = true; // 解鎖運算思維提示
+                levelHasFailed = true; 
                 updateConceptUI();
                 showLoseModal("天啊！太空探險艇被黑洞強大的重力引力吸入，瞬間撕裂解體了！");
                 return;
@@ -2755,7 +2321,7 @@ function doGet(e) {
             if (hitObstacle) {
                 stopExecution();
                 sfx.playExplosion();
-                levelHasFailed = true; // 解鎖運算思維提示
+                levelHasFailed = true; 
                 updateConceptUI();
                 showLoseModal("太空艇正面撞上了堅硬的星際隕石！船體嚴重受損！");
                 return;
@@ -2766,7 +2332,7 @@ function doGet(e) {
             if (hitWood && !woodDestroyed) {
                 stopExecution();
                 sfx.playExplosion();
-                levelHasFailed = true; // 解鎖運算思維提示
+                levelHasFailed = true; 
                 updateConceptUI();
                 showLoseModal("太空艇撞擊了太空廢棄貨櫃！請先使用『魚叉射擊卡』擊碎它。");
                 return;
@@ -2776,13 +2342,12 @@ function doGet(e) {
             if (hitTrashIsland) {
                 stopExecution();
                 sfx.playExplosion();
-                levelHasFailed = true; // 解鎖運算思維提示
+                levelHasFailed = true; 
                 updateConceptUI();
                 showLoseModal("探險艇墜毀在毒氣垃圾星上！");
                 return;
             }
 
-            // 防禦性編程：毒氣警戒例外（Exception）
             if (activeLevel.trashIslands) {
                 const nextToTrash = activeLevel.trashIslands.some(island => {
                     return Math.abs(island.x - nextX) <= 1 && Math.abs(island.y - nextY) <= 1;
@@ -2790,25 +2355,22 @@ function doGet(e) {
                 if (nextToTrash) {
                     stopExecution();
                     sfx.playExplosion();
-                    levelHasFailed = true; // 解鎖運算思維提示
+                    levelHasFailed = true; 
                     updateConceptUI();
                     showLoseModal("觸發當機系統例外！太空船太過靠近有毒垃圾星，毒氣警報器引發控制核心鎖死！請遠離綠色虛線區。");
                     return;
                 }
             }
 
-            // 前進
             shipState.x = nextX;
             shipState.y = nextY;
 
-            // 鑰匙拾取
             if (activeLevel.keyPos && activeLevel.keyPos.x === shipState.x && activeLevel.keyPos.y === shipState.y && !shipState.hasKey) {
                 shipState.hasKey = true;
                 sfx.playKey();
                 updateKeyUI();
             }
 
-            // 蟲洞空間瞬間跳躍
             const standingPortal = (activeLevel.portals || []).find(p => p.x === shipState.x && p.y === shipState.y);
             if (standingPortal) {
                 const destPortal = (activeLevel.portals || []).find(p => p.color === standingPortal.color && (p.x !== shipState.x || p.y !== shipState.y));
@@ -2819,15 +2381,13 @@ function doGet(e) {
                 }
             }
 
-            // 幽浮移動
             moveSharks();
 
-            // 幽浮碰撞偵測
             const hitByShark = sharksState.some(s => s.curX === shipState.x && s.curY === shipState.y);
             if (hitByShark) {
                 stopExecution();
                 sfx.playExplosion();
-                levelHasFailed = true; // 解鎖運算思維提示
+                levelHasFailed = true; 
                 updateConceptUI();
                 showLoseModal("不好了！太空探險艇與幽浮巡邏飛彈正面相撞！請規劃時序等待避開巡邏！");
                 return;
@@ -2837,7 +2397,6 @@ function doGet(e) {
             updateCompassUI();
         }
 
-        // 巡邏幽浮游動
         function moveSharks() {
             sharksState.forEach(shark => {
                 const dx = shark.x2 - shark.x1;
@@ -2896,7 +2455,6 @@ function doGet(e) {
             }
         }
 
-        // 教師設定 modal 控制
         function openTeacherModal() {
             sfx.playClick();
             document.getElementById('teacherModal').classList.remove('hidden');
@@ -2907,7 +2465,6 @@ function doGet(e) {
             document.getElementById('teacherModal').classList.add('hidden');
         }
 
-        // 學生自選太空船 Modal 控制
         function openShipModal() {
             sfx.playClick();
             document.getElementById('shipModal').classList.remove('hidden');
@@ -2938,7 +2495,6 @@ function doGet(e) {
             showToast("<i class='fa-solid fa-copy'></i> Apps Script 程式碼複製成功！", "indigo");
         }
 
-        // 提示框控制
         function showToast(message, color = "indigo") {
             const toast = document.getElementById('toast');
             const msg = document.getElementById('toastMessage');
@@ -2962,7 +2518,6 @@ function doGet(e) {
             }, 3000);
         }
 
-        // 成功彈窗 UI
         function showWinModal() {
             document.getElementById('winModalLevelName').textContent = activeLevel.name;
             
@@ -2986,7 +2541,7 @@ function doGet(e) {
         function closeWinModal() {
             sfx.playClick();
             document.getElementById('winModal').classList.add('hidden');
-            resetLevel(); // 成功關閉視窗後，自動重置太空艇位置至原始格
+            resetLevel(); 
         }
 
         function showLoseModal(reason) {
@@ -2997,7 +2552,7 @@ function doGet(e) {
         function closeLoseModal() {
             sfx.playClick();
             document.getElementById('loseModal').classList.add('hidden');
-            resetLevel(); // 失敗關閉視窗後，太空艇必定瞬移重置回原始起點！
+            resetLevel(); 
         }
 
         function goToNextLevel() {
