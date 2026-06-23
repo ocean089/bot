@@ -834,7 +834,7 @@ function doGet(e) {
                 size: 5,
                 startPos: { x: 1, y: 4 },
                 endPos: { x: 3, y: 2 },
-                obstacles: [{ x: 1, y: 2 }, { x: 2, y: 3 }],
+                obstacles: [{ x: 1, y: 2 }, { x: 2, y: 4 }], // 修正：將 y 由 3 修正為 4，避免阻礙正確的之字形階梯航道
                 driftwoods: [],
                 trashIslands: [],
                 sharks: [],
@@ -868,7 +868,7 @@ function doGet(e) {
                 startPos: { x: 1, y: 5 },
                 endPos: { x: 4, y: 2 },
                 obstacles: [
-                    { x: 1, y: 3 }, { x: 2, y: 4 }, { x: 2, y: 2 }, { x: 3, y: 3 }
+                    { x: 1, y: 3 }, { x: 2, y: 5 }, { x: 2, y: 2 }, { x: 3, y: 4 } // 修正：將 y 由 4 與 3 修正為 5 與 4，暢通正確航線，防止撞機
                 ],
                 driftwoods: [],
                 trashIslands: [],
